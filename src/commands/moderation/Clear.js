@@ -53,9 +53,9 @@ module.exports = new class Clear extends Command {
       }),
       new Argument({
         defaultValue: null,
-        example: "stop spamming",
-        key: "reason",
-        name: "reason",
+        example: "https://imgur.com/a/sKrBAKD",
+        key: "evidence",
+        name: "evidence",
         preconditionOptions: [{max: config.max.reasonLength}],
         preconditions: ["maxlength"],
         remainder: true,

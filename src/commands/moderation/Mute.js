@@ -49,9 +49,9 @@ module.exports = new class Mute extends Command {
       }),
       new Argument({
         defaultValue: null,
-        example: "stop spamming",
-        key: "reason",
-        name: "reason",
+        example: "https://imgur.com/a/z6j59Jj",
+        key: "evidence",
+        name: "evidence",
         preconditionOptions: [{max: config.max.reasonLength}],
         preconditions: ["maxlength"],
         remainder: true,

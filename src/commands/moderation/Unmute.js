@@ -31,9 +31,9 @@ module.exports = new class Unmute extends Command {
         type: "user"
       }),
       new Argument({
-        example: "he apologized",
-        key: "reason",
-        name: "reason",
+        example: "https://imgur.com/a/gKWTj2U",
+        key: "evidence",
+        name: "evidence",
         preconditionOptions: [{max: config.max.reasonLength}],
         preconditions: ["maxlength"],
         remainder: true,

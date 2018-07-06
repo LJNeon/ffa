@@ -187,7 +187,7 @@ module.exports = {
       await this.pool.query(str.format(queries, user));
       await this.pool.query(
         "INSERT INTO info(version) VALUES($1)",
-        [data.db.version]
+        [data.constants.version]
       );
     }
 
@@ -229,7 +229,7 @@ module.exports = {
   async update() {
     const res = await this.pool.query("SELECT version FROM info");
     const version = parseVersion(res.rows[0].version);
-    const wantedVersion = parseVersion(data.db.version);
+    const wantedVersion = parseVersion(data.constants.version);
 
     if (version[0] < wantedVersion[0] || (version[0] === wantedVersion[0]
         && version[1] < wantedVersion[1])) {
@@ -263,7 +263,7 @@ module.exports = {
       for (let i = 0; i < migrations.length; i++)
         await this.pool.query(migrations[i].queries);
 
-      await this.pool.query("UPDATE info SET version = $1", [data.db.version]);
+      await this.pool.query("UPDATE info SET version = $1", [data.constants.version]);
     }
   },
 

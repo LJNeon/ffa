@@ -1,27 +1,9 @@
--- Setup queries
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET client_min_messages = warning;
-SET row_security = off;
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-SET default_tablespace = '';
-SET default_with_oids = false;
-
--- Table creation queries
 CREATE TABLE public.ages (
     guild_id varchar(18) PRIMARY KEY,
     ban_request int NOT NULL,
     member int NOT NULL
 );
-ALTER TABLE public.ages OWNER TO ffa;
+ALTER TABLE public.ages OWNER TO {0};
 
 CREATE TABLE public.channels (
     guild_id varchar(18) PRIMARY KEY,
@@ -30,7 +12,7 @@ CREATE TABLE public.channels (
     log_id varchar(18),
     rules_id varchar(18)
 );
-ALTER TABLE public.channels OWNER TO ffa;
+ALTER TABLE public.channels OWNER TO {0};
 
 CREATE TABLE public.chat (
     guild_id varchar(18) PRIMARY KEY,
@@ -38,13 +20,13 @@ CREATE TABLE public.chat (
     delay int NOT NULL,
     reward real NOT NULL
 );
-ALTER TABLE public.chat OWNER TO ffa;
+ALTER TABLE public.chat OWNER TO {0};
 
 CREATE TABLE public.info (
     archive_count int NOT NULL DEFAULT 0,
     version varchar(20) NOT NULL
 );
-ALTER TABLE public.info OWNER TO ffa;
+ALTER TABLE public.info OWNER TO {0};
 
 CREATE TABLE public.logs (
     guild_id varchar(18) NOT NULL,
@@ -55,21 +37,21 @@ CREATE TABLE public.logs (
     user_id varchar(18) NOT NULL,
     PRIMARY KEY (guild_id, case_number)
 );
-ALTER TABLE public.logs OWNER TO ffa;
+ALTER TABLE public.logs OWNER TO {0};
 
 CREATE TABLE public.rep (
     guild_id varchar(18) PRIMARY KEY,
     decrease real NOT NULL,
     increase real NOT NULL
 );
-ALTER TABLE public.rep OWNER TO ffa;
+ALTER TABLE public.rep OWNER TO {0};
 
 CREATE TABLE public.roles (
     guild_id varchar(18) PRIMARY KEY,
     mod_id varchar(18),
     muted_id varchar(18)
 );
-ALTER TABLE public.roles OWNER TO ffa;
+ALTER TABLE public.roles OWNER TO {0};
 
 CREATE TABLE public.rules (
     guild_id varchar(18) NOT NULL,
@@ -79,7 +61,7 @@ CREATE TABLE public.rules (
     mute_length int
 );
 CREATE INDEX rules_id_idx ON public.rules USING btree (guild_id);
-ALTER TABLE public.rules OWNER TO ffa;
+ALTER TABLE public.rules OWNER TO {0};
 
 CREATE TABLE public.senate (
     guild_id varchar(18) PRIMARY KEY,
@@ -89,7 +71,7 @@ CREATE TABLE public.senate (
     max_actions int2 NOT NULL,
     mute_length int NOT NULL
 );
-ALTER TABLE public.senate OWNER TO ffa;
+ALTER TABLE public.senate OWNER TO {0};
 
 CREATE TABLE public.spam (
     guild_id varchar(18) PRIMARY KEY,
@@ -97,7 +79,7 @@ CREATE TABLE public.spam (
     msg_limit int2 NOT NULL,
     rep_penalty real NOT NULL
 );
-ALTER TABLE public.spam OWNER TO ffa;
+ALTER TABLE public.spam OWNER TO {0};
 
 CREATE TABLE public.top (
     guild_id varchar(18) PRIMARY KEY,
@@ -105,7 +87,7 @@ CREATE TABLE public.top (
     court int2 NOT NULL,
     mod int2 NOT NULL
 );
-ALTER TABLE public.top OWNER TO ffa;
+ALTER TABLE public.top OWNER TO {0};
 
 CREATE TABLE public.users (
     guild_id varchar(18) NOT NULL,
@@ -115,4 +97,4 @@ CREATE TABLE public.users (
     reputation real DEFAULT 0 NOT NULL,
     PRIMARY KEY(guild_id, user_id)
 );
-ALTER TABLE public.users OWNER TO ffa;
+ALTER TABLE public.users OWNER TO {0};

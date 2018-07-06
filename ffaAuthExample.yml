@@ -7,6 +7,7 @@ bot: {
 }
 
 # For connecting to the PostgreSQL database. See more at: https://node-postgres.com/features/connecting
+# database can't be set to "postgres" or the bot will break
 pg: {
   user: steven dickenson,
   database: ffa

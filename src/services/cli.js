@@ -22,20 +22,12 @@ const yaml = require("js-yaml");
 const {argv} = require("yargs").options({
   auth: {
     alias: "a",
-    coerce: arg => yaml.safeLoad(fs.readFileSync(
-      path.join(__dirname, `../${arg}`),
-      "utf8"
-    )),
     desc: "Authentication file using the yaml format.",
     example: "./ffaAuth.yml",
     type: "string"
   },
   config: {
     alias: "c",
-    coerce: arg => yaml.safeLoad(fs.readFileSync(
-      path.join(__dirname, `../${arg}`),
-      "utf8"
-    )),
     desc: "Configuration file using the yaml format.",
     example: "./ffa.yml",
     type: "string"
@@ -58,9 +50,9 @@ const str = require("../utilities/string.js");
 const readDir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 
-async function parse(bool, dir, files, file) {
+async function parse(bool, path, files, file) {
   if (bool === false && files.includes(file) === true)
-    return yaml.safeLoad(await readFile(path.join(dir, file), "utf8"));
+    return yaml.safeLoad(await readFile(path, "utf8"));
 
   return bool;
 }
@@ -83,11 +75,21 @@ module.exports = {
 
   async fetch() {
     if (this.auth === false || this.config === false) {
-      if (argv.auth != null)
-        this.auth = argv.auth;
+      if (argv.auth != null) {
+        this.authPath = path.join(__dirname, `../${argv.auth}`);
+        this.auth =  yaml.safeLoad(fs.readFileSync(
+          this.authPath,
+          "utf8"
+        ));
+      }
 
-      if (argv.config != null)
-        this.config = argv.config;
+      if (argv.config != null){
+        this.configPath = path.join(__dirname, `../${argv.config}`);
+        this.config =  yaml.safeLoad(fs.readFileSync(
+          this.configPath,
+          "utf8"
+        ));
+      }
 
       await this.searchIfNeeded(path.join(__dirname, "../../"));
       await this.searchIfNeeded(homedir);
@@ -106,9 +108,24 @@ module.exports = {
   async searchIfNeeded(dir) {
     if (this.auth === false || this.config === false) {
       const files = await readDir(dir);
+      const authPath = path.join(dir, "ffaAuth.yml");
+      const auth = await parse(this.auth, authPath, files, "ffaAuth.yml");
+      const configPath = path.join(dir, "ffa.yml");
+      const config = await parse(this.config, configPath, files, "ffa.yml");
 
-      this.auth = await parse(this.auth, dir, files, "ffaAuth.yml");
-      this.config = await parse(this.config, dir, files, "ffa.yml");
+      if (auth !== false) {
+        this.auth = auth;
+
+        if (this.authPath == null)
+          this.authPath = authPath;
+      }
+
+      if (config !== false) {
+        this.config = config;
+
+        if (this.configPath == null)
+          this.configPath = configPath;
+      }
     }
   }
 };

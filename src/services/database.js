@@ -16,16 +16,29 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {auth} = require("./cli.js");
-const {data: {queries}} = require("./data.js");
+const cli = require("./cli.js");
+const crypto = require("crypto");
+const {data} = require("./data.js");
+const fs = require("fs");
+const path = require("path");
 const pg = require("pg");
 const str = require("../utilities/string.js");
-const Pool = pg.native == null ? pg.Pool : pg.native.Pool;
+const util = require("util");
+const yaml = require("js-yaml");
+const {Client, Pool} = pg.native == null ? pg : pg.native;
+const readDir = util.promisify(fs.readdir);
+const readFile = util.promisify(fs.readFile);
+const writeFile = util.promisify(fs.writeFile);
 
+function parseVersion(version) {
+  return version.split(".").map(n => Number(n));
+}
+
+// TODO test `setup()`
 module.exports = {
   async changeRep(guildId, userId, change) {
     return this.pool.query(
-      queries.changeRep,
+      data.queries.changeRep,
       [guildId, userId, change]
     );
   },
@@ -87,7 +100,7 @@ module.exports = {
   },
 
   async findNeededColumns(table) {
-    const res = await this.pool.query(queries.tableInfo, [table]);
+    const res = await this.pool.query(data.queries.tableInfo, [table]);
     /**
      * The only columns that need defaults are the not null ones with no
      * PostgreSQL default value, the id column being exempt from that as a
@@ -157,7 +170,62 @@ module.exports = {
     );
   },
 
-  pool: new Pool(auth.pg),
+  parseQueries(queries) {
+    return queries.replace(data.regexes.newline, "").split(";");
+  },
+
+  pool: null, //new Pool(cli.auth.pg)
+
+  async setup() {
+    const client = new Client({
+      database: "postgres",
+      user: "postgres"
+    });
+    const db = cli.auth.pg.database == null ? "ffa" : cli.auth.pg.database;
+    const user = cli.auth.pg.user == null ? "postgres" : cli.auth.pg.user;
+
+    await client.connect();
+    let res = await client.query(
+      "SELECT 1 FROM pg_database WHERE datname = $1",
+      [db]
+    );
+
+    if (res.rows.length === 0) {
+      await client.query("CREATE DATABASE $1", [db]);
+
+      let queries = this.parseQueries(data.model)
+        .concat(this.parseQueries(data.defaults));
+
+      for (let i = 0; i < queries; i++)
+        await client.query(str.format(queries[i], user));
+
+      await client.query(
+        "INSERT INTO info(version) VALUES($1)",
+        [data.version.version]
+      );
+
+      if (cli.auth.pg.database == null) {
+        cli.auth.pg.database = "ffa";
+        cli.auth.pg.password = crypto
+          .randomBytes(16)
+          .toString("hex")
+          .slice(-32);
+
+        await client.query(
+          `ALTER USER ${user} WITH PASSWORD $1`,
+          [cli.auth.pg.password]
+        );
+
+        await writeFile(cli.authPath, yaml.safeDump(
+          cli.auth,
+          {sortKeys: true}
+        ));
+      }
+    }
+
+    await client.end();
+    this.pool = new Pool(cli.auth.pg);
+  },
 
   sortDefaultValues(row, needed) {
     const columns = Object.keys(row);
@@ -188,10 +256,39 @@ module.exports = {
     return values;
   },
 
+  async update() {
+    let res = await this.pool.query("SELECT version FROM info");
+
+    const version = parseVersion(res.rows[0].version);
+    const wantedVersion = parseVersion(data.version.version);
+
+    if (version[0] < wantedVersion[0] || (version[0] === wantedVersion[0]
+        && version[1] < wantedVersion[1])) {
+      const dir = path.join(__dirname, "../migrations");
+      const files = await readDir(dir);
+      let migrations = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const filepath = `${dir}/${files[i]}`;
+        migrations[i] = {
+          verison: parseVersion(files[i]
+            .slice(0, files[i]
+            .indexOf(".sql"))),
+          queries: this.parseQueries(await readFile(filepath, "utf8"))
+        };
+      }
+
+      migrations = migrations.sort((a, b) => a.version[0] < b.version[0]
+        || (a.version[0] === b.version[0] && a.version[1] < b.version[1]));
+
+      // TODO filter out unneeded migrations and apply the rest
+    }
+  },
+
   async upsert(table, columns, values, conflict, returns) {
     const valStr = this.stringifyQuery(values.length - 1);
     const selectStr = str.format(
-      queries.selectDefault,
+      data.queries.selectDefault,
       returns,
       table,
       columns,
@@ -201,7 +298,7 @@ module.exports = {
 
     if (row == null) {
       await this.pool.query(str.format(
-        queries.insertDefault,
+        data.queries.insertDefault,
         table,
         columns,
         valStr,

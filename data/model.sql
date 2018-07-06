@@ -24,16 +24,17 @@ ALTER TABLE public.chat OWNER TO {0};
 
 CREATE TABLE public.info (
     archive_count int NOT NULL DEFAULT 0,
-    version varchar(20) NOT NULL
+    version int NOT NULL
 );
 ALTER TABLE public.info OWNER TO {0};
 
+CREATE TYPE logtype AS ENUM ('mute', 'unmute', 'automute', 'autounmute', 'clear');
 CREATE TABLE public.logs (
     guild_id varchar(18) NOT NULL,
     case_number int NOT NULL,
     data jsonb,
     epoch int NOT NULL,
-    type smallint NOT NULL,
+    type logtype NOT NULL,
     user_id varchar(18) NOT NULL,
     PRIMARY KEY (guild_id, case_number)
 );

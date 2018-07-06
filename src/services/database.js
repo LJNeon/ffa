@@ -30,11 +30,6 @@ const readDir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
-function parseVersion(version) {
-  return version.split(".").map(n => Number(n));
-}
-
-// TODO test `setup()`
 module.exports = {
   async changeRep(guildId, userId, change) {
     return this.pool.query(
@@ -187,7 +182,7 @@ module.exports = {
       await this.pool.query(str.format(queries, user));
       await this.pool.query(
         "INSERT INTO info(version) VALUES($1)",
-        [data.constants.version]
+        [data.db.version]
       );
     }
 
@@ -228,11 +223,10 @@ module.exports = {
 
   async update() {
     const res = await this.pool.query("SELECT version FROM info");
-    const version = parseVersion(res.rows[0].version);
-    const wantedVersion = parseVersion(data.constants.version);
+    const {version} = res.rows[0];
+    const wantedVersion = data.db.version;
 
-    if (version[0] < wantedVersion[0] || (version[0] === wantedVersion[0]
-        && version[1] < wantedVersion[1])) {
+    if (version < wantedVersion) {
       const dir = path.join(__dirname, "../../migrations");
       const files = await readDir(dir);
       let migrations = [];
@@ -243,27 +237,24 @@ module.exports = {
 
         migrations[i] = {
           queries: content.replace(data.regexes.newline, ""),
-          version: parseVersion(files[i]
+          version: Number(files[i]
             .slice(0, files[i]
               .indexOf(".sql")))
         };
       }
 
-      migrations = migrations.sort((a, b) => {
-        if (a.version[0] === b.version[0])
-          return a.version[1] - b.version[1];
+      migrations = migrations.sort((a, b) => a.version - b.version);
 
-        return a.version[0] - b.version[0];
-      });
-
-      migrations = migrations.slice(migrations
-        .findIndex(m => m.version[0] === version[0]
-          && m.version[1] === version[1]));
+      migrations = migrations
+        .slice(migrations.findIndex(m => m.version === version));
 
       for (let i = 0; i < migrations.length; i++)
         await this.pool.query(migrations[i].queries);
 
-      await this.pool.query("UPDATE info SET version = $1", [data.constants.version]);
+      await this.pool.query(
+        "UPDATE info SET version = $1",
+        [data.db.version]
+      );
     }
   },
 

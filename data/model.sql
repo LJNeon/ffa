@@ -5,6 +5,17 @@ CREATE TABLE public.ages (
 );
 ALTER TABLE public.ages OWNER TO {0};
 
+CREATE TYPE archivetype AS ENUM('rep', 'unrep');
+CREATE TABLE archives (
+    archive_id serial,
+    guild_id varchar(18) NOT NULL,
+    data jsonb,
+    epoch int NOT NULL,
+    type archivetype NOT NULL,
+    user_id varchar(18) NOT NULL
+);
+ALTER TABLE public.archives OWNER TO {0};
+
 CREATE TABLE public.channels (
     guild_id varchar(18) PRIMARY KEY,
     archive_id varchar(18),
@@ -23,7 +34,6 @@ CREATE TABLE public.chat (
 ALTER TABLE public.chat OWNER TO {0};
 
 CREATE TABLE public.info (
-    archive_count int NOT NULL DEFAULT 0,
     version int NOT NULL
 );
 ALTER TABLE public.info OWNER TO {0};

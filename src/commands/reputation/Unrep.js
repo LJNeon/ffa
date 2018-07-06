@@ -16,10 +16,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const archives = require("../../services/archives.js");
 const {Argument, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
+const {data: {queries}} = require("../../services/data.js");
+const str = require("../../utilities/string.js");
+const time = require("../../utilities/time.js");
 
 module.exports = new class Unrep extends Command {
   constructor() {
@@ -38,9 +42,24 @@ module.exports = new class Unrep extends Command {
       names: ["unrep"],
       preconditions: ["memberage"]
     });
+    this.weekUnrepQuery = str.format(queries.selectWeekRep, "unrep");
   }
 
   async run(msg, args) {
+    const res = await db.pool.query(
+      this.weekUnrepQuery,
+      [msg.channel.guild.id, msg.author.id, time.epoch() - 604800]
+    );
+
+    for (let i = 0; i < res.rows.length; i++) {
+      if (res.rows[0].data.target_id === args.user.id) {
+        return message.replyError(
+          msg,
+          `you already unrepped ${message.tag(args.user)} in the past week.`
+        );
+      }
+    }
+
     const {rep: {decrease}} = await db.getGuild(
       msg.channel.guild.id,
       {rep: "decrease"}
@@ -51,5 +70,11 @@ module.exports = new class Unrep extends Command {
       msg,
       `you have successfully unrepped **${message.tag(args.user)}**.`
     );
+    await archives.add({
+      data: {target_id: args.user.id},
+      guild_id: msg.channel.guild.id,
+      type: "unrep",
+      user_id: msg.author.id
+    });
   }
 }();

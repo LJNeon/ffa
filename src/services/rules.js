@@ -104,11 +104,8 @@ module.exports = {
         {channels: "rules_id"}
       );
 
-      if (rules_id == null) {
-        this.queue[guildId] = 0;
-
+      if (rules_id == null)
         return;
-      }
 
       const channel = client.getChannel(rules_id);
 

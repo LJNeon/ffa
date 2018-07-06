@@ -86,7 +86,7 @@ module.exports = new class Clear extends Command {
         rule: args.rule.content
       },
       guild_id: msg.channel.guild.id,
-      type: 4,
+      type: "clear",
       user_id: args.user.id
     }, config.customColors.clear);
     await message.reply(msg, str.format(

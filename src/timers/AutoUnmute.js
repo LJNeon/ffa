@@ -18,7 +18,6 @@
 "use strict";
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
-const Logs = require("../enums/Logs.js");
 const senate = require("../services/senate.js");
 const time = require("../utilities/time.js");
 const Timer = require("../utilities/Timer.js");
@@ -26,17 +25,17 @@ const Timer = require("../utilities/Timer.js");
 module.exports = new Timer(async () => {
   const epoch = time.epoch();
   const res = await db.pool.query(
-    "SELECT * FROM logs WHERE epoch > $1 AND type < 4",
+    "SELECT * FROM logs WHERE epoch > $1 AND type != 'clear'",
     [epoch - config.max.mute]
   );
 
   for (let i = 0; i < res.rows.length; i++) {
     const row = res.rows[i];
 
-    if (row.type === Logs.Mute || row.type === Logs.AutoMute) {
+    if (row.type === "mute" || row.type === "automute") {
       const unmute = res.rows.find(r => r.guild_id === row.guild_id
-        && r.user_id === row.user_id && (r.type === Logs.Unmute
-        || r.type === Logs.AutoUnmute) && r.epoch > row.epoch);
+        && r.user_id === row.user_id && (r.type === "unmute"
+        || r.type === "autounmute") && r.epoch > row.epoch);
 
       if (unmute != null)
         continue;

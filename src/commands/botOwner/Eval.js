@@ -43,7 +43,8 @@ module.exports = new class Eval extends patron.Command {
 
   async run(msg, args) {
     /* eslint-disable no-unused-vars */
-    const {author: user, channel, member} = msg;
+    const {channel, member, author: user} = msg;
+    const {client, database: db} = serv;
     const {guild} = msg.channel;
     /* eslint-enable no-unused-vars */
     let res;

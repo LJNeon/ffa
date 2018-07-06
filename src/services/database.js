@@ -30,6 +30,13 @@ const readDir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
+function parseQueries(queries) {
+  return queries
+    .replace(data.regexes.newline, "")
+    .split(";")
+    .filter(q => q.length !== 0);
+}
+
 function parseVersion(version) {
   return version.split(".").map(n => Number(n));
 }
@@ -170,16 +177,14 @@ module.exports = {
     );
   },
 
-  parseQueries(queries) {
-    return queries.replace(data.regexes.newline, "").split(";");
-  },
-
   pool: null,
 
   async setup() {
     const client = new Client({
       database: "postgres",
+      host: cli.auth.pg.host,
       password: "postgres",
+      port: cli.auth.pg.port,
       user: "postgres"
     });
     const db = cli.auth.pg.database == null ? "ffa" : cli.auth.pg.database;
@@ -194,8 +199,8 @@ module.exports = {
     if (res.rows.length === 0) {
       await client.query("CREATE DATABASE $1", [db]);
 
-      const queries = this.parseQueries(data.model)
-        .concat(this.parseQueries(data.defaults));
+      const queries = parseQueries(data.model)
+        .concat(parseQueries(data.defaults));
 
       for (let i = 0; i < queries; i++)
         await client.query(str.format(queries[i], user));
@@ -260,31 +265,31 @@ module.exports = {
   async update() {
     const res = await this.pool.query("SELECT version FROM info");
     const version = parseVersion(res.rows[0].version);
-    const wantedVersion = parseVersion(data.version.version);
+    const wantedVersion = parseVersion(data.db.version);
 
     if (version[0] < wantedVersion[0] || (version[0] === wantedVersion[0]
         && version[1] < wantedVersion[1])) {
-      const dir = path.join(__dirname, "../migrations");
+      const dir = path.join(__dirname, "../../migrations");
       const files = await readDir(dir);
       let migrations = [];
 
       for (let i = 0; i < files.length; i++) {
         const filepath = `${dir}/${files[i]}`;
         migrations[i] = {
-          queries: this.parseQueries(await readFile(filepath, "utf8")),
-          verison: parseVersion(files[i]
+          queries: parseQueries(await readFile(filepath, "utf8")),
+          version: parseVersion(files[i]
             .slice(0, files[i]
               .indexOf(".sql")))
         };
       }
 
-      // TODO make sure this sort is in the right order
       migrations = migrations.sort((a, b) => {
         if (a.version[0] === b.version[0])
           return a.version[1] - b.version[1];
 
         return a.version[0] - b.version[0];
       });
+
       migrations = migrations.slice(migrations
         .findIndex(m => m.version[0] === version[0]
           && m.version[1] === version[1]));
@@ -293,6 +298,8 @@ module.exports = {
         for (let j = 0; j < migrations[i].queries.length; j++)
           await this.pool.query(migrations[i].queries[j]);
       }
+
+      await this.pool.query("UPDATE info SET version = $1", [data.db.version]);
     }
   },
 

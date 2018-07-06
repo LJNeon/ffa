@@ -30,18 +30,11 @@ const readDir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
-function parseQueries(queries) {
-  return queries
-    .replace(data.regexes.newline, "")
-    .split(";")
-    .filter(q => q.length !== 0);
-}
-
 function parseVersion(version) {
   return version.split(".").map(n => Number(n));
 }
 
-// TODO test `setup()` and `update()`
+// TODO test `setup()`
 module.exports = {
   async changeRep(guildId, userId, change) {
     return this.pool.query(
@@ -106,19 +99,6 @@ module.exports = {
     }
   },
 
-  async findNeededColumns(table) {
-    const res = await this.pool.query(data.queries.tableInfo, [table]);
-    /**
-     * The only columns that need defaults are the not null ones with no
-     * PostgreSQL default value, the id column being exempt from that as a
-     * primary key.
-     */
-    const needed = res.rows.filter(c => c.is_nullable === "NO"
-      && c.column_default == null && c.column_name !== "guild_id");
-
-    return needed.map(c => c.column_name);
-  },
-
   async getFirstRow(...args) {
     const res = await this.pool.query(...args);
 
@@ -137,30 +117,14 @@ module.exports = {
         [id]
       );
 
-      if (res[table] == null && typeof id === "string") {
-        const needed = await this.findNeededColumns(table);
-
-        if (needed.length === 0) {
-          res[table] = await this.upsert(
-            table,
-            "guild_id",
-            [id],
-            "guild_id",
-            tables[table]
-          );
-        } else {
-          const neededStr = needed.join(", ");
-          const defaultValues = await this.getFirstRow(
-            `SELECT ${neededStr} FROM ${table} WHERE guild_id = 'default'`
-          );
-
-          res[table] = await this.upsert(
-            table, `guild_id, ${neededStr}`,
-            [id, ...this.sortDefaultValues(defaultValues, needed)],
-            "guild_id",
-            tables[table]
-          );
-        }
+      if (res[table] == null) {
+        res[table] = await this.upsert(
+          table,
+          "guild_id",
+          [id],
+          "guild_id",
+          tables[table]
+        );
       }
     }
 
@@ -197,25 +161,12 @@ module.exports = {
     );
 
     if (res.rows.length === 0) {
-      await client.query("CREATE DATABASE $1", [db]);
-
-      const queries = parseQueries(data.model)
-        .concat(parseQueries(data.defaults));
-
-      for (let i = 0; i < queries; i++)
-        await client.query(str.format(queries[i], user));
-
-      await client.query(
-        "INSERT INTO info(version) VALUES($1)",
-        [data.version.version]
-      );
-
       if (cli.auth.pg.database == null) {
         cli.auth.pg.database = "ffa";
-        cli.auth.pg.password = crypto
+        cli.auth.pg.password = cli.auth.pg.password == null ? crypto
           .randomBytes(16)
           .toString("hex")
-          .slice(-32);
+          .slice(-32) : cli.auth.pg.password;
 
         await client.query(
           `ALTER USER ${user} WITH PASSWORD $1`,
@@ -227,10 +178,19 @@ module.exports = {
           {sortKeys: true}
         ));
       }
-    }
 
-    await client.end();
-    this.pool = new Pool(cli.auth.pg);
+      await client.query(`CREATE DATABASE ${db}`);
+      await client.end();
+      this.pool = new Pool(cli.auth.pg);
+
+      const queries = data.model.replace(data.regexes.newline, "");
+
+      await this.pool.query(str.format(queries, user));
+      await this.pool.query(
+        "INSERT INTO info(version) VALUES($1)",
+        [data.db.version]
+      );
+    }
   },
 
   sortDefaultValues(row, needed) {
@@ -275,8 +235,10 @@ module.exports = {
 
       for (let i = 0; i < files.length; i++) {
         const filepath = `${dir}/${files[i]}`;
+        const content = await readFile(filepath, "utf8");
+
         migrations[i] = {
-          queries: parseQueries(await readFile(filepath, "utf8")),
+          queries: content.replace(data.regexes.newline, ""),
           version: parseVersion(files[i]
             .slice(0, files[i]
               .indexOf(".sql")))
@@ -294,10 +256,8 @@ module.exports = {
         .findIndex(m => m.version[0] === version[0]
           && m.version[1] === version[1]));
 
-      for (let i = 0; i < migrations.length; i++) {
-        for (let j = 0; j < migrations[i].queries.length; j++)
-          await this.pool.query(migrations[i].queries[j]);
-      }
+      for (let i = 0; i < migrations.length; i++)
+        await this.pool.query(migrations[i].queries);
 
       await this.pool.query("UPDATE info SET version = $1", [data.db.version]);
     }

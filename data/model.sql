@@ -17,91 +17,90 @@ SET default_with_oids = false;
 
 -- Table creation queries
 CREATE TABLE public.ages (
-    guild_id character varying(18) PRIMARY KEY,
-    member integer NOT NULL
+    guild_id varchar(18) PRIMARY KEY,
+    member int NOT NULL
 );
 ALTER TABLE public.ages OWNER TO ffa;
 
 CREATE TABLE public.channels (
-    guild_id character varying(18) PRIMARY KEY,
-    archive_id character varying(18),
-    ignored_ids character varying(18)[] DEFAULT '{}'::character varying[] NOT NULL,
-    log_id character varying(18),
-    rules_id character varying(18)
+    guild_id varchar(18) PRIMARY KEY,
+    archive_id varchar(18),
+    ignored_ids varchar(18)[] DEFAULT '{}'::varchar[] NOT NULL,
+    log_id varchar(18),
+    rules_id varchar(18)
 );
 ALTER TABLE public.channels OWNER TO ffa;
 
 CREATE TABLE public.chat (
-    guild_id character varying(18) PRIMARY KEY,
+    guild_id varchar(18) PRIMARY KEY,
     decay real NOT NULL,
-    delay integer NOT NULL,
+    delay int NOT NULL,
     reward real NOT NULL
 );
 ALTER TABLE public.chat OWNER TO ffa;
 
 CREATE TABLE public.logs (
-    guild_id character varying(18) NOT NULL,
-    case_number integer NOT NULL,
+    guild_id varchar(18) NOT NULL,
+    case_number int NOT NULL,
     data jsonb,
-    epoch integer NOT NULL,
-    type smallint NOT NULL,
-    user_id character varying(18) NOT NULL,
+    epoch int NOT NULL,
+    type int2 NOT NULL,
+    user_id varchar(18) NOT NULL,
     PRIMARY KEY (guild_id, case_number)
 );
 ALTER TABLE public.logs OWNER TO ffa;
 
-CREATE TABLE public.moderation (
-    guild_id character varying(18) PRIMARY KEY,
-    auto_mute boolean NOT NULL,
-    case_count integer DEFAULT 0 NOT NULL,
-    max_actions smallint NOT NULL,
-    mute_length integer NOT NULL
-);
-ALTER TABLE public.moderation OWNER TO ffa;
-
 CREATE TABLE public.rep (
-    guild_id character varying(18) PRIMARY KEY,
+    guild_id varchar(18) PRIMARY KEY,
     decrease real NOT NULL,
     increase real NOT NULL
 );
 ALTER TABLE public.rep OWNER TO ffa;
 
 CREATE TABLE public.roles (
-    guild_id character varying(18) PRIMARY KEY,
-    mod_id character varying(18),
-    muted_id character varying(18)
+    guild_id varchar(18) PRIMARY KEY,
+    mod_id varchar(18),
+    muted_id varchar(18)
 );
 ALTER TABLE public.roles OWNER TO ffa;
 
 CREATE TABLE public.rules (
-    guild_id character varying(18) NOT NULL,
-    content character varying(512) NOT NULL,
-    category character varying(32) NOT NULL,
-    epoch integer NOT NULL,
-    mute_length integer
+    guild_id varchar(18) NOT NULL,
+    content varchar(512) NOT NULL,
+    category varchar(32) NOT NULL,
+    epoch int NOT NULL,
+    mute_length int
 );
 CREATE INDEX rules_id_idx ON public.rules USING btree (guild_id);
 ALTER TABLE public.rules OWNER TO ffa;
 
+CREATE TABLE public.senate (
+    guild_id varchar(18) PRIMARY KEY,
+    auto_mute boolean NOT NULL,
+    case_count int DEFAULT 0 NOT NULL,
+    max_actions int2 NOT NULL,
+    mute_length int NOT NULL
+);
+ALTER TABLE public.senate OWNER TO ffa;
+
 CREATE TABLE public.spam (
-    guild_id character varying(18) PRIMARY KEY,
-    duration integer NOT NULL,
-    msg_limit smallint NOT NULL,
-    mute_length integer NOT NULL,
+    guild_id varchar(18) PRIMARY KEY,
+    duration int NOT NULL,
+    msg_limit int2 NOT NULL,
     rep_penalty real NOT NULL
 );
 ALTER TABLE public.spam OWNER TO ffa;
 
 CREATE TABLE public.top (
-    guild_id character varying(18) PRIMARY KEY,
-    clear smallint NOT NULL,
-    mod smallint NOT NULL
+    guild_id varchar(18) PRIMARY KEY,
+    clear int2 NOT NULL,
+    mod int2 NOT NULL
 );
 ALTER TABLE public.top OWNER TO ffa;
 
 CREATE TABLE public.users (
-    guild_id character varying(18) NOT NULL,
-    user_id character varying(18) NOT NULL,
+    guild_id varchar(18) NOT NULL,
+    user_id varchar(18) NOT NULL,
     in_guild boolean DEFAULT true NOT NULL,
     muted boolean DEFAULT false NOT NULL,
     reputation real DEFAULT 0 NOT NULL,

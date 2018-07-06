@@ -21,8 +21,8 @@ const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
 const message = require("../utilities/message.js");
-const modService = require("../services/moderation.js");
 const {data: {responses}} = require("../services/data.js");
+const senate = require("../services/senate.js");
 const str = require("../utilities/string.js");
 const helpMsg = str.format(
   responses.helpMsg,
@@ -41,7 +41,7 @@ client.on("guildMemberAdd", catchEvent(async (guild, member) => {
   );
 
   const {roles: {muted_id}} = await db.getGuild(guild.id, {roles: "muted_id"});
-  const isMuted = await modService.isMuted(
+  const isMuted = await senate.isMuted(
     guild.id,
     member.id,
     muted_id,

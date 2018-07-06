@@ -53,6 +53,10 @@ module.exports = new class Logger {
     const date = new Date();
 
     if (date.getUTCDate() !== this.day) {
+      /**
+       * TODO some error about getUTCDate is popping up when bot is running
+       *  for long periods of time.
+       */
       this.day = date.getUTCDate();
       this.dateStr = time.formatDate(this.date);
       this.stream = fs.createWriteStream(

@@ -18,52 +18,36 @@
 "use strict";
 const {Argument, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
-const modService = require("../../services/moderation.js");
+const senate = require("../../services/senate.js");
 
-module.exports = new class Mute extends Command {
+module.exports = new class Unmute extends Command {
   constructor() {
     super({
       args: [new Argument({
-        example: "Jimbo#5555",
+        example: "Billy#6969",
         key: "user",
         name: "user",
-        preconditions: ["noself", "noffa", "higherrep"],
+        preconditions: ["noself"],
         type: "user"
       }),
       new Argument({
-        example: "2c",
-        key: "rule",
-        name: "rule",
-        type: "rule"
-      }),
-      new Argument({
-        example: "8h",
-        key: "length",
-        name: "mute length",
-        preconditionOptions: [{
-          max: config.max.mute,
-          min: config.min.mute
-        }],
-        preconditions: ["betweentime"],
-        type: "timespan"
-      }),
-      new Argument({
-        example: "https://imgur.com/a/z6j59Jj",
+        example: "https://imgur.com/a/gKWTj2U",
         key: "evidence",
         name: "evidence",
-        preconditionOptions: [{max: config.max.reasonLength}],
+        preconditionOptions: [{max: config.max.evidenceLen}],
         preconditions: ["maxlength"],
         remainder: true,
         type: "string"
       })],
       botPermissions: ["manageRoles"],
-      description: "Mute any guild user.",
-      groupName: "moderation",
-      names: ["mute"]
+      cooldown: config.cd.unmute * 1e3,
+      description: "Unmute any guild user.",
+      groupName: "justice",
+      names: ["unmute"]
     });
   }
 
   async run(msg, args) {
-    return modService.mute(msg, args);
+    return senate.unmute(msg, args);
   }
 }();

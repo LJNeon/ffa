@@ -18,7 +18,7 @@
 "use strict";
 const {Precondition, PreconditionResult} = require("patron.js");
 const db = require("../../services/database.js");
-const modService = require("../../services/moderation.js");
+const senate = require("../../services/senate.js");
 
 module.exports = new class NotMutedPrecondition extends Precondition {
   constructor() {
@@ -30,7 +30,7 @@ module.exports = new class NotMutedPrecondition extends Precondition {
       msg.channel.guild.id,
       {roles: "muted_id"}
     );
-    const muted = await modService.isMuted(
+    const muted = await senate.isMuted(
       msg.channel.guild.id,
       msg.author.id,
       muted_id

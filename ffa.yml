@@ -36,14 +36,13 @@ handlerOptions: {}
 registryOptions: {caseSensitive: false}
 
 guild: {
-  id: "290759415362224139",
   invite: https://discord.gg/F7reg7e
 }
 
 max: {
   lb: 30,
   clear: 100,
-  reasonLength: 600,
+  evidenceLen: 600,
   cmdNewLines: 10,
   deletedMsgs: 10,
   typos: 2,

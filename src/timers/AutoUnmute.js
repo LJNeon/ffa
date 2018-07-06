@@ -18,7 +18,7 @@
 "use strict";
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
-const modService = require("../services/moderation.js");
+const senate = require("../services/senate.js");
 const time = require("../utilities/time.js");
 const Timer = require("../utilities/Timer.js");
 
@@ -41,7 +41,7 @@ module.exports = new Timer(async () => {
         continue;
 
       if (row.epoch < epoch - row.data.length)
-        await modService.autoUnmute(row);
+        await senate.autoUnmute(row);
     }
   }
 }, config.timer.autoUnmute * 1e3);

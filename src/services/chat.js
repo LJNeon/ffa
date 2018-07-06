@@ -18,11 +18,11 @@
 "use strict";
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
-const modService = require("../services/moderation.js");
+const senate = require("../services/senate.js");
 const cooldowns = new Map();
 
 module.exports = async (msg, guild) => {
-  const isMuted = await modService.isMuted(
+  const isMuted = await senate.isMuted(
     msg.channel.guild.id,
     msg.author.id
   );

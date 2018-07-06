@@ -21,7 +21,8 @@ const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
 
-module.exports = new class Rep extends Command { // TODO add once week limit per user
+// TODO add once week limit per user
+module.exports = new class Rep extends Command {
   constructor() {
     super({
       args: [new Argument({

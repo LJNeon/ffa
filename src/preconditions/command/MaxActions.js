@@ -28,9 +28,9 @@ module.exports = new class MaxActions extends Precondition {
   }
 
   async run(cmd, msg) {
-    const {moderation: {max_actions}} = await db.getGuild(
+    const {senate: {max_actions}} = await db.getGuild(
       msg.channel.guild.id,
-      {moderation: "max_actions"}
+      {senate: "max_actions"}
     );
     const success = await actionService.check(
       msg.channel.guild.id,

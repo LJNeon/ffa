@@ -17,8 +17,8 @@
  */
 "use strict";
 const db = require("./database.js");
-const modService = require("./moderation.js");
 const MultiMutex = require("../utilities/MultiMutex.js");
+const senate = require("./senate.js");
 
 module.exports = {
   entries: new Map(),
@@ -38,9 +38,11 @@ module.exports = {
         entry.count++;
 
         if (entry.count >= guild.spam.msg_limit) {
-          const success = await modService.autoMute(
-            msg,
-            guild.moderation.mute_length
+          await senate.autoMute(msg, guild.moderation.mute_length);
+          await db.changeRep(
+            msg.channel.guild.id,
+            msg.author.id,
+            -guild.spam.rep_penalty
           );
 
           if (success === true) {

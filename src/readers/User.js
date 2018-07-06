@@ -45,7 +45,12 @@ module.exports = new class User extends TypeReader {
 
       for (const member of msg.channel.guild.members.values()) {
         const lowerUser = member.username.toLowerCase();
+        const userSim = str.similarity(lowerUser, lowerVal);
         let lowerNick = null;
+        let nickSim = Number.POSITIVE_INFINITY;
+
+        if (member.nick != null)
+          nickSim = str.similarity(lowerNick, lowerVal);
 
         if (member.nick != null)
           lowerNick = member.nick.toLowerCase();
@@ -55,24 +60,16 @@ module.exports = new class User extends TypeReader {
             typos: 0,
             user: member.user
           });
-        } else {
-          const userSim = str.similarity(lowerUser, lowerVal);
-          let nickSim = Number.POSITIVE_INFINITY;
-
-          if (member.nick != null)
-            nickSim = str.similarity(lowerNick, lowerVal);
-
-          if (userSim <= config.max.typos) {
-            matches.push({
-              typos: userSim,
-              user: member.user
-            });
-          } else if (nickSim <= config.max.typos) {
-            matches.push({
-              typos: nickSim,
-              user: member.user
-            });
-          }
+        } else if (userSim <= config.max.typos) {
+          matches.push({
+            typos: userSim,
+            user: member.user
+          });
+        } else if (nickSim <= config.max.typos) {
+          matches.push({
+            typos: nickSim,
+            user: member.user
+          });
         }
       }
 
@@ -90,7 +87,10 @@ module.exports = new class User extends TypeReader {
           matches = matches.map(m => message.tag(m.user));
         }
 
-        return TypeReaderResult.fromError(cmd, `I found multiple members: ${str.list(matches)}.`);
+        return TypeReaderResult.fromError(
+          cmd,
+          `I found multiple members: ${str.list(matches)}.`
+        );
       }
     } else {
       let matches = [];
@@ -128,7 +128,10 @@ module.exports = new class User extends TypeReader {
           matches = matches.map(m => message.tag(m.user));
         }
 
-        return TypeReaderResult.fromError(cmd, `I found multiple members: ${str.list(matches)}.`);
+        return TypeReaderResult.fromError(
+          cmd,
+          `I found multiple members: ${str.list(matches)}.`
+        );
       }
     }
 

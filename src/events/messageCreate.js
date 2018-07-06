@@ -35,12 +35,12 @@ client.on("messageCreate", catchEvent(async msg => {
     guild = await db.getGuild(msg.channel.guild.id, {
       channels: "ignored_ids",
       chat: "delay, reward",
-      moderation: "auto_mute, case_count, mute_length",
       roles: "muted_id",
-      spam: "duration, msg_limit, mute_length, rep_penalty"
+      senate: "auto_mute, case_count, mute_length",
+      spam: "duration, msg_limit, rep_penalty"
     });
 
-    if (guild.moderation.auto_mute === true)
+    if (guild.senate.auto_mute === true)
       await spamService.update(msg, guild);
 
     if (guild.channels.ignored_ids.includes(msg.channel.id) === true)

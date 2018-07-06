@@ -19,11 +19,11 @@
 const {Group} = require("patron.js");
 const {data: {descriptions}} = require("../services/data.js");
 
-module.exports = new class Moderation extends Group {
+module.exports = new class Justice extends Group {
   constructor() {
     super({
-      description: descriptions.moderation,
-      name: "moderation",
+      description: descriptions.justice,
+      name: "justice",
       postconditions: ["maxactions"],
       preconditionOptions: [null, null, {column: "mod"}],
       preconditions: ["maxactions", "modrole", "top"]

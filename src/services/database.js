@@ -16,15 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {auth, config} = require("./cli.js");
+const {auth} = require("./cli.js");
 const {data: {queries}} = require("./data.js");
 const pg = require("pg");
 const str = require("../utilities/string.js");
 const Pool = pg.native == null ? pg.Pool : pg.native.Pool;
 
 module.exports = {
-  baseGuildId: config.guild.id,
-
   async changeRep(guildId, userId, change) {
     return this.pool.query(
       queries.changeRep,
@@ -122,7 +120,7 @@ module.exports = {
       if (res[table] == null && typeof id === "string") {
         const needed = await this.findNeededColumns(table);
 
-        if (needed.length === 0) {console.log(table, "guild_id")
+        if (needed.length === 0) {
           res[table] = await this.upsert(
             table,
             "guild_id",
@@ -133,8 +131,7 @@ module.exports = {
         } else {
           const neededStr = needed.join(", ");
           const defaultValues = await this.getFirstRow(
-            `SELECT ${neededStr} FROM ${table} WHERE guild_id = $1`,
-            [this.baseGuildId]
+            `SELECT ${neededStr} FROM ${table} WHERE guild_id = 'default'`
           );
 
           res[table] = await this.upsert(

@@ -34,7 +34,7 @@ module.exports = {
           && files[i].startsWith(".") === false) {
         res[files[i]] = await module.exports.readAll(filepath, options);
       } else {
-        res[files[i].slice(0, files[i].lastIndexOf("."))] = await readFile(
+        res[files[i]] = await readFile(
           filepath,
           options
         );

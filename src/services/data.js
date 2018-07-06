@@ -25,21 +25,27 @@ module.exports = {
 
   async fetch() {
     if (this.data === false) {
-      this.data = await readAll(path.join(__dirname, "../../data"), "utf8");
+      this.data = {};
+      const data = await readAll(path.join(__dirname, "../../data"), "utf8");
 
-      for (const key in this.data) {
-        if (this.data.hasOwnProperty(key) === false
-            || typeof this.data[key] !== "string")
+      for (const key in data) {
+        if (data.hasOwnProperty(key) === false
+            || typeof data[key] !== "string")
           continue;
 
-        this.data[key] = yaml.load(this.data[key]);
+        const prop = key.slice(0, key.lastIndexOf("."));
+
+        if (key.endsWith(".yml") === true)
+          this.data[prop] = yaml.load(data[key]);
+        else
+          this.data[prop] = data[key];
       }
 
-      for (const query in this.data.queries) {
-        if (this.data.queries.hasOwnProperty(query) === false)
+      for (const query in data.queries) {
+        if (data.queries.hasOwnProperty(query) === false)
           continue;
 
-        this.data.queries[query] = this.data.queries[query]
+        this.data.queries[query] = data.queries[query]
           .replace(this.data.regexes.newline, "");
       }
     }

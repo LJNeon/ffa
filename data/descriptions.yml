@@ -7,7 +7,7 @@ command: |-
 
 cooldown: "**{0}**: {1}"
 
-moderation: Commands reserved for the most reputable users to moderate the guild.
+justice: Commands reserved for the most reputable users to moderate the guild.
 
 module: List of all commands in a module if one is provided. If not, all modules are listed.
 

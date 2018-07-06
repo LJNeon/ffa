@@ -30,11 +30,11 @@ const unmuteUserQuery = str.format(queries.muteUser, "false");
 
 module.exports = {
   async addLog(log, color) {
-    const {channels: {log_id}, moderation: {case_count}} = await db.getGuild(
+    const {channels: {log_id}, senate: {case_count}} = await db.getGuild(
       log.guild_id,
       {
         channels: "log_id",
-        moderation: "case_count"
+        senate: "case_count"
       }
     );
     let msg;
@@ -49,7 +49,7 @@ module.exports = {
         log.type]
     );
     await db.pool.query(
-      "UPDATE moderation SET case_count = case_count + 1 WHERE guild_id = $1",
+      "UPDATE senate SET case_count = case_count + 1 WHERE guild_id = $1",
       [log.guild_id]
     );
 
@@ -201,6 +201,7 @@ module.exports = {
     return str.format(
       responses.log,
       action,
+      // TODO user is sometimes undefined
       message.tag(client.users.get(log.user_id)),
       log.user_id,
       data
@@ -240,9 +241,9 @@ module.exports = {
 
       const data = {
         data: {
+          evidence: args.evidence,
           length: args.length,
           mod_id: msg.author.id,
-          reason: args.reason,
           rule: args.rule.content
         },
         guild_id: msg.channel.guild.id,
@@ -271,7 +272,7 @@ module.exports = {
           tag,
           time.format(args.length),
           str.code(args.rule.content, ""),
-          args.reason == null ? "" : args.reason,
+          args.evidence == null ? "" : args.evidence,
           message.tag(client.users.get(msg.channel.guild.ownerID)),
           config.bot.prefix
         )).catch(() => {});
@@ -292,7 +293,7 @@ module.exports = {
 
     await db.pool.query("DELETE FROM logs WHERE case_number = $1", [caseNum]);
     await db.pool.query(
-      "UPDATE moderation SET case_count = case_count - 1 WHERE guild_id = $1",
+      "UPDATE senate SET case_count = case_count - 1 WHERE guild_id = $1",
       [logMsg.channel.guild.id]
     );
     await logMsg.delete();
@@ -322,8 +323,8 @@ module.exports = {
 
       const data = {
         data: {
-          mod_id: msg.author.id,
-          reason: args.reason
+          evidence: args.evidence,
+          mod_id: msg.author.id
         },
         guild_id: msg.channel.guild.id,
         type: 1,

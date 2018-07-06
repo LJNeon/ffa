@@ -20,7 +20,7 @@ const {Argument, Command, CommandResult} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const {data: {descriptions, responses}} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
-const modService = require("../../services/moderation.js");
+const senate = require("../../services/senate.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class Clear extends Command {
@@ -56,14 +56,14 @@ module.exports = new class Clear extends Command {
         example: "https://imgur.com/a/sKrBAKD",
         key: "evidence",
         name: "evidence",
-        preconditionOptions: [{max: config.max.reasonLength}],
+        preconditionOptions: [{max: config.max.evidenceLen}],
         preconditions: ["maxlength"],
         remainder: true,
         type: "string"
       })],
       botPermissions: ["manageRoles"],
       description: descriptions.clear,
-      groupName: "moderation",
+      groupName: "justice",
       names: ["clear", "prune", "purge"]
     });
   }
@@ -78,11 +78,11 @@ module.exports = new class Clear extends Command {
     if (amount === 0)
       return CommandResult.fromError("there are no messages to delete.");
 
-    await modService.addLog({
+    await senate.addLog({
       data: {
+        evidence: args.evidence,
         mod_id: msg.author.id,
         quantity: amount,
-        reason: args.reason,
         rule: args.rule.content
       },
       guild_id: msg.channel.guild.id,

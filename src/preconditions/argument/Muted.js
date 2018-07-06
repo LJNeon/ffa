@@ -16,32 +16,32 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Precondition, PreconditionResult} = require("patron.js");
+const {ArgumentPrecondition, PreconditionResult} = require("patron.js");
 const db = require("../../services/database.js");
 const senate = require("../../services/senate.js");
 
-module.exports = new class NotMuted extends Precondition {
+module.exports = new class Muted extends ArgumentPrecondition {
   constructor() {
-    super({name: "notmuted"});
+    super({name: "muted"});
   }
 
-  async run(cmd, msg) {
+  async run(cmd, msg, arg, args, val) {
     const {roles: {muted_id}} = await db.getGuild(
       msg.channel.guild.id,
       {roles: "muted_id"}
     );
     const muted = await senate.isMuted(
       msg.channel.guild.id,
-      msg.author.id,
+      val.id,
       muted_id
     );
 
-    if (muted === false)
+    if (muted === true)
       return PreconditionResult.fromSuccess();
 
     return PreconditionResult.fromError(
       cmd,
-      "you may not use this command while muted."
+      `${msg.author.id === val.id ? "you are" : "that user is"} not muted.`
     );
   }
 }();

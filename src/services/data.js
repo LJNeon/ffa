@@ -41,11 +41,14 @@ module.exports = {
           this.data[prop] = data[key];
       }
 
+      this.data.queries = {};
       for (const query in data.queries) {
         if (data.queries.hasOwnProperty(query) === false)
           continue;
 
-        this.data.queries[query] = data.queries[query]
+        const prop = query.slice(0, query.lastIndexOf("."));
+
+        this.data.queries[prop] = data.queries[query]
           .replace(this.data.regexes.newline, "");
       }
     }

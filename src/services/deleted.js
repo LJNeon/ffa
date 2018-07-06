@@ -16,32 +16,28 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Precondition, PreconditionResult} = require("patron.js");
-const db = require("../../services/database.js");
-const senate = require("../../services/senate.js");
+const {config} = require("./cli.js");
+const msgs = new Map();
 
-module.exports = new class NotMuted extends Precondition {
-  constructor() {
-    super({name: "notmuted"});
+module.exports = {
+  add(msg) {
+    if (msgs.has(msg.channel.id) === false)
+      msgs.set(msg.channel.id, []);
+
+    const channel = msgs.get(msg.channel.id);
+
+    if (channel.length === config.max.deletedMsgs)
+      channel.pop();
+
+    channel.splice(0, 0, msg);
+  },
+
+  get(channelId, count) {
+    const channel = msgs.get(channelId);
+
+    if (channel == null)
+      return [];
+
+    return channel.slice(0, count);
   }
-
-  async run(cmd, msg) {
-    const {roles: {muted_id}} = await db.getGuild(
-      msg.channel.guild.id,
-      {roles: "muted_id"}
-    );
-    const muted = await senate.isMuted(
-      msg.channel.guild.id,
-      msg.author.id,
-      muted_id
-    );
-
-    if (muted === false)
-      return PreconditionResult.fromSuccess();
-
-    return PreconditionResult.fromError(
-      cmd,
-      "you may not use this command while muted."
-    );
-  }
-}();
+};

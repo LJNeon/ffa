@@ -18,6 +18,7 @@ SET default_with_oids = false;
 -- Table creation queries
 CREATE TABLE public.ages (
     guild_id varchar(18) PRIMARY KEY,
+    ban_request int NOT NULL,
     member int NOT NULL
 );
 ALTER TABLE public.ages OWNER TO ffa;
@@ -38,6 +39,12 @@ CREATE TABLE public.chat (
     reward real NOT NULL
 );
 ALTER TABLE public.chat OWNER TO ffa;
+
+CREATE TABLE public.info (
+    archive_count int NOT NULL DEFAULT 0,
+    version varchar(20) NOT NULL
+);
+ALTER TABLE public.info OWNER TO ffa;
 
 CREATE TABLE public.logs (
     guild_id varchar(18) NOT NULL,
@@ -77,6 +84,7 @@ ALTER TABLE public.rules OWNER TO ffa;
 CREATE TABLE public.senate (
     guild_id varchar(18) PRIMARY KEY,
     auto_mute boolean NOT NULL,
+    ban_signed int2 NOT NULL,
     case_count int DEFAULT 0 NOT NULL,
     max_actions int2 NOT NULL,
     mute_length int NOT NULL
@@ -94,6 +102,7 @@ ALTER TABLE public.spam OWNER TO ffa;
 CREATE TABLE public.top (
     guild_id varchar(18) PRIMARY KEY,
     clear int2 NOT NULL,
+    court int2 NOT NULL,
     mod int2 NOT NULL
 );
 ALTER TABLE public.top OWNER TO ffa;

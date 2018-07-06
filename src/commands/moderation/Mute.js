@@ -48,7 +48,6 @@ module.exports = new class Mute extends Command {
         type: "timespan"
       }),
       new Argument({
-        defaultValue: null,
         example: "https://imgur.com/a/z6j59Jj",
         key: "evidence",
         name: "evidence",

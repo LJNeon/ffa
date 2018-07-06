@@ -46,6 +46,8 @@ max: {
   reasonLength: 600,
   cmdNewLines: 10,
   deletedMsgs: 10,
+  typos: 2,
+  userResults: 3,
   # All times are in seconds
   mute: 2592e3
 }
@@ -65,8 +67,8 @@ default: {
 }
 
 cd: {
-  rep: 21600,
-  unrep: 21600,
+  rep: 3600,
+  unrep: 3600,
   color: 3600,
   unmute: 43200,
   modCmd: 3600,

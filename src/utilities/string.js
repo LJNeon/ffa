@@ -57,5 +57,30 @@ module.exports = {
 
   pluralize(str) {
     return str.endsWith("s") === true ? `${str}'` : `${str}'s`;
+  },
+
+  similarity(one, two) {
+    const column = [];
+
+    for (let i = 1; i <= one.length; i++)
+      column[i] = i;
+
+    for (let i = 1; i <= two.length; i++) {
+      let lastDiag = i - 1;
+      column[0] = i;
+
+      for (let j = 1; j <= one.length; j++) {
+        const editDist = one.charAt(j - 1) === two.charAt(i - 1) ? 0 : 1;
+        const oldDiag = column[j];
+        column[j] = Math.min(
+          column[j] + 1,
+          column[j - 1] + 1,
+          lastDiag + editDist
+        );
+        lastDiag = oldDiag;
+      }
+    }
+
+    return column[one.length];
   }
 };

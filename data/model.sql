@@ -48,6 +48,7 @@ ALTER TABLE public.rep OWNER TO {0};
 
 CREATE TABLE public.roles (
     guild_id varchar(18) PRIMARY KEY,
+    court_id varchar(18),
     mod_id varchar(18),
     muted_id varchar(18)
 );

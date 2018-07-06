@@ -16,32 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Precondition, PreconditionResult} = require("patron.js");
-const db = require("../../services/database.js");
-const senate = require("../../services/senate.js");
+const client = require("../services/client.js");
+const deleted = require("../services/deleted.js");
 
-module.exports = new class NotMuted extends Precondition {
-  constructor() {
-    super({name: "notmuted"});
-  }
-
-  async run(cmd, msg) {
-    const {roles: {muted_id}} = await db.getGuild(
-      msg.channel.guild.id,
-      {roles: "muted_id"}
-    );
-    const muted = await senate.isMuted(
-      msg.channel.guild.id,
-      msg.author.id,
-      muted_id
-    );
-
-    if (muted === false)
-      return PreconditionResult.fromSuccess();
-
-    return PreconditionResult.fromError(
-      cmd,
-      "you may not use this command while muted."
-    );
-  }
-}();
+client.on("messageDelete", msg => deleted.add(msg));

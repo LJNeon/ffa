@@ -32,8 +32,12 @@ module.exports = new class User extends TypeReader {
     const lowerVal = val.toLowerCase();
     let id = val.match(regexes.mention);
 
-    if (id != null || (id = val.match(regexes.id)) != null)
-      return TypeReaderResult.fromSuccess(client.users.get(id[id.length - 1]));
+    if (id != null || (id = val.match(regexes.id)) != null) {
+      const user = client.users.get(id[id.length - 1]);
+
+      if (user != null)
+        return TypeReaderResult.fromSuccess(user);
+    }
 
     if (msg.channel.guild == null)
       return TypeReaderResult.fromError(cmd, "User not found.");
@@ -49,11 +53,10 @@ module.exports = new class User extends TypeReader {
         let lowerNick = null;
         let nickSim = Number.POSITIVE_INFINITY;
 
-        if (member.nick != null)
-          nickSim = str.similarity(lowerNick, lowerVal);
-
-        if (member.nick != null)
+        if (member.nick != null) {
           lowerNick = member.nick.toLowerCase();
+          nickSim = str.similarity(lowerNick, lowerVal);
+        }
 
         if (lowerUser === lowerVal || lowerNick === lowerVal) {
           matches.push({

@@ -44,6 +44,7 @@ max: {
   clear: 100,
   evidenceLen: 600,
   cmdNewLines: 10,
+  deletedMsgChars: 100,
   deletedMsgs: 10,
   typos: 2,
   userResults: 3,

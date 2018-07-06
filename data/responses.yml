@@ -1,8 +1,12 @@
 allCooldowns: All of **{0}** commands are available for use.
 
+alt: |-
+  **Created:** {0}
+  **Joined:** {1}{2}
+
 between: the {0} must be between {1} and {2}.
 
-cantDM: I can't DM you. Please allow direct messages from server users.
+cantDM: I can't DM you. Please allow direct messages from server members.
 
 cantLocate: Unable to locate {0}. Please double-check that it's in the working directory, your home directory, or the {1} argument.
 

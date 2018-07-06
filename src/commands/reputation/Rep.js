@@ -16,12 +16,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const archives = require("../../services/archives.js");
 const {Argument, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
+const {data: {queries}} = require("../../services/data.js");
+const str = require("../../utilities/string.js");
+const time = require("../../utilities/time.js");
 
-// TODO add once week limit per user
+// TODO test once week limit
 module.exports = new class Rep extends Command {
   constructor() {
     super({
@@ -39,9 +43,24 @@ module.exports = new class Rep extends Command {
       names: ["rep"],
       preconditions: ["memberage"]
     });
+    this.weekRepQuery = str.format(queries.selectWeekRep, "rep");
   }
 
   async run(msg, args) {
+    const res = await db.pool.query(
+      this.weekRepQuery,
+      [msg.channel.guild.id, msg.author.id, time.epoch() - 604800]
+    );
+
+    for (let i = 0; i < res.rows.length; i++) {
+      if (res.rows[0].data.target_id === args.user.id) {
+        return message.replyError(
+          msg,
+          `you already repped ${message.tag(args.user)} in the past week.`
+        );
+      }
+    }
+
     const {rep: {increase}} = await db.getGuild(
       msg.channel.guild.id,
       {rep: "increase"}
@@ -52,5 +71,11 @@ module.exports = new class Rep extends Command {
       msg,
       `you have successfully repped **${message.tag(args.user)}**.`
     );
+    await archives.add({
+      data: {target_id: args.user.id},
+      guild_id: msg.channel.guild.id,
+      type: "rep",
+      user_id: msg.author.id
+    });
   }
 }();

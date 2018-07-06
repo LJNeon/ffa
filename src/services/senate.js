@@ -21,7 +21,6 @@ const {CommandResult} = require("patron.js");
 const {config} = require("./cli.js");
 const {data: {responses, queries}} = require("./data.js");
 const db = require("./database.js");
-const Logs = require("../enums/Logs.js");
 const message = require("../utilities/message.js");
 const MultiMutex = require("../utilities/MultiMutex.js");
 const str = require("../utilities/string.js");
@@ -68,7 +67,7 @@ module.exports = {
             icon_url: user.avatarURL,
             name: `${message.tag(user)} (${log.data.mod_id})`
           },
-          description: await this.describeLog(log),
+          description: this.describeLog(log),
           footer: {text: `Case #${case_count + 1}`},
           timestamp: new Date()
         }, color);
@@ -103,7 +102,7 @@ module.exports = {
       const data = {
         data: {length},
         guild_id: msg.channel.guild.id,
-        type: 2,
+        type: "automute",
         user_id: msg.author.id
       };
       const {caseNum, logMsg} = await this.addLog(
@@ -147,7 +146,7 @@ module.exports = {
 
       const data = {
         guild_id: log.guild_id,
-        type: 3,
+        type: "autounmute",
         user_id: log.user_id
       };
       const {caseNum, logMsg} = await this.addLog(
@@ -170,17 +169,17 @@ module.exports = {
     });
   },
 
-  async describeLog(log) {
+  describeLog(log) {
     let action = "Mute";
     let data = "";
 
-    if (log.type === Logs.Unmute)
+    if (log.type === "unmute")
       action = "Unmute";
-    else if (log.type === Logs.AutoMute)
+    else if (log.type === "automute")
       action = "Automatic Mute";
-    else if (log.type === Logs.AutoUnmute)
+    else if (log.type === "autounmute")
       action = "Automatic Unmute";
-    else if (log.type === Logs.Clear)
+    else if (log.type === "clear")
       action = "Clear";
 
     if (log.data != null) {
@@ -192,7 +191,7 @@ module.exports = {
 
         if (val == null)
           continue;
-        else if (key === "length")
+        else if (key === "epoch")
           val = time.format(val);
 
         data += `\n**${str.capitalize(key)}:** ${val}`;
@@ -202,7 +201,6 @@ module.exports = {
     return str.format(
       responses.log,
       action,
-      // TODO user is sometimes undefined
       message.tag(client.users.get(log.user_id)),
       log.user_id,
       data
@@ -248,7 +246,7 @@ module.exports = {
           rule: args.rule.content
         },
         guild_id: msg.channel.guild.id,
-        type: 0,
+        type: "mute",
         user_id: args.user.id
       };
       const {caseNum, logMsg} = await this.addLog(
@@ -328,7 +326,7 @@ module.exports = {
           mod_id: msg.author.id
         },
         guild_id: msg.channel.guild.id,
-        type: 1,
+        type: "unmute",
         user_id: args.user.id
       };
       const {caseNum, logMsg} = await this.addLog(

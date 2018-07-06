@@ -122,7 +122,7 @@ module.exports = {
       if (res[table] == null && typeof id === "string") {
         const needed = await this.findNeededColumns(table);
 
-        if (needed.length === 0) {
+        if (needed.length === 0) {console.log(table, "guild_id")
           res[table] = await this.upsert(
             table,
             "guild_id",
@@ -182,10 +182,6 @@ module.exports = {
   },
 
   stringifyQuery(count) {
-    /**
-     * Table will always have id and at least one other column that's needed,
-     * so the for loop needs to start at $3.
-     */
     const len = count + 2;
     let values = "$1";
 

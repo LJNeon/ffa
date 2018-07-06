@@ -3,6 +3,8 @@ alphabet: [a, b, c, d, e, f, g, h, i, j, k, l, m,
 
 clearDeleteDelay: 3e3
 
+databaseVersion: "1.0.0"
+
 deletedMsgChars: 200
 
 discordErrorCodes: {

@@ -18,7 +18,10 @@
 "use strict";
 const {TypeReader, TypeReaderResult} = require("patron.js");
 const client = require("../services/client.js");
+const {config} = require("../services/cli.js");
+const message = require("../utilities/message.js");
 const {data: {regexes}} = require("../services/data.js");
+const str = require("../utilities/string.js");
 
 module.exports = new class User extends TypeReader {
   constructor() {
@@ -26,6 +29,7 @@ module.exports = new class User extends TypeReader {
   }
 
   async read(cmd, msg, arg, args, val) {
+    const lowerVal = val.toLowerCase();
     let id = val.match(regexes.mention);
 
     if (id != null || (id = val.match(regexes.id)) != null)
@@ -37,23 +41,94 @@ module.exports = new class User extends TypeReader {
     const index = val.lastIndexOf("#");
 
     if (index === -1) {
-      const member = msg.channel.guild.members
-        .find(m => m.username === val || (m.nick != null && m.nick === val));
+      let matches = [];
 
-      if (member != null)
-        return TypeReaderResult.fromSuccess(member.user);
+      for (const member of msg.channel.guild.members.values()) {
+        const lowerUser = member.username.toLowerCase();
+        let lowerNick = null;
+
+        if (member.nick != null)
+          lowerNick = member.nick.toLowerCase();
+
+        if (lowerUser === lowerVal || lowerNick === lowerVal) {
+          matches.push({
+            typos: 0,
+            user: member.user
+          });
+        } else {
+          const userSim = str.similarity(lowerUser, lowerVal);
+          let nickSim = Number.POSITIVE_INFINITY;
+
+          if (member.nick != null)
+            nickSim = str.similarity(lowerNick, lowerVal);
+
+          if (userSim <= config.max.typos) {
+            matches.push({
+              typos: userSim,
+              user: member.user
+            });
+          } else if (nickSim <= config.max.typos) {
+            matches.push({
+              typos: nickSim,
+              user: member.user
+            });
+          }
+        }
+      }
+
+      if (matches.length !== 0) {
+        if (matches.length === 1)
+          return TypeReaderResult.fromSuccess(matches[0].user);
+
+        if (matches.length > config.max.userResults) {
+          const more = `${matches.length - config.max.userResults} more`;
+          matches = matches.sort((a, b) => a.typos - b.typos)
+            .slice(0, config.max.userResults)
+            .map(m => message.tag(m.user));
+          matches.push(more);
+        } else {
+          matches = matches.map(m => message.tag(m.user));
+        }
+
+        return TypeReaderResult.fromError(cmd, `I found multiple members: ${str.list(matches)}.`);
+      }
     } else {
-      const discrim = val.slice(index + 1);
-      const username = val.slice(0, index);
+      let matches = [];
 
-      if (regexes.discrim.test(discrim) === true) {
-        const member = msg.channel.guild.members
-          .find(m => m.discriminator === discrim
-            && (m.username === username
-            || (m.nick != null && m.nick === username)));
+      for (const member of msg.channel.guild.members.values()) {
+        const tag = message.tag(member);
 
-        if (member != null)
-          return TypeReaderResult.fromSuccess(member.user);
+        if (tag === lowerVal) {
+          matches.push({
+            typos: 0,
+            user: member.user
+          });
+        } else {
+          const userSim = str.similarity(tag, lowerVal);
+
+          if (userSim <= config.max.typos) {
+            matches.push({
+              typos: userSim,
+              user: member.user
+            });
+          }
+        }
+      }
+
+      if (matches.length !== 0) {
+        if (matches.length === 1)
+          return TypeReaderResult.fromSuccess(matches[0].user);
+
+        if (matches.length > config.max.userResults) {
+          matches = matches.sort((a, b) => a.typos - b.typos)
+            .slice(0, config.max.userResults)
+            .map(m => message.tag(m.user));
+          matches.push(`${matches.length - config.max.userResults} more`);
+        } else {
+          matches = matches.map(m => message.tag(m.user));
+        }
+
+        return TypeReaderResult.fromError(cmd, `I found multiple members: ${str.list(matches)}.`);
       }
     }
 

@@ -50,9 +50,9 @@ const str = require("../utilities/string.js");
 const readDir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 
-async function parse(bool, path, files, file) {
+async function parse(bool, filepath, files, file) {
   if (bool === false && files.includes(file) === true)
-    return yaml.safeLoad(await readFile(path, "utf8"));
+    return yaml.safeLoad(await readFile(filepath, "utf8"));
 
   return bool;
 }
@@ -77,15 +77,15 @@ module.exports = {
     if (this.auth === false || this.config === false) {
       if (argv.auth != null) {
         this.authPath = path.join(__dirname, `../${argv.auth}`);
-        this.auth =  yaml.safeLoad(fs.readFileSync(
+        this.auth = yaml.safeLoad(fs.readFileSync(
           this.authPath,
           "utf8"
         ));
       }
 
-      if (argv.config != null){
+      if (argv.config != null) {
         this.configPath = path.join(__dirname, `../${argv.config}`);
-        this.config =  yaml.safeLoad(fs.readFileSync(
+        this.config = yaml.safeLoad(fs.readFileSync(
           this.configPath,
           "utf8"
         ));

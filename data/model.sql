@@ -33,7 +33,7 @@ CREATE TABLE public.logs (
     case_number int NOT NULL,
     data jsonb,
     epoch int NOT NULL,
-    type int2 NOT NULL,
+    type smallint NOT NULL,
     user_id varchar(18) NOT NULL,
     PRIMARY KEY (guild_id, case_number)
 );
@@ -67,9 +67,9 @@ ALTER TABLE public.rules OWNER TO {0};
 CREATE TABLE public.senate (
     guild_id varchar(18) PRIMARY KEY,
     auto_mute boolean NOT NULL,
-    ban_signed int2 NOT NULL,
+    ban_signed smallint NOT NULL,
     case_count int DEFAULT 0 NOT NULL,
-    max_actions int2 NOT NULL,
+    max_actions smallint NOT NULL,
     mute_length int NOT NULL
 );
 ALTER TABLE public.senate OWNER TO {0};
@@ -77,16 +77,16 @@ ALTER TABLE public.senate OWNER TO {0};
 CREATE TABLE public.spam (
     guild_id varchar(18) PRIMARY KEY,
     duration int NOT NULL,
-    msg_limit int2 NOT NULL,
+    msg_limit smallint NOT NULL,
     rep_penalty real NOT NULL
 );
 ALTER TABLE public.spam OWNER TO {0};
 
 CREATE TABLE public.top (
     guild_id varchar(18) PRIMARY KEY,
-    clear int2 NOT NULL,
-    court int2 NOT NULL,
-    mod int2 NOT NULL
+    clear smallint NOT NULL,
+    court smallint NOT NULL,
+    mod smallint NOT NULL
 );
 ALTER TABLE public.top OWNER TO {0};
 

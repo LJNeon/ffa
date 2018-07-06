@@ -18,6 +18,7 @@
 "use strict";
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
+const Logs = require("../enums/Logs.js");
 const senate = require("../services/senate.js");
 const time = require("../utilities/time.js");
 const Timer = require("../utilities/Timer.js");
@@ -32,10 +33,10 @@ module.exports = new Timer(async () => {
   for (let i = 0; i < res.rows.length; i++) {
     const row = res.rows[i];
 
-    if (row.type === 0 || row.type === 2) {
+    if (row.type === Logs.Mute || row.type === Logs.AutoMute) {
       const unmute = res.rows.find(r => r.guild_id === row.guild_id
-        && r.user_id === row.user_id && (r.type === 1 || r.type === 3)
-        && r.epoch > row.epoch);
+        && r.user_id === row.user_id && (r.type === Logs.Unmute
+        || r.type === Logs.AutoUnmute) && r.epoch > row.epoch);
 
       if (unmute != null)
         continue;

@@ -180,7 +180,6 @@ module.exports = {
       }
 
       await client.query(`CREATE DATABASE ${db}`);
-      await client.end();
       this.pool = new Pool(cli.auth.pg);
 
       const queries = data.model.replace(data.regexes.newline, "");
@@ -191,6 +190,11 @@ module.exports = {
         [data.db.version]
       );
     }
+
+    await client.end();
+
+    if (this.pool == null)
+      this.pool = new Pool(cli.auth.pg);
   },
 
   sortDefaultValues(row, needed) {

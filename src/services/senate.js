@@ -21,6 +21,7 @@ const {CommandResult} = require("patron.js");
 const {config} = require("./cli.js");
 const {data: {responses, queries}} = require("./data.js");
 const db = require("./database.js");
+const Logs = require("../enums/Logs.js");
 const message = require("../utilities/message.js");
 const MultiMutex = require("../utilities/MultiMutex.js");
 const str = require("../utilities/string.js");
@@ -173,13 +174,13 @@ module.exports = {
     let action = "Mute";
     let data = "";
 
-    if (log.type === 1)
+    if (log.type === Logs.Unmute)
       action = "Unmute";
-    else if (log.type === 2)
+    else if (log.type === Logs.AutoMute)
       action = "Automatic Mute";
-    else if (log.type === 3)
+    else if (log.type === Logs.AutoUnmute)
       action = "Automatic Unmute";
-    else if (log.type === 4)
+    else if (log.type === Logs.Clear)
       action = "Clear";
 
     if (log.data != null) {

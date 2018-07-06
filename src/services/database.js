@@ -34,7 +34,7 @@ function parseVersion(version) {
   return version.split(".").map(n => Number(n));
 }
 
-// TODO test `setup()`
+// TODO test `setup()` and `update()`
 module.exports = {
   async changeRep(guildId, userId, change) {
     return this.pool.query(
@@ -174,18 +174,19 @@ module.exports = {
     return queries.replace(data.regexes.newline, "").split(";");
   },
 
-  pool: null, //new Pool(cli.auth.pg)
+  pool: null,
 
   async setup() {
     const client = new Client({
       database: "postgres",
+      password: "postgres",
       user: "postgres"
     });
     const db = cli.auth.pg.database == null ? "ffa" : cli.auth.pg.database;
     const user = cli.auth.pg.user == null ? "postgres" : cli.auth.pg.user;
 
     await client.connect();
-    let res = await client.query(
+    const res = await client.query(
       "SELECT 1 FROM pg_database WHERE datname = $1",
       [db]
     );
@@ -193,7 +194,7 @@ module.exports = {
     if (res.rows.length === 0) {
       await client.query("CREATE DATABASE $1", [db]);
 
-      let queries = this.parseQueries(data.model)
+      const queries = this.parseQueries(data.model)
         .concat(this.parseQueries(data.defaults));
 
       for (let i = 0; i < queries; i++)
@@ -257,8 +258,7 @@ module.exports = {
   },
 
   async update() {
-    let res = await this.pool.query("SELECT version FROM info");
-
+    const res = await this.pool.query("SELECT version FROM info");
     const version = parseVersion(res.rows[0].version);
     const wantedVersion = parseVersion(data.version.version);
 
@@ -271,17 +271,28 @@ module.exports = {
       for (let i = 0; i < files.length; i++) {
         const filepath = `${dir}/${files[i]}`;
         migrations[i] = {
+          queries: this.parseQueries(await readFile(filepath, "utf8")),
           verison: parseVersion(files[i]
             .slice(0, files[i]
-            .indexOf(".sql"))),
-          queries: this.parseQueries(await readFile(filepath, "utf8"))
+              .indexOf(".sql")))
         };
       }
 
-      migrations = migrations.sort((a, b) => a.version[0] < b.version[0]
-        || (a.version[0] === b.version[0] && a.version[1] < b.version[1]));
+      // TODO make sure this sort is in the right order
+      migrations = migrations.sort((a, b) => {
+        if (a.version[0] === b.version[0])
+          return a.version[1] - b.version[1];
 
-      // TODO filter out unneeded migrations and apply the rest
+        return a.version[0] - b.version[0];
+      });
+      migrations = migrations.slice(migrations
+        .findIndex(m => m.version[0] === version[0]
+          && m.version[1] === version[1]));
+
+      for (let i = 0; i < migrations.length; i++) {
+        for (let j = 0; j < migrations[i].queries.length; j++)
+          await this.pool.query(migrations[i].queries[j]);
+      }
     }
   },
 

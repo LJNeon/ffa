@@ -27,10 +27,15 @@ const reqAbs = require("./utilities/reqAbs.js");
   console.log(data.data.responses.licenseNotice);
 
   const cli = require("./services/cli.js");
-  Logger = require("./utilities/Logger.js");
 
+  Logger = require("./utilities/Logger.js");
   await cli.checkLicense();
   await cli.fetch();
+
+  const db = require("./services/database.js");
+
+  await db.setup();
+  await db.update();
 
   const client = require("./services/client.js");
   const registry = require("./services/registry.js");

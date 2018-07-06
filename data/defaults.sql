@@ -7,9 +7,6 @@ INSERT INTO channels(guild_id)
 INSERT INTO chat(guild_id, decay, delay, reward)
     VALUES('default', 0.99, 30, 0.025);
 
-INSERT INTO info(version)
-    VALUES('1.0');
-
 INSERT INTO rep(guild_id, decrease, increase)
     VALUES('default', 1, 1);
 

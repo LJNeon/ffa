@@ -63,7 +63,7 @@ module.exports = {
       const {target_id} = archive.data;
 
       return `repped **${message.tag(target_id)}** (${target_id}).`;
-    } else if(archive.type === "unrep") {
+    } else if (archive.type === "unrep") {
       const {target_id} = archive.data;
 
       return `unrepped **${message.tag(target_id)}** (${target_id}).`;

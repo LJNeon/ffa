@@ -223,7 +223,7 @@ module.exports = {
 
   async update() {
     const res = await this.pool.query("SELECT version FROM info");
-    const {version} = res.rows[0];
+    const [{version}] = res.rows;
     const wantedVersion = data.db.version;
 
     if (version < wantedVersion) {

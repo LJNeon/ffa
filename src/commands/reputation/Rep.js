@@ -25,7 +25,6 @@ const {data: {queries}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 const time = require("../../utilities/time.js");
 
-// TODO test once week limit
 module.exports = new class Rep extends Command {
   constructor() {
     super({

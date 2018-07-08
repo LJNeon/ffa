@@ -20,7 +20,7 @@ const {Argument, Command, CommandResult} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const {data: {descriptions, responses}} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
-const senate = require("../../services/senate.js");
+const logs = require("../../services/logs.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class Clear extends Command {
@@ -78,7 +78,7 @@ module.exports = new class Clear extends Command {
     if (amount === 0)
       return CommandResult.fromError("there are no messages to delete.");
 
-    await senate.addLog({
+    await logs.add({
       data: {
         evidence: args.evidence,
         mod_id: msg.author.id,

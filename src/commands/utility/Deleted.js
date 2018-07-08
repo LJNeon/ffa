@@ -48,6 +48,7 @@ module.exports = new class Deleted extends Command {
 
     if (msg.attachments != null && msg.attachments.length !== 0) {
       const list = msg.attachments.map(a => a.filename);
+
       value += `\n**Attachments:** ${str.list(list)}`;
     }
 

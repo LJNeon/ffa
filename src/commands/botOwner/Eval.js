@@ -20,6 +20,7 @@ const patron = require("patron.js");
 /* eslint-disable-next-line no-unused-vars */
 const {serv, util} = require("../../utilities/requireAll.js");
 const nodeUtil = require("util");
+
 function inspect(obj) {
   return nodeUtil.inspect(obj, {depth: 3});
 }

@@ -150,6 +150,7 @@ module.exports = {
     const user = cli.auth.pg.user == null ? "postgres" : cli.auth.pg.user;
 
     await client.connect();
+
     const res = await client.query(
       "SELECT 1 FROM pg_database WHERE datname = $1",
       [db]
@@ -162,12 +163,10 @@ module.exports = {
           .randomBytes(16)
           .toString("hex")
           .slice(-32) : cli.auth.pg.password;
-
         await client.query(
           `ALTER USER ${user} WITH PASSWORD $1`,
           [cli.auth.pg.password]
         );
-
         await writeFile(cli.authPath, yaml.safeDump(
           cli.auth,
           {sortKeys: true}
@@ -244,7 +243,6 @@ module.exports = {
       }
 
       migrations = migrations.sort((a, b) => a.version - b.version);
-
       migrations = migrations
         .slice(migrations.findIndex(m => m.version === version));
 

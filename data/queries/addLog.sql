@@ -1,2 +1,3 @@
-INSERT INTO logs(guild_id, user_id, case_number, data, epoch, type)
-    VALUES($1, $2, $3, $4, $5, $6)
+INSERT INTO archives(guild_id, user_id, data, epoch, type)
+    VALUES($1, $2, $3, $4, $5)
+    RETURNING archive_id

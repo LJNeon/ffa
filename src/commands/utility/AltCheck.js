@@ -76,6 +76,7 @@ module.exports = new class AltCheck extends Command {
     }
 
     const timeStr = time.format((member.joinedAt - member.createdAt) / 1e3);
+
     await message.create(msg.channel, {
       description: str.format(
         responses.alt,

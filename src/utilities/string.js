@@ -67,11 +67,13 @@ module.exports = {
 
     for (let i = 1; i <= two.length; i++) {
       let lastDiag = i - 1;
+
       column[0] = i;
 
       for (let j = 1; j <= one.length; j++) {
         const editDist = one.charAt(j - 1) === two.charAt(i - 1) ? 0 : 1;
         const oldDiag = column[j];
+
         column[j] = Math.min(
           column[j] + 1,
           column[j - 1] + 1,

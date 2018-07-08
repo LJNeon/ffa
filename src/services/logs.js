@@ -19,18 +19,18 @@
 const client = require("./client.js");
 const db = require("./database.js");
 const message = require("../utilities/message.js");
-const {data: {queries}} = require("./data.js");
+const {data: {queries, responses}} = require("./data.js");
+const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
 
 module.exports = {
-  async add(log) {
+  async add(log, color) {
     const {channels: {log_id}} = await db.getGuild(
       log.guild_id,
       {channels: "log_id"}
     );
-
     const res = await db.pool.query(
-      queries.addArchive,
+      queries.addLog,
       [log.guild_id,
         log.user_id,
         log.data,
@@ -42,38 +42,86 @@ module.exports = {
       const channel = client.getChannel(log_id);
 
       if (channel != null) {
-        const user = client.users.get(log.user_id);
+        const id = log.data.mod_id == null ? log.user_id : log.data.mod_id;
+        const user = client.users.get(id);
 
         return message.create(channel, {
           author: {
             icon_url: user.avatarURL,
-            name: `${message.tag(user)} (${log.user_id})`
+            name: `${message.tag(user)} (${id})`
           },
+          color,
           description: await this.describe(log),
-          footer: {text: `ID: ${res.rows[0].archive_id}`},
+          footer: {text: `ID: ${res.rows[0].log_id}`},
           timestamp: new Date()
         });
       }
     }
   },
 
-  // TODO add more types
-  describe(archive) {
-    if (archive.type === "rep") {
-      const {target_id} = archive.data;
+  describe(log) {
+    if (log.type === "mute" || log.type === "unmute" || log.type === "automute"
+        || log.type === "autounmute" || log.type === "clear") {
+      let action = "Mute";
+      let data = "";
 
-      return `repped **${message.tag(target_id)}** (${target_id}).`;
-    } else if (archive.type === "unrep") {
-      const {target_id} = archive.data;
+      if (log.type === "unmute")
+        action = "Unmute";
+      else if (log.type === "automute")
+        action = "Automatic Mute";
+      else if (log.type === "autounmute")
+        action = "Automatic Unmute";
+      else if (log.type === "clear")
+        action = "Clear";
 
-      return `unrepped **${message.tag(target_id)}** (${target_id}).`;
+      if (log.data != null) {
+        for (const key in log.data) {
+          if (log.data.hasOwnProperty(key) === false || key === "mod_id")
+            continue;
+
+          let val = log.data[key];
+
+          if (val == null)
+            continue;
+          else if (key === "length")
+            val = time.format(val);
+
+          data += `\n**${str.capitalize(key)}:** ${val}`;
+        }
+      }
+
+      return str.format(
+        responses.modLog,
+        action,
+        message.tag(client.users.get(log.user_id)),
+        log.user_id,
+        data
+      );
+    } else if (log.type === "rep") {
+      const {target_id} = log.data;
+
+      return `Repped **${message.tag(target_id)}** (${target_id}).`;
+    } else if (log.type === "unrep") {
+      const {target_id} = log.data;
+
+      return `Unrepped **${message.tag(target_id)}** (${target_id}).`;
     }
   },
 
   async get(id, columns = "*") {
     return db.getFirstRow(
-      `SELECT ${columns} FROM archives where archive_id = $1`,
+      `SELECT ${columns} FROM logs where log_id = $1`,
       [id]
     );
+  },
+
+  async remove(err, msg, id, silent = false) {
+    const logMsg = await msg;
+
+    await db.pool.query("DELETE FROM logs WHERE log_id = $1", [id]);
+    await logMsg.delete();
+
+    if (silent === false)
+      throw err;
   }
 };

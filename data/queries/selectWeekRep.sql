@@ -1,5 +1,5 @@
 SELECT data
-    FROM archives
+    FROM logs
         WHERE guild_id = $1
             AND user_id = $2
             AND type = '{0}'

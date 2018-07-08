@@ -41,8 +41,9 @@ ALTER TABLE public.logs OWNER TO {0};
 
 CREATE TABLE public.rep (
     guild_id varchar(18) PRIMARY KEY,
-    decrease real NOT NULL DEFAULT 1 CHECK (decrease > 0),
-    increase real NOT NULL DEFAULT 1 CHECK (increase > 0)
+    decrease real NOT NULL CHECK (decrease > 0) DEFAULT 1,
+    increase real NOT NULL CHECK (increase > 0) DEFAULT 1,
+    rep_reward real NOT NULL CHECK (rep_reward > 0) DEFAULT 0.25
 );
 ALTER TABLE public.rep OWNER TO {0};
 
@@ -67,7 +68,7 @@ ALTER TABLE public.rules OWNER TO {0};
 CREATE TABLE public.senate (
     guild_id varchar(18) PRIMARY KEY,
     auto_mute boolean NOT NULL DEFAULT true,
-    ban_signed smallint NOT NULL CHECK (ban_signed > 0) DEFAULT 7,
+    ban_sigs smallint NOT NULL CHECK (ban_signed > 0) DEFAULT 7,
     case_count int NOT NULL DEFAULT 0,
     max_actions smallint NOT NULL CHECK (max_actions > 0) DEFAULT 15,
     mute_length int NOT NULL CHECK (mute_length > 0) DEFAULT 21600

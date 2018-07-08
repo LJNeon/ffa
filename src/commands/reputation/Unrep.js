@@ -16,12 +16,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const archives = require("../../services/archives.js");
 const {Argument, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
-const {data: {queries}} = require("../../services/data.js");
+const logs = require("../../services/logs.js");
+const {data: {queries, responses}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 const time = require("../../utilities/time.js");
 
@@ -60,17 +60,25 @@ module.exports = new class Unrep extends Command {
       }
     }
 
-    const {rep: {decrease}} = await db.getGuild(
+    const {rep: {decrease, rep_reward}} = await db.getGuild(
       msg.channel.guild.id,
-      {rep: "decrease"}
+      {rep: "decrease, rep_reward"}
+    );
+    const rep = await db.changeRep(
+      msg.channel.guild.id,
+      args.user.id,
+      -decrease
     );
 
-    await db.changeRep(msg.channel.guild.id, args.user.id, -decrease);
-    await message.reply(
-      msg,
-      `you have successfully unrepped **${message.tag(args.user)}**.`
-    );
-    await archives.add({
+    await db.changeRep(msg.channel.guild.id, msg.author.id, rep_reward);
+    await message.reply(msg, str.format(
+      responses.rep,
+      message.tag(args.user),
+      "decreasing",
+      rep.toFixed(2),
+      rep_reward.toFixed(2)
+    ));
+    await logs.add({
       data: {target_id: args.user.id},
       guild_id: msg.channel.guild.id,
       type: "unrep",

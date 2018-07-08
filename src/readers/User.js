@@ -82,6 +82,7 @@ module.exports = new class User extends TypeReader {
 
         if (matches.length > config.max.userResults) {
           const more = `${matches.length - config.max.userResults} more`;
+
           matches = matches.sort((a, b) => a.typos - b.typos)
             .slice(0, config.max.userResults)
             .map(m => message.tag(m.user));

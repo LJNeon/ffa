@@ -25,7 +25,8 @@ module.exports = {
 
   async fetch() {
     if (this.data === false) {
-      this.data = {};
+      this.data = {queries: {}};
+
       const data = await readAll(path.join(__dirname, "../../data"), "utf8");
 
       for (const key in data) {
@@ -41,7 +42,6 @@ module.exports = {
           this.data[prop] = data[key];
       }
 
-      this.data.queries = {};
       for (const query in data.queries) {
         if (data.queries.hasOwnProperty(query) === false)
           continue;

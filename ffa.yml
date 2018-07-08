@@ -67,8 +67,8 @@ default: {
 }
 
 cd: {
-  rep: 3600,
-  unrep: 3600,
+  rep: 7200,
+  unrep: 7200,
   color: 3600,
   unmute: 43200,
   modCmd: 3600,

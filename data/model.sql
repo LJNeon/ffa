@@ -1,24 +1,12 @@
 CREATE TABLE public.ages (
     guild_id varchar(18) PRIMARY KEY,
-    ban_request int NOT NULL DEFAULT 172800,
-    member int NOT NULL DEFAULT 172800
+    ban_req int NOT NULL CHECK (ban_req > 0) DEFAULT 172800,
+    member int NOT NULL CHECK (member > 0) DEFAULT 172800
 );
 ALTER TABLE public.ages OWNER TO {0};
 
-CREATE TYPE archivetype AS ENUM('rep', 'unrep');
-CREATE TABLE archives (
-    archive_id serial,
-    guild_id varchar(18) NOT NULL,
-    data jsonb,
-    epoch int NOT NULL,
-    type archivetype NOT NULL,
-    user_id varchar(18) NOT NULL
-);
-ALTER TABLE public.archives OWNER TO {0};
-
 CREATE TABLE public.channels (
     guild_id varchar(18) PRIMARY KEY,
-    archive_id varchar(18),
     ignored_ids varchar(18)[] DEFAULT '{}'::varchar[] NOT NULL,
     log_id varchar(18),
     rules_id varchar(18)
@@ -27,9 +15,9 @@ ALTER TABLE public.channels OWNER TO {0};
 
 CREATE TABLE public.chat (
     guild_id varchar(18) PRIMARY KEY,
-    decay real NOT NULL DEFAULT 0.99,
-    delay int NOT NULL DEFAULT 30,
-    reward real NOT NULL DEFAULT 0.025
+    decay real NOT NULL CHECK (decay > 0) DEFAULT 0.99,
+    delay int NOT NULL CHECK (delay > 0) DEFAULT 30,
+    reward real NOT NULL CHECK (reward > 0) DEFAULT 0.025
 );
 ALTER TABLE public.chat OWNER TO {0};
 
@@ -38,22 +26,23 @@ CREATE TABLE public.info (
 );
 ALTER TABLE public.info OWNER TO {0};
 
-CREATE TYPE logtype AS ENUM ('mute', 'unmute', 'automute', 'autounmute', 'clear');
+CREATE TYPE logtype AS ENUM ('mute', 'unmute', 'auto_mute', 'auto_unmute',
+        'clear', 'member_ban', 'rep', 'unrep', 'ban_request', 'ban_sign',
+        'ban_vote', 'resign', 'court_change');
 CREATE TABLE public.logs (
     guild_id varchar(18) NOT NULL,
-    case_number int NOT NULL,
+    log_id serial,
     data jsonb,
-    epoch int NOT NULL,
+    epoch int NOT NULL CHECK (epoch > 0),
     type logtype NOT NULL,
-    user_id varchar(18) NOT NULL,
-    PRIMARY KEY (guild_id, case_number)
+    user_id varchar(18) NOT NULL
 );
 ALTER TABLE public.logs OWNER TO {0};
 
 CREATE TABLE public.rep (
     guild_id varchar(18) PRIMARY KEY,
-    decrease real NOT NULL DEFAULT 1,
-    increase real NOT NULL DEFAULT 1
+    decrease real NOT NULL DEFAULT 1 CHECK (decrease > 0),
+    increase real NOT NULL DEFAULT 1 CHECK (increase > 0)
 );
 ALTER TABLE public.rep OWNER TO {0};
 
@@ -69,7 +58,7 @@ CREATE TABLE public.rules (
     guild_id varchar(18) NOT NULL,
     content varchar(512) NOT NULL,
     category varchar(32) NOT NULL,
-    epoch int NOT NULL,
+    epoch int NOT NULL CHECK (epoch > 0),
     mute_length int
 );
 CREATE INDEX rules_id_idx ON public.rules USING btree (guild_id);
@@ -78,26 +67,26 @@ ALTER TABLE public.rules OWNER TO {0};
 CREATE TABLE public.senate (
     guild_id varchar(18) PRIMARY KEY,
     auto_mute boolean NOT NULL DEFAULT true,
-    ban_signed smallint NOT NULL DEFAULT 7,
+    ban_signed smallint NOT NULL CHECK (ban_signed > 0) DEFAULT 7,
     case_count int NOT NULL DEFAULT 0,
-    max_actions smallint NOT NULL DEFAULT 15,
-    mute_length int NOT NULL DEFAULT 21600
+    max_actions smallint NOT NULL CHECK (max_actions > 0) DEFAULT 15,
+    mute_length int NOT NULL CHECK (mute_length > 0) DEFAULT 21600
 );
 ALTER TABLE public.senate OWNER TO {0};
 
 CREATE TABLE public.spam (
     guild_id varchar(18) PRIMARY KEY,
-    duration int NOT NULL DEFAULT 4,
-    msg_limit smallint NOT NULL DEFAULT 5,
-    rep_penalty real NOT NULL DEFAULT 2
+    duration int NOT NULL CHECK (duration > 0) DEFAULT 4,
+    msg_limit smallint NOT NULL CHECK (msg_limit > 0) DEFAULT 5,
+    rep_penalty real NOT NULL CHECK (rep_penalty > 0) DEFAULT 2
 );
 ALTER TABLE public.spam OWNER TO {0};
 
 CREATE TABLE public.top (
     guild_id varchar(18) PRIMARY KEY,
-    clear smallint NOT NULL DEFAULT 10,
-    court smallint NOT NULL DEFAULT 5,
-    mod smallint NOT NULL DEFAULT 20
+    clear smallint NOT NULL CHECK (clear > 0) DEFAULT 10,
+    court smallint NOT NULL CHECK (court > 0) DEFAULT 5,
+    mod smallint NOT NULL CHECK (mod > 0) DEFAULT 20
 );
 ALTER TABLE public.top OWNER TO {0};
 
@@ -106,7 +95,7 @@ CREATE TABLE public.users (
     user_id varchar(18) NOT NULL,
     in_guild boolean DEFAULT true NOT NULL,
     muted boolean DEFAULT false NOT NULL,
-    reputation real DEFAULT 0 NOT NULL,
+    reputation real DEFAULT 0 CHECK (reputation >= 0) NOT NULL,
     PRIMARY KEY(guild_id, user_id)
 );
 ALTER TABLE public.users OWNER TO {0};

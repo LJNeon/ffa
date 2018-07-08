@@ -59,7 +59,7 @@ module.exports = {
     }
   },
 
-  describe(log) {
+  async describe(log) {
     if (log.type === "mute" || log.type === "unmute" || log.type === "automute"
         || log.type === "autounmute" || log.type === "clear") {
       let action = "Mute";
@@ -105,6 +105,11 @@ module.exports = {
       const {target_id} = log.data;
 
       return `Unrepped **${message.tag(target_id)}** (${target_id}).`;
+    } else if (log.type === "resign") {
+      const {top: {court}} = await db.getGuild(log.guild_id, {top: "court"});
+      const level = log.data.rank < court ? "Supreme Court" : "Senate";
+
+      return `Retired from the ${level}.`;
     }
   },
 

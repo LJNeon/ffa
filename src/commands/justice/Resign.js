@@ -20,6 +20,7 @@ const {Command} = require("patron.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
 const modRoleUpdate = require("../../services/modRoleUpdate.js");
+const logs = require("../../services/logs.js");
 const {data: {queries}} = require("../../services/data.js");
 
 module.exports = new class Resign extends Command {
@@ -32,11 +33,20 @@ module.exports = new class Resign extends Command {
   }
 
   async run(msg) {
+    const res = await db.pool.query(this.lbQuery, [msg.channel.guild.id]);
+    const rank = res.rows.findIndex(r => r.user_id === msg.author.id);
+
     await db.pool.query(
       queries.resetRep,
       [msg.channel.guild.id, msg.author.id]
     );
     await modRoleUpdate(msg.channel.guild);
+    await logs.add({
+      data: {rank},
+      guild_id: msg.channel.guild.id,
+      type: "resign",
+      user_id: msg.author.id
+    });
     await message.reply(msg, "you have successfully resigned.");
   }
 }();

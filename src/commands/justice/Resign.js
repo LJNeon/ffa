@@ -28,7 +28,7 @@ module.exports = new class Resign extends Command {
     super({
       description: "Resign from the senate.",
       groupName: "justice",
-      names: ["resign", "leave", "quit"]
+      names: ["resign"]
     });
   }
 

@@ -26,7 +26,8 @@ const resultService = require("../services/result.js");
 const spamService = require("../services/spam.js");
 
 client.on("messageCreate", catchEvent(async msg => {
-  if (msg.author.bot === true)
+  if (msg.type !== 0 || msg.author.bot === true
+      || msg.author.discriminator === "0000")
     return;
   else if (msg.embeds.length !== 0)
     return msg.delete().catch(() => {});

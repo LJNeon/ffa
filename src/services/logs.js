@@ -18,10 +18,14 @@
 "use strict";
 const client = require("./client.js");
 const db = require("./database.js");
+const http = require("http");
+const Logger = require("../utilities/Logger.js");
 const message = require("../utilities/message.js");
 const {data: {queries, responses}} = require("./data.js");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
+const util = require("util");
+const getAttachment = util.promisify(http.get);
 
 module.exports = {
   async add(log, color) {
@@ -118,6 +122,31 @@ module.exports = {
       `SELECT ${columns} FROM logs where log_id = $1`,
       [id]
     );
+  },
+
+  async message(msg) {
+    /**
+     * TODO set this to `== null` once eris 0.8.7 fixes
+     * `Message.editedTimestamp`.
+     */
+    const epoch = msg.editedTimestamp || msg.timestamp;
+    const files = [];
+    const filenames = [];
+
+    for (let i = 0; i < msg.attachments.length; i++) {
+      files.push(await getAttachment(msg.attachments[i].url));
+      filenames.push(msg.attachments[i].filename);
+    }
+
+    await db.pool.query(
+      queries.insertMessage,
+      msg.id,
+      msg.author.id,
+      msg.content,
+      Math.floor(epoch / 1e3),
+      filenames,
+      files
+    ).catch(Logger.error);
   },
 
   async remove(err, msg, id, silent = false) {

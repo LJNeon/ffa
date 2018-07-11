@@ -16,7 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const catchEvent = require("../utilities/catchEvent.js");
 const client = require("../services/client.js");
 const logs = require("../services/logs.js");
 
-client.on("messageUpdate", async msg => logs.message(msg));
+client.on("messageUpdate", catchEvent(async msg => logs.message(msg)));

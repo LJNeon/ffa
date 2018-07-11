@@ -39,16 +39,24 @@ CREATE TABLE public.logs (
 );
 ALTER TABLE public.logs OWNER TO {0};
 
-CREATE TABLE public.messages (
-    id varchar(20) NOT NULL,
+CREATE TABLE messages (
+    id varchar(20) PRIMARY KEY,
     author_id varchar(20) NOT NULL,
-    content varchar(2000) NOT NULL,
+    channel_id varchar(20) NOT NULL,
+    guild_id varchar(20) NOT NULL,
     epoch int NOT NULL CHECK (epoch > 0),
-    filenames text[] NOT NULL,
-    files bytea[] NOT NULL,
+    revision_ids int[] NOT NULL,
     used bool NOT NULL DEFAULT false
 );
 ALTER TABLE public.messages OWNER TO {0};
+
+CREATE TABLE public.attachments (
+    id varchar(20) NOT NULL,
+    name text NOT NULL,
+    file bytea,
+    hash text
+);
+ALTER TABLE public.attachments OWNER TO {0};
 
 CREATE TABLE public.rep (
     guild_id varchar(20) PRIMARY KEY,
@@ -57,6 +65,14 @@ CREATE TABLE public.rep (
     rep_reward real NOT NULL CHECK (rep_reward > 0) DEFAULT 0.25
 );
 ALTER TABLE public.rep OWNER TO {0};
+
+CREATE TABLE revisions (
+    message_id varchar(20) NOT NULL REFERENCES messages(id),
+    attachment_ids varchar(20)[] NOT NULL,
+    content varchar(2000) NOT NULL,
+    epoch int NOT NULL CHECK (epoch > 0)
+);
+ALTER TABLE public.revisions OWNER TO {0};
 
 CREATE TABLE public.roles (
     guild_id varchar(20) PRIMARY KEY,

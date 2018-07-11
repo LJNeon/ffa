@@ -38,15 +38,13 @@ module.exports = {
         entry.count++;
 
         if (entry.count >= guild.spam.msg_limit) {
-          await senate.autoMute(msg, guild.moderation.mute_length);
-          await db.changeRep(
-            msg.channel.guild.id,
-            msg.author.id,
-            -guild.spam.rep_penalty
+          const success = await senate.autoMute(
+            msg,
+            guild.moderation.mute_length
           );
 
           if (success === true) {
-            entry.count = 1;
+            entry.count = 0;
             await db.changeRep(
               msg.channel.guild.id,
               msg.author.id,

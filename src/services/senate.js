@@ -68,14 +68,14 @@ module.exports = {
         if (member.roles.includes(muted_id) === false)
           await member.addRole(muted_id);
       } catch (e) {
-        await logs.remove(e, logMsg, caseNum, true);
         await db.pool.query(
           unmuteUserQuery,
           [msg.channel.guild.id, msg.author.id]
         );
-        await this.removeLog(e, logMsg, caseNum, true);
+        await logs.remove(e, logMsg, caseNum, true);
         return false;
       }
+
       return true;
     });
   },
@@ -89,7 +89,7 @@ module.exports = {
       const guild = client.guilds.get(log.guild_id);
 
       if (muted_id == null || guild.roles.get(muted_id) == null)
-        return true;
+        return false;
 
       const isMuted = await this.isMuted(log.guild_id, log.user_id, muted_id);
 
@@ -114,11 +114,12 @@ module.exports = {
         if (member.roles.includes(muted_id) === true)
           await member.removeRole(muted_id);
       } catch (e) {
-        await logs.remove(e, logMsg, caseNum, true);
         await db.pool.query(muteUserQuery, [log.guild_id, log.user_id]);
+        await logs.remove(e, logMsg, caseNum, true);
 
         return false;
       }
+      return true;
     });
   },
 
@@ -192,11 +193,11 @@ module.exports = {
           config.bot.prefix
         )).catch(() => {});
       } catch (e) {
-        await logs.remove(e, logMsg, caseNum);
         await db.pool.query(
           unmuteUserQuery,
           [msg.channel.guild.id, args.user.id]
         );
+        await logs.remove(e, logMsg, caseNum);
       }
     });
   },
@@ -252,11 +253,11 @@ module.exports = {
           `you have successfully unmuted **${message.tag(args.user)}**.`
         );
       } catch (e) {
-        await logs.remove(e, logMsg, caseNum);
         await db.pool.query(
           muteUserQuery,
           [msg.channel.guild.id, args.user.id]
         );
+        await logs.remove(e, logMsg, caseNum);
       }
     });
   }

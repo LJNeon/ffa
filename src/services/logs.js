@@ -18,14 +18,20 @@
 "use strict";
 const client = require("./client.js");
 const db = require("./database.js");
-const http = require("http");
-const Logger = require("../utilities/Logger.js");
+const https = require("https");
 const message = require("../utilities/message.js");
 const {data: {queries, responses}} = require("./data.js");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
-const util = require("util");
-const getAttachment = util.promisify(http.get);
+
+function getAttachment(options) {
+  return new Promise((res, rej) => {
+    https.get(options, (response) => {
+      response.end = new Promise(resolve => response.on("end", resolve));
+      res(response);
+    }).on("error", rej);
+  });
+}
 
 module.exports = {
   async add(log, color) {
@@ -134,19 +140,30 @@ module.exports = {
     const filenames = [];
 
     for (let i = 0; i < msg.attachments.length; i++) {
-      files.push(await getAttachment(msg.attachments[i].url));
-      filenames.push(msg.attachments[i].filename);
-    }
+      let file = "";
+      try {
+        const res = await getAttachment(msg.attachments[i].url);
 
+        res.on("data", chunk => file += chunk);
+        await res.end;
+      } catch (e) {
+        file = null;
+      }
+
+      files.push(file);
+      filenames.push(msg.attachments[i].filename);
+      console.log(filenames, file)
+    }
+console.log(queries.insertMessage, msg.author.id, msg.content, filenames, files);
     await db.pool.query(
       queries.insertMessage,
-      msg.id,
-      msg.author.id,
-      msg.content,
-      Math.floor(epoch / 1e3),
-      filenames,
-      files
-    ).catch(Logger.error);
+      [msg.id,
+        msg.author.id,
+        msg.content,
+        Math.floor(epoch / 1e3),
+        filenames,
+        files]
+    );
   },
 
   async remove(err, msg, id, silent = false) {

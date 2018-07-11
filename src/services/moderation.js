@@ -88,7 +88,7 @@ module.exports = {
       );
 
       if (muted_id == null || msg.channel.guild.roles.get(muted_id) == null)
-        return;
+        return false;
 
       const isMuted = await this.isMuted(
         msg.channel.guild.id,
@@ -97,7 +97,7 @@ module.exports = {
       );
 
       if (isMuted === true)
-        return;
+        return false;
 
       const data = {
         data: {length},
@@ -117,12 +117,14 @@ module.exports = {
         if (member.roles.includes(muted_id) === false)
           await member.addRole(muted_id);
       } catch (e) {
-        await this.removeLog(e, logMsg, caseNum, true);
         await db.pool.query(
           unmuteUserQuery,
           [msg.channel.guild.id, msg.author.id]
         );
+        await this.removeLog(e, logMsg, caseNum, true);
+        return false;
       }
+      return true;
     });
   },
 

@@ -29,7 +29,7 @@ module.exports = {
         first: Date.now()
       });
     }
-console.log(this.actions.get(key).count, max, this.actions.get(key).count < max);
+
     return this.actions.get(key).count < max;
   },
 
@@ -38,8 +38,6 @@ console.log(this.actions.get(key).count, max, this.actions.get(key).count < max)
   },
 
   async update(guildId, userId) {
-    console.log(guildId, userId);
     this.actions.get(`${guildId}-${userId}`).count++;
-    console.log(this.actions.get(`${guildId}-${userId}`).count);
   }
 };

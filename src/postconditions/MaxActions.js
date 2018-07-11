@@ -25,7 +25,7 @@ module.exports = new class MaxActions extends Postcondition {
   }
 
   async run(msg, res) {
-    console.log(res);
+    console.log(res ? res.success : res);
     if (res == null || res.success !== false)
       await actionService.update(msg.channel.guild.id, msg.author.id);
   }

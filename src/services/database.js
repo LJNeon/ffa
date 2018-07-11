@@ -96,7 +96,7 @@ module.exports = {
      * primary key.
      */
     const needed = res.rows.filter(c => c.is_nullable === "NO"
-      && c.column_default == null && c.column_name !== "id");
+      && c.column_default == null && c.column_name !== "guild_id");
 
     return needed.map(c => c.column_name);
   },
@@ -187,9 +187,9 @@ module.exports = {
      * so the for loop needs to start at $3.
      */
     const len = count + 2;
-    let values = "$2";
+    let values = "$1";
 
-    for (let i = 3; i < len; i++)
+    for (let i = 2; i < len; i++)
       values += `, $${i}`;
 
     return values;

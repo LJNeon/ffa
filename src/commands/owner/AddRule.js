@@ -22,7 +22,6 @@ const {data: {queries}} = require("../../services/data.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
 const ruleService = require("../../services/rules.js");
-const time = require("../../utilities/time.js");
 
 module.exports = new class AddRule extends Command {
   constructor() {
@@ -63,7 +62,7 @@ module.exports = new class AddRule extends Command {
       [msg.channel.guild.id,
         args.category.toLowerCase(),
         args.content,
-        time.epoch(),
+        new Date(),
         args.muteLen]
     );
     await message.reply(msg, "you have successfully added a new rule.");

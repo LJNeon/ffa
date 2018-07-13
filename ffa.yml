@@ -48,37 +48,34 @@ max: {
   deletedMsgs: 10,
   typos: 2,
   userResults: 3,
-  # All times are in seconds
-  mute: 2592e3
+  mute: 2592e6
 }
 
 min: {
   lb: 5,
   clear: 3,
   deletedMsgs: 1,
-  mute: 300
+  mute: 3e5
 }
 
 default: {
   clear: 20,
   lb: 10,
-  deletedMsgs: 5,
-  mute: 2592e3
+  deletedMsgs: 5
 }
 
 cd: {
-  rep: 7200,
-  unrep: 7200,
-  color: 3600,
-  unmute: 43200,
-  modCmd: 3600,
-  removeCmd: 3600
+  rep: 72e5,
+  unrep: 72e5,
+  color: 36e5,
+  modCmd: 36e5,
+  removeCmd: 36e5
 }
 
 timer: {
-  autoUnmute: 60,
-  dbClean: 600,
-  modRoleUpdate: 300,
-  repDecay: 3600,
-  resetActions: 3600
+  autoUnmute: 6e4,
+  dbClean: 6e5,
+  modRoleUpdate: 3e5,
+  repDecay: 36e5,
+  resetActions: 36e5
 }

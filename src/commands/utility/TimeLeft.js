@@ -42,13 +42,13 @@ module.exports = new class TimeLeft extends Command {
   }
 
   async run(msg, args) {
-    const epoch = time.epoch();
+    const epoch = Date.now();
     const res = await db.pool.query(
       queries.selectMute,
-      [epoch - config.max.mute, args.user.id]
+      [new Date(epoch - config.max.mute), args.user.id]
     );
     const [log] = res.rows;
-    const timeStr = time.format(log.epoch + log.data.length - epoch);
+    const timeStr = time.format(log.epoch.getTime() + log.data.length - epoch);
 
     await message.create(msg.channel, {
       description: `**Time Left:** ${timeStr}`,

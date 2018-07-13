@@ -32,7 +32,7 @@ const writeFile = util.promisify(fs.writeFile);
 
 module.exports = {
   async changeRep(guildId, userId, change) {
-    return this.pool.query(
+    return this.getFirstRow(
       data.queries.changeRep,
       [guildId, userId, change]
     );

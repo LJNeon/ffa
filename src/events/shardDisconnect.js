@@ -16,11 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const actionService = require("../services/maxActions.js");
-const {config} = require("../services/cli.js");
-const Timer = require("../utilities/Timer.js");
+const client = require("../services/client.js");
+const Logger = require("../utilities/Logger.js");
 
-module.exports = new Timer(
-  async () => actionService.reset(),
-  config.timer.resetActions
-);
+client.on("shardDisconnect", (e, id) => {
+  Logger.error(`SHARD_DISCONNECT#${id}`, e);
+});

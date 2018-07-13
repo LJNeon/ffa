@@ -24,4 +24,4 @@ const Timer = require("../utilities/Timer.js");
 module.exports = new Timer(async () => {
   for (const guild of client.guilds.values())
     await modRoleUpdate(guild);
-}, config.timer.modRoleUpdate * 1e3);
+}, config.timer.modRoleUpdate);

@@ -16,6 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const catchApi = require("../utilities/catchApi.js");
 const client = require("./client.js");
 const {CommandResult} = require("patron.js");
 const {config} = require("./cli.js");
@@ -26,7 +27,9 @@ const message = require("../utilities/message.js");
 const MultiMutex = require("../utilities/MultiMutex.js");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
+const addRole = catchApi(client.addGuildMemberRole);
 const muteUserQuery = str.format(queries.muteUser, "true");
+const removeRole = catchApi(client.removeGuildMemberRole);
 const unmuteUserQuery = str.format(queries.muteUser, "false");
 
 module.exports = {
@@ -45,36 +48,27 @@ module.exports = {
         msg.author.id,
         muted_id
       );
+      const member = msg.channel.guild.members.get(msg.author.id);
 
-      if (isMuted === true)
+      if (isMuted === true || member == null
+          || member.roles.includes(muted_id) === true)
         return false;
 
-      const data = {
-        data: {length},
-        guild_id: msg.channel.guild.id,
-        type: "automute",
-        user_id: msg.author.id
-      };
-      const {caseNum, logMsg} = await logs.add(
-        data,
-        config.customColors.mute
-      );
+      const res = await addRole(msg.channel.guild.id, member.id, muted_id);
+
+      if (res === false)
+        return res;
 
       await db.pool.query(muteUserQuery, [msg.channel.guild.id, msg.author.id]);
-
-      try {
-        const member = msg.channel.guild.members.get(msg.author.id);
-
-        if (member.roles.includes(muted_id) === false)
-          await member.addRole(muted_id);
-      } catch (e) {
-        await db.pool.query(
-          unmuteUserQuery,
-          [msg.channel.guild.id, msg.author.id]
-        );
-        await logs.remove(e, logMsg, caseNum, true);
-        return false;
-      }
+      await logs.add(
+        {
+          data: {length},
+          guild_id: msg.channel.guild.id,
+          type: "automute",
+          user_id: msg.author.id
+        },
+        config.customColors.mute
+      );
 
       return true;
     });
@@ -92,33 +86,27 @@ module.exports = {
         return false;
 
       const isMuted = await this.isMuted(log.guild_id, log.user_id, muted_id);
+      const member = guild.members.get(log.user_id);
 
-      if (isMuted === false)
+      if (isMuted === false || member == null
+          || member.roles.includes(muted_id) === false)
         return false;
 
-      const data = {
-        guild_id: log.guild_id,
-        type: "autounmute",
-        user_id: log.user_id
-      };
-      const {caseNum, logMsg} = await logs.add(
-        data,
+      const res = await removeRole(log.guild_id, member.id, muted_id);
+
+      if (res === false)
+        return res;
+
+      await db.pool.query(unmuteUserQuery, [log.guild_id, log.user_id]);
+      await logs.add(
+        {
+          guild_id: log.guild_id,
+          type: "autounmute",
+          user_id: log.user_id
+        },
         config.customColors.unmute
       );
 
-      await db.pool.query(unmuteUserQuery, [log.guild_id, log.user_id]);
-
-      try {
-        const member = guild.members.get(log.user_id);
-
-        if (member.roles.includes(muted_id) === true)
-          await member.removeRole(muted_id);
-      } catch (e) {
-        await db.pool.query(muteUserQuery, [log.guild_id, log.user_id]);
-        await logs.remove(e, logMsg, caseNum, true);
-
-        return false;
-      }
       return true;
     });
   },
@@ -154,51 +142,45 @@ module.exports = {
       if (isMuted === true)
         return CommandResult.fromError(responses.notMutedUser);
 
-      const data = {
-        data: {
-          evidence: args.evidence,
-          length: args.length,
-          mod_id: msg.author.id,
-          rule: args.rule.content
-        },
-        guild_id: msg.channel.guild.id,
-        type: "mute",
-        user_id: args.user.id
-      };
-      const {caseNum, logMsg} = await logs.add(
-        data,
-        config.customColors.mute
-      );
+      const member = msg.channel.guild.members.get(args.user.id);
+      const tag = message.tag(args.user);
+
+      if (member == null || member.roles.includes(muted_id) === true)
+        return false;
+
+      const res = await addRole(msg.channel.guild.id, member.id, muted_id);
+
+      if (res === false)
+        return res;
 
       await db.pool.query(muteUserQuery, [msg.channel.guild.id, args.user.id]);
-
-      try {
-        const tag = message.tag(msg.author);
-        const member = msg.channel.guild.members.get(args.user.id);
-
-        if (member != null && member.roles.includes(muted_id) === false)
-          await member.addRole(muted_id);
-
-        await message.reply(
-          msg,
-          `you have successfully muted **${message.tag(args.user)}**.`
-        );
-        message.dm(args.user, str.format(
-          responses.muted,
-          tag,
-          time.format(args.length),
-          str.code(args.rule.content, ""),
-          args.evidence == null ? "" : args.evidence,
-          message.tag(client.users.get(msg.channel.guild.ownerID)),
-          config.bot.prefix
-        )).catch(() => {});
-      } catch (e) {
-        await db.pool.query(
-          unmuteUserQuery,
-          [msg.channel.guild.id, args.user.id]
-        );
-        await logs.remove(e, logMsg, caseNum);
-      }
+      await logs.add(
+        {
+          data: {
+            evidence: args.evidence,
+            length: args.length,
+            mod_id: msg.author.id,
+            rule: args.rule.content
+          },
+          guild_id: msg.channel.guild.id,
+          type: "mute",
+          user_id: args.user.id
+        },
+        config.customColors.mute
+      );
+      await message.reply(
+        msg,
+        `you have successfully muted **${message.tag(args.user)}**.`
+      );
+      message.dm(args.user, str.format(
+        responses.muted,
+        tag,
+        time.format(args.length),
+        str.code(args.rule.content, ""),
+        args.evidence == null ? "" : args.evidence,
+        message.tag(client.users.get(msg.channel.guild.ownerID)),
+        config.bot.prefix
+      )).catch(() => {});
     });
   },
 
@@ -223,42 +205,32 @@ module.exports = {
       if (isMuted === false)
         return CommandResult.fromError(responses.mutedUser);
 
-      const data = {
-        data: {
-          evidence: args.evidence,
-          mod_id: msg.author.id
-        },
-        guild_id: msg.channel.guild.id,
-        type: "unmute",
-        user_id: args.user.id
-      };
-      const {caseNum, logMsg} = await logs.add(
-        data,
-        config.customColors.unmute
-      );
+      const member = msg.channel.guild.members.get(args.user.id);
 
+      if (member == null || member.roles.includes(muted_id) === false)
+        return false;
+
+      await removeRole(msg.channel.guild.id, member.id, muted_id);
       await db.pool.query(
         unmuteUserQuery,
         [msg.channel.guild.id, args.user.id]
       );
-
-      try {
-        const member = msg.channel.guild.members.get(args.user.id);
-
-        if (member != null && member.roles.includes(muted_id) === true)
-          await member.removeRole(muted_id);
-
-        await message.reply(
-          msg,
-          `you have successfully unmuted **${message.tag(args.user)}**.`
-        );
-      } catch (e) {
-        await db.pool.query(
-          muteUserQuery,
-          [msg.channel.guild.id, args.user.id]
-        );
-        await logs.remove(e, logMsg, caseNum);
-      }
+      await logs.add(
+        {
+          data: {
+            evidence: args.evidence,
+            mod_id: msg.author.id
+          },
+          guild_id: msg.channel.guild.id,
+          type: "unmute",
+          user_id: args.user.id
+        },
+        config.customColors.unmute
+      );
+      await message.reply(
+        msg,
+        `you have successfully unmuted **${message.tag(args.user)}**.`
+      );
     });
   }
 };

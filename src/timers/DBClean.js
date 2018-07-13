@@ -18,18 +18,25 @@
 "use strict";
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
-const time = require("../utilities/time.js");
 const Timer = require("../utilities/Timer.js");
 
 module.exports = new Timer(async () => {
-  const epoch = time.epoch();
+  const epoch = Date.now();
+  const {rows: msgs} = await db.pool.query(
+    "SELECT id FROM messages WHERE epoch < $1 AND used = false",
+    [new Date(epoch - 6048e5)]
+  );
+
+  for (let i = 0; i < msgs.length; i++) {
+    await db.pool.query(
+      "DELETE FROM revisions WHERE msg_id = $1",
+      [msgs[i].id]
+    );
+    await db.pool.query("DELETE FROM messages WHERE id = $1", [msgs[i].id]);
+  }
 
   await db.pool.query(
-    "DELETE FROM messages WHERE epoch < $1",
-    [epoch - 604800]
+    "DELETE FROM attachments WHERE epoch < $1 AND used = false",
+    [new Date(epoch - 36e5)]
   );
-  await db.pool.query(
-    "UPDATE messages SET files = '{}' WHERE epoch < $1 AND files != '{}'",
-    [epoch - 3600]
-  );
-}, config.timer.dbClean * 1e3);
+}, config.timer.dbClean);

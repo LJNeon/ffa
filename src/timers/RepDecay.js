@@ -30,4 +30,4 @@ module.exports = new Timer(async () => {
       [decay, guild.id]
     );
   }
-}, config.timer.repDecay * 1e3);
+}, config.timer.repDecay);

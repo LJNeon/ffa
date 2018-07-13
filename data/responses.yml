@@ -70,7 +70,7 @@ noBulkDelete: Discord doesn't allow bulk deletion of messages that are more than
 
 notmutedUser: this command may not be used on a muted user.
 
-rep: You have successfully repped **{0}** {1} their reputation to {3}, rewarding you with {4} rep.
+rep: You have successfully {0} **{1}** {2} their reputation to {3}, rewarding you with {4} rep.
 
 repRank: |-
   **Reputation:** {0}

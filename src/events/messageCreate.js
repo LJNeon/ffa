@@ -37,8 +37,7 @@ client.on("messageCreate", catchEvent(async msg => {
   let guild;
 
   if (msg.channel.guild != null) {
-    logs.message(msg).catch(e => Logger.error(e));
-
+    logs.message(msg).catch(e => Logger.error("LOG_MSG", e));
     guild = await db.getGuild(msg.channel.guild.id, {
       channels: "ignored_ids",
       chat: "delay, reward",

@@ -23,7 +23,6 @@ const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
 const {data: {queries, responses}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
-const time = require("../../utilities/time.js");
 
 module.exports = new class Rep extends Command {
   constructor() {
@@ -36,7 +35,7 @@ module.exports = new class Rep extends Command {
         remainder: true,
         type: "user"
       })],
-      cooldown: config.cd.rep * 1e3,
+      cooldown: config.cd.rep,
       description: "Give reputation to any user.",
       groupName: "reputation",
       names: ["rep"],
@@ -48,7 +47,7 @@ module.exports = new class Rep extends Command {
   async run(msg, args) {
     const res = await db.pool.query(
       this.weekRepQuery,
-      [msg.channel.guild.id, msg.author.id, time.epoch() - 604800]
+      [msg.channel.guild.id, msg.author.id, new Date(Date.now() - 6048e5)]
     );
 
     for (let i = 0; i < res.rows.length; i++) {
@@ -73,6 +72,7 @@ module.exports = new class Rep extends Command {
     await db.changeRep(msg.channel.guild.id, msg.author.id, rep_reward);
     await message.reply(msg, str.format(
       responses.rep,
+      "repped",
       message.tag(args.user),
       "increasing",
       rep.toFixed(2),

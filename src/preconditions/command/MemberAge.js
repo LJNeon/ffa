@@ -34,7 +34,7 @@ module.exports = new class MemberAge extends Precondition {
     );
 
     if (msg.member.joinedAt == null
-        || msg.member.joinedAt + (memberAge * 1e3) > Date.now()) {
+        || msg.member.joinedAt + memberAge > Date.now()) {
       return PreconditionResult.fromError(
         cmd,
         str.format(responses.memberAge, time.format(memberAge))

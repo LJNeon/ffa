@@ -25,11 +25,11 @@ const mutex = new LimitedMutex(1);
 const selectRep = str.format(queries.selectRep, "DESC LIMIT $2");
 
 module.exports = async guild => mutex.sync(guild.id, async () => {
-  const {roles: {mod_id}, top: {mod}} = await db.getGuild(
+  const {roles: {mod_id}, top: {senate}} = await db.getGuild(
     guild.id,
     {
       roles: "mod_id",
-      top: "mod"
+      top: "senate"
     }
   );
 
@@ -38,7 +38,7 @@ module.exports = async guild => mutex.sync(guild.id, async () => {
 
   const res = await db.pool.query(
     selectRep,
-    [guild.id, mod]
+    [guild.id, senate]
   );
   const mods = guild.members.filter(m => m.roles.includes(mod_id) === true);
   const usable = message.canUseRole(

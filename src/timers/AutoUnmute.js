@@ -19,14 +19,13 @@
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
 const senate = require("../services/senate.js");
-const time = require("../utilities/time.js");
 const Timer = require("../utilities/Timer.js");
 
 module.exports = new Timer(async () => {
-  const epoch = time.epoch();
+  const epoch = Date.now();
   const res = await db.pool.query(
     "SELECT * FROM logs WHERE epoch > $1 AND type != 'clear'",
-    [epoch - config.max.mute]
+    [new Date(epoch - config.max.mute)]
   );
 
   for (let i = 0; i < res.rows.length; i++) {
@@ -40,8 +39,8 @@ module.exports = new Timer(async () => {
       if (unmute != null)
         continue;
 
-      if (row.epoch < epoch - row.data.length)
+      if (row.epoch < Date.now() - row.data.length)
         await senate.autoUnmute(row);
     }
   }
-}, config.timer.autoUnmute * 1e3);
+}, config.timer.autoUnmute);

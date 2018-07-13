@@ -25,7 +25,7 @@ module.exports = new class Justice extends Group {
       description: descriptions.justice,
       name: "justice",
       postconditions: ["maxactions"],
-      preconditionOptions: [{column: "mod"}],
+      preconditionOptions: [{column: "senate"}],
       preconditions: ["top", "maxactions", "modrole"]
     });
   }

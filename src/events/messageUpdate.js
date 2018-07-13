@@ -20,4 +20,8 @@ const catchEvent = require("../utilities/catchEvent.js");
 const client = require("../services/client.js");
 const logs = require("../services/logs.js");
 
-client.on("messageUpdate", catchEvent(async msg => logs.message(msg)));
+client.on("messageUpdate", catchEvent(async msg => {
+  if (msg.type === 0 && msg.author.bot === false
+      && msg.author.discriminator !== "0000" && msg.embeds.length === 0)
+    await logs.message(msg);
+}));

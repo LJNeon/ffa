@@ -16,11 +16,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const actionService = require("../services/maxActions.js");
-const {config} = require("../services/cli.js");
-const Timer = require("../utilities/Timer.js");
+module.exports = func => async (...args) => {
+  let res;
 
-module.exports = new Timer(
-  async () => actionService.reset(),
-  config.timer.resetActions
-);
+  try {
+    res = await func(...args);
+  } catch (e) {
+    if ((e.constructor.name === "DiscordHTTPError" && e.code > 599
+        && e.code < 500) || (e.constructor.name === "DiscordRESTError"
+        && e.code !== 50013 && e.code !== 403))
+      throw e;
+
+    return false;
+  }
+
+  return res;
+};

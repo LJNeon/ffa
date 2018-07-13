@@ -40,7 +40,6 @@ module.exports = new class Unmute extends Command {
         type: "string"
       })],
       botPermissions: ["manageRoles"],
-      cooldown: config.cd.unmute * 1e3,
       description: "Unmute any guild user.",
       groupName: "justice",
       names: ["unmute"]

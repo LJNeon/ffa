@@ -18,6 +18,7 @@
 "use strict";
 const client = require("./client.js");
 const db = require("./database.js");
+const crypto = require("crypto");
 const https = require("https");
 const message = require("../utilities/message.js");
 const {data: {queries, responses}} = require("./data.js");
@@ -26,9 +27,13 @@ const time = require("../utilities/time.js");
 
 function getAttachment(options) {
   return new Promise((res, rej) => {
-    https.get(options, (response) => {
-      response.end = new Promise(resolve => response.on("end", resolve));
-      res(response);
+    https.get(options, response => {
+      const end = new Promise(resolve => response.on("end", resolve));
+
+      res({
+        end,
+        response
+      });
     }).on("error", rej);
   });
 }
@@ -44,7 +49,7 @@ module.exports = {
       [log.guild_id,
         log.user_id,
         log.data,
-        time.epoch(),
+        new Date(),
         log.type]
     );
 
@@ -131,48 +136,65 @@ module.exports = {
   },
 
   async message(msg) {
-    /**
-     * TODO set this to `== null` once eris 0.8.7 fixes
-     * `Message.editedTimestamp`.
-     */
-    const epoch = msg.editedTimestamp || msg.timestamp;
-    const files = [];
-    const filenames = [];
-
-    for (let i = 0; i < msg.attachments.length; i++) {
-      let file = "";
-      try {
-        const res = await getAttachment(msg.attachments[i].url);
-
-        res.on("data", chunk => file += chunk);
-        await res.end;
-      } catch (e) {
-        file = null;
-      }
-
-      files.push(file);
-      filenames.push(msg.attachments[i].filename);
-      console.log(filenames, file)
-    }
-console.log(queries.insertMessage, msg.author.id, msg.content, filenames, files);
     await db.pool.query(
       queries.insertMessage,
       [msg.id,
         msg.author.id,
-        msg.content,
-        Math.floor(epoch / 1e3),
-        filenames,
-        files]
+        msg.channel.id,
+        msg.channel.guild.id,
+        new Date(msg.timestamp)]
     );
-  },
 
-  async remove(err, msg, id, silent = false) {
-    const logMsg = await msg;
+    const {attachments} = msg;
 
-    await db.pool.query("DELETE FROM logs WHERE log_id = $1", [id]);
-    await logMsg.delete();
+    for (let i = 0; i < attachments.length; i++) {
+      let end;
+      let file = [];
+      let response;
 
-    if (silent === false)
-      throw err;
+      try {
+        const req = await getAttachment(attachments[i].url);
+
+        ({end, response} = req);
+      } catch (e) {
+        if (e.code === 401 || e.code === 404)
+          continue;
+        else
+          throw e;
+      }
+
+      response.on("data", chunk => file.push(chunk));
+      await end;
+      file = Buffer.concat(file);
+
+      const hash = crypto.createHash("md5").update(file).digest("hex");
+      const match = await db.getFirstRow(
+        "SELECT id FROM attachments WHERE hash = $1",
+        [hash]
+      );
+
+      if (match == null) {
+        await db.pool.query(
+          queries.insertAttachment,
+          [attachments[i].id,
+            attachments[i].filename,
+            new Date(),
+            file,
+            hash]
+        );
+        attachments[i] = attachments[i].id;
+      } else {
+        await db.pool.query(
+          "UPDATE attachments set epoch = $1 WHERE id = $2",
+          [new Date(), match.id]
+        );
+        attachments[i] = match.id;
+      }
+    }
+
+    await db.pool.query(
+      queries.insertRevisions,
+      [msg.id, attachments, msg.content, new Date()]
+    );
   }
 };

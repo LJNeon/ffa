@@ -38,21 +38,17 @@ module.exports = {
     return `${hours}:${mins}:${secs}`;
   },
 
-  epoch() {
-    return Math.floor(Date.now() / 1e3);
-  },
-
-  format(s, precision = 2) {
+  format(ms, precision = 2) {
     const items = [];
 
     for (let i = 0; i < keys.length; i++) {
-      if (times[keys[i]][0] <= s) {
+      if (times[keys[i]][0] <= ms) {
         let num;
 
         if (times[keys[i]][1] == null)
-          num = Math.floor(s / times[keys[i]][0]);
+          num = Math.floor(ms / times[keys[i]][0]);
         else
-          num = Math.floor(s / times[keys[i]][0] % times[keys[i]][1]);
+          num = Math.floor(ms / times[keys[i]][0] % times[keys[i]][1]);
 
         if (num !== 0)
           items.push(`${num} ${keys[i]}${num === 1 ? "" : "s"}`);
@@ -63,7 +59,9 @@ module.exports = {
   },
 
   formatDate(date) {
-    return `${date.getUTCFullYear()}-${date.getUTCMonth() + 1}-${date
-      .getUTCDate()}`;
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
   }
 };

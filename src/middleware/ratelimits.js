@@ -16,28 +16,31 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {config} = require("./cli.js");
-const msgs = new Map();
+const store = new Map();
+const {config} = require("../services/cli.js");
 
-module.exports = {
-  async add(msg) {
-    if (msgs.has(msg.channel.id) === false)
-      msgs.set(msg.channel.id, []);
+module.exports = async (req, res, next) => {
+  let limits = store.get(req.ip);
 
-    const channel = msgs.get(msg.channel.id);
-
-    if (channel.length === config.max.deletedMsgs)
-      channel.pop();
-
-    channel.splice(0, 0, msg);
-  },
-
-  get(channelId, count) {
-    const channel = msgs.get(channelId);
-
-    if (channel == null)
-      return [];
-
-    return channel.slice(0, count);
+  if (limits == null || limits.reset >= Date.now()) {
+    store.set(req.ip, {
+      count: 1,
+      reset: Date.now() + config.duration
+    });
+    limits = store.get(req.ip);
+  } else {
+    limits.count++;
   }
+
+  res.setHeader("X-RateLimit-Limit", config.max);
+  res.setHeader("X-RateLimit-Remaining", Math.max(config.max - limits.count, 0));
+  res.setHeader("X-RateLimit-Reset", Math.floor(limits.reset / 1e3));
+
+  if (limits.count >= config.max) {
+    res.writeHead(429, {"Retry-After": limits.reset - Date.now()});
+
+    return res.end("Too many requests, please try again later.");
+  }
+
+  next();
 };

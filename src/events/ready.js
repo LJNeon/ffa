@@ -23,6 +23,7 @@ const db = require("../services/database.js");
 const Logger = require("../utilities/Logger.js");
 const reqAbs = require("../utilities/reqAbs.js");
 const str = require("../utilities/string.js");
+const web = require("../services/web.js");
 
 client.on("ready", catchEvent(async () => {
   await client.editStatus({name: str.format(
@@ -51,5 +52,6 @@ client.on("ready", catchEvent(async () => {
   }
 
   await reqAbs(__dirname, "../timers");
+  require("../services/web.js");
   Logger.info("READY");
 }));

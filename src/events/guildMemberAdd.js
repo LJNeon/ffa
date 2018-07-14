@@ -34,7 +34,7 @@ client.on("guildMemberAdd", catchEvent(async (guild, member) => {
   message.dm(member.user, {
     description: helpMsg,
     title: "Welcome to FFA"
-  }).catch(() => {});
+  }, null, guild).catch(() => {});
   await db.pool.query(
     "UPDATE users SET in_guild = true WHERE (guild_id, user_id) = ($1, $2)",
     [guild.id, member.id]

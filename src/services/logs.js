@@ -98,8 +98,12 @@ module.exports = {
 
           if (val == null)
             continue;
+          else if (Array.isArray(val))
+            val = str.list(val);
           else if (key === "length")
             val = time.format(val);
+          else if (key === "penalty")
+            val = `${val.toFixed(2)} rep`;
 
           data += `\n**${str.capitalize(key)}:** ${val}`;
         }
@@ -179,7 +183,7 @@ module.exports = {
           [attachments[i].id,
             attachments[i].filename,
             new Date(),
-            file,
+            file.toString("hex"),
             hash]
         );
         attachments[i] = attachments[i].id;

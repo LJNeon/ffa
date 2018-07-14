@@ -52,7 +52,7 @@ module.exports = new class Mute extends Command {
         key: "evidence",
         name: "evidence",
         preconditionOptions: [{max: config.max.evidenceLen}],
-        preconditions: ["maxlength"],
+        preconditions: ["maxlength", "hasmsg"],
         remainder: true,
         type: "string"
       })],

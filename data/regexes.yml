@@ -4,6 +4,8 @@ format: !!js/regexp /{(\d+)}/g
 
 id: !!js/regexp /\d{14,20}/
 
+ids: !!js/regexp /\d{14,20}/g
+
 markdown: !!js/regexp /[<@!#&>:_~*`\\]/g
 
 mention: !!js/regexp /<@!?(\d{14,20})>/
@@ -11,3 +13,5 @@ mention: !!js/regexp /<@!?(\d{14,20})>/
 newline: !!js/regexp /\n/g
 
 number: !!js/regexp /^\d+(\.\d+)?/
+
+onlyId: !!js/regexp /^\d{14,20}$/

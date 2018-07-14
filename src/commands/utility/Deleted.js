@@ -47,7 +47,9 @@ module.exports = new class Deleted extends Command {
     let value = msg.content.slice(0, config.max.deletedMsgChars);
 
     if (msg.attachments != null && msg.attachments.length !== 0) {
-      const list = msg.attachments.map(a => a.filename);
+      const list = msg.attachments.map(a => {
+        return `[${a.filename}](https://ffabot.com/api/attachments/${a.id})`;
+      });
 
       value += `\n**Attachments:** ${str.list(list)}`;
     }

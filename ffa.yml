@@ -39,6 +39,11 @@ guild: {
   invite: https://discord.gg/F7reg7e
 }
 
+ratelimits: {
+  max: 3,
+  duration: 6e3
+}
+
 max: {
   lb: 30,
   clear: 100,

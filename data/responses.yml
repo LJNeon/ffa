@@ -16,6 +16,8 @@ console: "{0} {1}[{2}]\x1b[0m"
 
 cooldownReply: you may use this command in {0}.
 
+hasMsg: the {0} must contain valid message IDs. <https://support.discordapp.com/hc/en-us/articles/206346498>
+
 helpMsg: |-
   FFA's goal is to provide a fully decentralized discord server by allowing the community to control every aspect of the server. The entire system is based around reputation. The most reputable users are the moderators. If you believe a certain user is suitable to moderate, you may enter the following: `{0}rep username#1234`. The opposite can be done with `{0}unrep`.
 

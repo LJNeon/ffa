@@ -18,7 +18,13 @@
 "use strict";
 const {Argument, Command, CommandResult} = require("patron.js");
 const {config} = require("../../services/cli.js");
-const {data: {descriptions, responses}} = require("../../services/data.js");
+const {
+  data: {
+    descriptions,
+    regexes,
+    responses
+  }
+} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
 const logs = require("../../services/logs.js");
 const str = require("../../utilities/string.js");
@@ -57,7 +63,7 @@ module.exports = new class Clear extends Command {
         key: "evidence",
         name: "evidence",
         preconditionOptions: [{max: config.max.evidenceLen}],
-        preconditions: ["maxlength"],
+        preconditions: ["maxlength", "hasmsg"],
         remainder: true,
         type: "string"
       })],
@@ -82,6 +88,7 @@ module.exports = new class Clear extends Command {
       data: {
         evidence: args.evidence,
         mod_id: msg.author.id,
+        msg_ids: args.evidence.match(regexes.ids),
         quantity: amount,
         rule: args.rule.content
       },

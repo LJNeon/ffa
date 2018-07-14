@@ -84,28 +84,36 @@ module.exports = {
     return this.create(channel, msg, this.errorColor);
   },
 
-  async dm(user, msg, color, override = false) {
+  async dm(user, msg, color, guild) {
     const channel = await user.getDMChannel();
-    let result = msg.description;
+    let result;
 
-    if (result == null) {
-      if (msg.content == null)
-        result = msg;
-      else
-        result = msg.content;
+    if (typeof msg === "string") {
+      result = this.embedify({
+        color,
+        description: msg
+      });
+    } else {
+      result = this.embedify({
+        color,
+        ...msg
+      });
     }
 
-    if (override !== true) {
-      if (typeof msg === "string") {
-        result = this.embedify({
-          color,
-          description: msg
-        });
+    if (guild != null) {
+      if (result.footer == null) {
+        result.footer = {
+          icon_url: guild.iconURL,
+          text: guild.name
+        };
       } else {
-        result = this.embedify({
-          color,
-          ...msg
-        });
+        if (result.footer.text == null)
+          result.footer.text = guild.name;
+        else
+          result.footer.text += ` | ${guild.name}`;
+
+        if (result.footer.icon_url == null)
+          result.footer.icon_url = guild.iconURL;
       }
     }
 

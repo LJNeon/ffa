@@ -16,28 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {config} = require("./cli.js");
-const msgs = new Map();
+const {Group} = require("patron.js");
 
-module.exports = {
-  async add(msg) {
-    if (msgs.has(msg.channel.id) === false)
-      msgs.set(msg.channel.id, []);
-
-    const channel = msgs.get(msg.channel.id);
-
-    if (channel.length === config.max.deletedMsgs)
-      channel.pop();
-
-    channel.splice(0, 0, msg);
-  },
-
-  get(channelId, count) {
-    const channel = msgs.get(channelId);
-
-    if (channel == null)
-      return [];
-
-    return channel.slice(0, count);
+module.exports = new class Privacy extends Group {
+  constructor() {
+    super({
+      description: "Commands directly tied with your data and privacy rights.",
+      name: "privacy"
+    });
   }
-};
+}();

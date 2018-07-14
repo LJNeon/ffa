@@ -20,7 +20,7 @@ const catchApi = require("../utilities/catchApi.js");
 const client = require("./client.js");
 const {CommandResult} = require("patron.js");
 const {config} = require("./cli.js");
-const {data: {responses, queries}} = require("./data.js");
+const {data: {regexes, responses, queries}} = require("./data.js");
 const db = require("./database.js");
 const logs = require("./logs.js");
 const message = require("../utilities/message.js");
@@ -33,7 +33,7 @@ const removeRole = catchApi(client.removeGuildMemberRole);
 const unmuteUserQuery = str.format(queries.muteUser, "false");
 
 module.exports = {
-  autoMute(msg, length) {
+  autoMute(msg, length, penalty) {
     return this.mutex.sync(msg.channel.guild.id, async () => {
       const {roles: {muted_id}} = await db.getGuild(
         msg.channel.guild.id,
@@ -62,7 +62,10 @@ module.exports = {
       await db.pool.query(muteUserQuery, [msg.channel.guild.id, msg.author.id]);
       await logs.add(
         {
-          data: {length},
+          data: {
+            length,
+            penalty
+          },
           guild_id: msg.channel.guild.id,
           type: "automute",
           user_id: msg.author.id
@@ -160,6 +163,7 @@ module.exports = {
             evidence: args.evidence,
             length: args.length,
             mod_id: msg.author.id,
+            msg_ids: args.evidence.match(regexes.ids),
             rule: args.rule.content
           },
           guild_id: msg.channel.guild.id,
@@ -180,7 +184,7 @@ module.exports = {
         args.evidence == null ? "" : args.evidence,
         message.tag(client.users.get(msg.channel.guild.ownerID)),
         config.bot.prefix
-      )).catch(() => {});
+      ), null, msg.channel.guild).catch(() => {});
     });
   },
 

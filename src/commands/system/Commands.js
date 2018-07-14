@@ -46,7 +46,7 @@ module.exports = new class Commands extends Command {
     if (msg.channel.guild == null) {
       await message.create(msg.channel, reply);
     } else {
-      await message.dm(msg.author, reply);
+      await message.dm(msg.author, reply, null, msg.channel.guild);
       await message.reply(
         msg,
         "you have been DMed with a list of all commands."

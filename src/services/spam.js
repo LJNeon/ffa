@@ -40,7 +40,8 @@ module.exports = {
         if (entry.count >= guild.spam.msg_limit) {
           const success = await senate.autoMute(
             msg,
-            guild.moderation.mute_length
+            guild.moderation.mute_length,
+            guild.spam.rep_penalty
           );
 
           if (success === true) {

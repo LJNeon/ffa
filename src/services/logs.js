@@ -21,7 +21,10 @@ const db = require("./database.js");
 const crypto = require("crypto");
 const https = require("https");
 const message = require("../utilities/message.js");
+const mime = require("mime");
+//const pako = require("pako");
 const {data: {queries, responses}} = require("./data.js");
+const sharp = require("sharp");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
 
@@ -178,6 +181,15 @@ module.exports = {
       );
 
       if (match == null) {
+        const type = mime.getType(attachments[i].filename);
+
+        if (type === "image/jpeg" || type === "image/png"
+            || type === "image/webp" || type === "image/svg+xml"
+            || type === "image/tiff")
+          file = await sharp(file).jpeg({quality: 50}).toBuffer();
+
+        file = Buffer.from(pako.deflate(file));
+
         await db.pool.query(
           queries.insertAttachment,
           [attachments[i].id,

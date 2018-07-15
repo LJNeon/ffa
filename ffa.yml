@@ -40,8 +40,8 @@ guild: {
 }
 
 ratelimits: {
-  max: 3,
-  duration: 6e3
+  max: 60,
+  duration: 6e4
 }
 
 max: {

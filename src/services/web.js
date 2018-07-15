@@ -19,6 +19,7 @@
 const db = require("./database.js");
 const Logger = require("../utilities/Logger.js");
 const mime = require("mime");
+//const pako = require("pako");
 const Polka = require("polka")();
 const ratelimits = require("../middleware/ratelimits.js");
 const {data: {regexes}} = require("./data.js");
@@ -54,10 +55,19 @@ Polka.get("/api/attachments/:id", async (req, res) => {
   const type = mime.getType(attachment.name);
 
   if (type === false) {
-    Logger.error(`Unknown mime type: ${attachment.name}`);
+    Logger.error("Unknown mime type:", attachment.name);
     res.writeHead(500, {"Content-Type": "text/plain"});
 
-    return req.end("Error occurred while determining file's mime type.");
+    return res.end("Error occurred while determining file's mime type.");
+  }
+
+  try {
+    attachment.file = Buffer.from(pako.inflate(attachment.file));
+  } catch (e) {
+    Logger.error("Inflation error", e);
+    res.writeHead(500, {"Content-Type": "text/plain"});
+
+    return res.end("Error occurred while decompressing file.");
   }
 
   res.writeHead(200, {"Content-Type": type});

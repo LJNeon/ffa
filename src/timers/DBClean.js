@@ -37,6 +37,6 @@ module.exports = new Timer(async () => {
 
   await db.pool.query(
     "DELETE FROM attachments WHERE epoch < $1 AND used = false",
-    [new Date(epoch - 36e5)]
+    [new Date(epoch - 864e5)]
   );
 }, config.timer.dbClean);

@@ -22,10 +22,10 @@ const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
 const handler = require("../services/handler.js");
-const Logger = require("../utilities/Logger.js");
 const logs = require("../services/logs.js");
 const resultService = require("../services/result.js");
 const spamService = require("../services/spam.js");
+const logMsg = catchEvent(logs.message);
 
 client.on("messageCreate", catchEvent(async msg => {
   if (msg.type !== 0 || msg.author.bot === true
@@ -37,7 +37,7 @@ client.on("messageCreate", catchEvent(async msg => {
   let guild;
 
   if (msg.channel.guild != null) {
-    logs.message(msg).catch(e => Logger.error("LOG_MSG", e));
+    logMsg(msg);
     guild = await db.getGuild(msg.channel.guild.id, {
       channels: "ignored_ids",
       chat: "delay, reward",

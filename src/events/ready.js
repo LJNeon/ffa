@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchEvent = require("../utilities/catchEvent.js");
+const catchPromise = require("../utilities/catchPromise.js");
 const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
@@ -25,7 +25,7 @@ const reqAbs = require("../utilities/reqAbs.js");
 const str = require("../utilities/string.js");
 const web = require("../services/web.js");
 
-client.on("ready", catchEvent(async () => {
+client.on("ready", catchPromise(async () => {
   await client.editStatus({name: str.format(
     config.bot.game,
     config.bot.prefix

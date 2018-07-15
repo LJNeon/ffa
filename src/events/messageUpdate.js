@@ -16,11 +16,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchEvent = require("../utilities/catchEvent.js");
+const catchPromise = require("../utilities/catchPromise.js");
 const client = require("../services/client.js");
 const logs = require("../services/logs.js");
 
-client.on("messageUpdate", catchEvent(async msg => {
+client.on("messageUpdate", catchPromise(async msg => {
   if (msg.type === 0 && msg.author.bot === false
       && msg.author.discriminator !== "0000" && msg.embeds.length === 0)
     await logs.message(msg);

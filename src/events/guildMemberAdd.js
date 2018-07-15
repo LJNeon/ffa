@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchEvent = require("../utilities/catchEvent.js");
+const catchPromise = require("../utilities/catchPromise.js");
 const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
@@ -30,7 +30,7 @@ const helpMsg = str.format(
   config.guild.invite
 );
 
-client.on("guildMemberAdd", catchEvent(async (guild, member) => {
+client.on("guildMemberAdd", catchPromise(async (guild, member) => {
   message.dm(member.user, {
     description: helpMsg,
     title: "Welcome to FFA"

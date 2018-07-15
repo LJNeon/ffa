@@ -17,8 +17,6 @@
  */
 "use strict";
 process.env.TZ = "utc";
-// TODO delet this
-//require("sharp");
 
 const data = require("./services/data.js");
 let Logger;

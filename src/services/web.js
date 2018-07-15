@@ -19,7 +19,7 @@
 const db = require("./database.js");
 const Logger = require("../utilities/Logger.js");
 const mime = require("mime");
-//const pako = require("pako");
+const pako = require("pako");
 const Polka = require("polka")();
 const ratelimits = require("../middleware/ratelimits.js");
 const {data: {regexes}} = require("./data.js");

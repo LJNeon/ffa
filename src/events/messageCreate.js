@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchEvent = require("../utilities/catchEvent.js");
+const catchPromise = require("../utilities/catchPromise.js");
 const chatService = require("../services/chat.js");
 const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
@@ -25,9 +25,9 @@ const handler = require("../services/handler.js");
 const logs = require("../services/logs.js");
 const resultService = require("../services/result.js");
 const spamService = require("../services/spam.js");
-const logMsg = catchEvent(logs.message);
+const logMsg = catchPromise(logs.message);
 
-client.on("messageCreate", catchEvent(async msg => {
+client.on("messageCreate", catchPromise(async msg => {
   if (msg.type !== 0 || msg.author.bot === true
       || msg.author.discriminator === "0000")
     return;

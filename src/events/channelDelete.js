@@ -16,11 +16,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchEvent = require("../utilities/catchEvent.js");
+const catchPromise = require("../utilities/catchPromise.js");
 const client = require("../services/client.js");
 const db = require("../services/database.js");
 
-client.on("channelDelete", catchEvent(async channel => {
+client.on("channelDelete", catchPromise(async channel => {
   if (channel.guild != null)
     await db.cleanupChannels(channel.guild);
 }));

@@ -16,10 +16,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchEvent = require("../utilities/catchEvent.js");
+const catchPromise = require("../utilities/catchPromise.js");
 const client = require("../services/client.js");
 const db = require("../services/database.js");
 
-client.on("guildRoleDelete", catchEvent(async guild => {
+client.on("guildRoleDelete", catchPromise(async guild => {
   await db.cleanupRoles(guild);
 }));

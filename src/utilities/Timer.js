@@ -16,11 +16,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchEvent = require("./catchEvent.js");
+const catchPromise = require("./catchPromise.js");
 
 module.exports = class Timer {
   constructor(run, wait) {
-    this.run = catchEvent(run);
+    this.run = catchPromise(run);
     this.wait = wait;
     this.loop();
   }

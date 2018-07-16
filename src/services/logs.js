@@ -189,7 +189,6 @@ module.exports = {
           file = await sharp(file).jpeg({quality: 50}).toBuffer();
 
         file = Buffer.from(pako.deflate(file));
-
         await db.pool.query(
           queries.insertAttachment,
           [attachments[i].id,

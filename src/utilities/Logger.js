@@ -34,77 +34,109 @@ const appendFile = util.promisify(fs.appendFile);
 
 module.exports = new class Logger {
   constructor() {
-    const date = new Date();
-
-    this.day = date.getUTCDate();
-    this.dateStr = time.formatDate(date);
+    this.date = new Date();
     this.logsPath = path.join(__dirname, `../../${logsDirectory}`);
+    this.toWrite = "";
 
     if (fs.existsSync(this.logsPath) === false)
       fs.mkdirSync(this.logsPath);
 
-    this.stream = fs.createWriteStream(
-      `${this.logsPath}/${this.dateStr}`,
-      {flags: "a"}
-    );
+    this.initStream();
   }
 
-  async log(level, msg) {
+  async debug(...msgs) {
+    await this.log("DEBUG", ...msgs);
+  }
+
+  async error(...errs) {
+    await this.log("ERROR", ...errs);
+  }
+
+  async info(...msgs) {
+    await this.log("INFO", ...msgs);
+  }
+
+  initStream() {
+    this.stream = fs.createWriteStream(
+      `${this.logsPath}/${time.formatDate(this.date)}`,
+      {flags: "a"}
+    );
+    this.stream.on("error", e => {
+      console.error(e);
+      process.exit(1);
+    });
+    this.stream.on("drain", () => {
+      this.stream.write(this.toWrite);
+      this.toWrite = "";
+    });
+  }
+
+  async log(level, ...msgs) {
     const date = new Date();
 
-    if (date.getUTCDate() !== this.day) {
-      /**
-       * TODO some error about getUTCDate is popping up when bot is running
-       *  for long periods of time.
-       */
-      this.day = date.getUTCDate();
-      this.dateStr = time.formatDate(this.date);
-      this.stream = fs.createWriteStream(
-        `${this.logsPath}/${this.dateStr}`,
-        {flags: "a"}
-      );
-    }
+    await this.validateStream(date);
 
-    if (this.stream.writable === false)
-      await this.waitTillWritable();
+    const timestamp = time.formatTime(date);
+    const formatted = `${timestamp} [${level}] ${msgs
+      .map(i => util.inspect(i, {depth: null}))
+      .join(" ")}\n`;
 
     console[level.toLowerCase()](str.format(
       responses.console,
-      this.dateStr,
+      timestamp,
       logColors[level],
       level
-    ), msg);
+    ), ...msgs);
+    this.stream.write(formatted);
 
-    const formattedMsg = `${this.dateStr} [${level}] ${msg}\n`;
-
-    this.stream.write(formattedMsg);
-
-    if (level === "ERROR")
-      await appendFile(`${this.logsPath}/${this.dateStr}-Errors`, formattedMsg);
+    if (level === "ERROR") {
+      await appendFile(
+        `${this.logsPath}/${time.formatDate(this.date)}-Errors`,
+        formatted
+      );
+    }
   }
 
-  debug(msg) {
-    this.log("DEBUG", msg);
+  async warn(...msgs) {
+    await this.log("WARN", ...msgs);
   }
 
-  info(msg) {
-    this.log("INFO", msg);
+  write(input) {
+    const res = this.stream.write(input);
+
+    if (res === false)
+      this.toWrite += input;
   }
 
-  warn(msg) {
-    this.log("WARN", msg);
-  }
+  streamWritable() {
+    return new Promise((res, rej) => {
+      let done = false;
+      this.stream.on("open", () => {
+        done = true;
+        res();
+      });
 
-  error(err) {
-    this.log("ERROR", err instanceof Error ? util.inspect(
-      err,
-      {depth: null}
-    ) : err);
-  }
+      if (this.stream.writable === true) {
+        done = true;
+        res();
+      }
 
-  waitTillWritable() {
-    return new Promise(res => {
-      this.stream.on("open", () => res());
+      setTimeout(() => {
+        if (done === false) {
+          console.error("Logger stream took over 10s.");
+          process.exit(1);
+        }
+      }, 1e4);
     });
+  }
+
+  async validateStream(date) {
+    if (this.date.getUTCDate() !== date.getUTCDate()) {
+      this.date = date;
+      this.initStream();
+      await this.streamWritable();
+    } else if (this.stream.writable === false) {
+      await this.streamWritable();
+    }
   }
 }();

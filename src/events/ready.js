@@ -23,7 +23,6 @@ const db = require("../services/database.js");
 const Logger = require("../utilities/Logger.js");
 const reqAbs = require("../utilities/reqAbs.js");
 const str = require("../utilities/string.js");
-const web = require("../services/web.js");
 
 client.on("ready", catchPromise(async () => {
   await client.editStatus({name: str.format(

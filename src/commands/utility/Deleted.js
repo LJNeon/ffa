@@ -19,6 +19,7 @@
 const {Argument, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const deleted = require("../../services/deleted.js");
+const {data: {descriptions}} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
 const str = require("../../utilities/string.js");
 
@@ -47,9 +48,11 @@ module.exports = new class Deleted extends Command {
     let value = msg.content.slice(0, config.max.deletedMsgChars);
 
     if (msg.attachments != null && msg.attachments.length !== 0) {
-      const list = msg.attachments.map(a => {
-        return `[${a.filename}](https://ffabot.com/api/attachments/${a.id})`;
-      });
+      const list = msg.attachments.map(a => str.format(
+        descriptions.attachment,
+        a.filename,
+        a.id
+      ));
 
       value += `\n**Attachments:** ${str.list(list)}`;
     }

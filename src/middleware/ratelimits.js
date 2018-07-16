@@ -33,7 +33,10 @@ module.exports = async (req, res, next) => {
   }
 
   res.setHeader("X-RateLimit-Limit", config.max);
-  res.setHeader("X-RateLimit-Remaining", Math.max(config.max - limits.count, 0));
+  res.setHeader(
+    "X-RateLimit-Remaining",
+    Math.max(config.max - limits.count, 0)
+  );
   res.setHeader("X-RateLimit-Reset", Math.floor(limits.reset / 1e3));
 
   if (limits.count >= config.max) {

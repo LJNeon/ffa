@@ -1,3 +1,5 @@
+attachment: "[{0}](https://ffabot.com/api/attachments/{1})"
+
 clear: Delete a specified amount of messages sent by any guild user.
 
 command: |-

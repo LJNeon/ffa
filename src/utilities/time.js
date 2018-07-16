@@ -59,7 +59,11 @@ module.exports = {
   },
 
   formatDate(date) {
-    return date.toLocaleTimeString("en-US", {
+    return `${date.getMonth()}-${date.getDate()}-${date.getFullYear()}`;
+  },
+
+  formatTime(time) {
+    return time.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit"
     });

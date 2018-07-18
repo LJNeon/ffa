@@ -16,15 +16,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const {
+  data: {
+    constants: {
+      discordErrorCodes
+    }
+  }
+} = require("../services/data.js");
+
 module.exports = func => async (...args) => {
   let res;
 
   try {
     res = await func(...args);
   } catch (e) {
-    if ((e.constructor.name === "DiscordHTTPError" && e.code > 599
-        && e.code < 500) || (e.constructor.name === "DiscordRESTError"
-        && e.code !== 50013 && e.code !== 403))
+    const serverErr = e.constructor.name === "DiscordHTTPError"
+        && (e.code > 599 || e.code < 500);
+    const permErr = e.constructor.name === "DiscordRESTError"
+        && e.code !== 50013 && e.code !== 403;
+    const timedOutErr = e.message.startsWith(discordErrorCodes.timedOut);
+
+    if (serverErr === true || permErr === true || timedOutErr === false)
       throw e;
 
     return false;

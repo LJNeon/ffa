@@ -19,7 +19,7 @@
 const {Command} = require("patron.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
-const modRoleUpdate = require("../../services/modRoleUpdate.js");
+const senateUpdate = require("../../services/senateUpdate.js");
 const logs = require("../../services/logs.js");
 const {data: {queries}} = require("../../services/data.js");
 
@@ -40,7 +40,7 @@ module.exports = new class Resign extends Command {
       queries.resetRep,
       [msg.channel.guild.id, msg.author.id]
     );
-    await modRoleUpdate(msg.channel.guild);
+    await senateUpdate(msg.channel.guild);
     await logs.add({
       data: {rank},
       guild_id: msg.channel.guild.id,

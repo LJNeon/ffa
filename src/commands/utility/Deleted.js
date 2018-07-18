@@ -19,7 +19,7 @@
 const {Argument, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const deleted = require("../../services/deleted.js");
-const {data: {descriptions}} = require("../../services/data.js");
+const {data: {descriptions, responses}} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
 const str = require("../../utilities/string.js");
 
@@ -40,7 +40,8 @@ module.exports = new class Deleted extends Command {
       })],
       description: "Gets the last deleted messages of the channel.",
       groupName: "utility",
-      names: ["deleted", "deletedmessages", "deletedmsgs"]
+      names: ["deleted", "deletedmessages", "deletedmsgs"],
+      preconditions: ["nsfw"]
     });
   }
 
@@ -66,16 +67,25 @@ module.exports = new class Deleted extends Command {
   async run(msg, args) {
     const msgs = deleted.get(msg.channel.id, args.count);
 
+    const users = msgs.reduce((a, b) => {
+      if (a.find(u => u.id === b.id) == null)
+        a.push(b);
+
+      return a;
+    }, []);
+
+    const approved = await message.verify(msg, users);
+
+    if (approved == null)
+      return;
+
     if (msgs.length === 0) {
-      return message.replyError(
-        msg,
-        "there have been no recent deleted messages in this channel."
-      );
+      return approved.edit(message.embedify({
+        color: config.customColors.error,
+        description: responses.noDeleted
+      }));
     }
 
-    await message.create(
-      msg.channel,
-      {fields: msgs.map(m => this.msgFormat(m))}
-    );
+    await approved.edit(message.embedify({fields: msgs.map(this.msgFormat)}));
   }
 }();

@@ -78,8 +78,8 @@ ALTER TABLE public.revisions OWNER TO {0};
 CREATE TABLE public.roles (
     guild_id varchar(20) PRIMARY KEY,
     court_id varchar(20),
-    mod_id varchar(20),
-    muted_id varchar(20)
+    muted_id varchar(20),
+    senate_id varchar(20)
 );
 ALTER TABLE public.roles OWNER TO {0};
 

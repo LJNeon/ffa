@@ -16,16 +16,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const modRoleUpdate = require("../../services/modRoleUpdate.js");
+const senateUpdate = require("../../services/senateUpdate.js");
 const {Precondition, PreconditionResult} = require("patron.js");
 
-module.exports = new class ModRole extends Precondition {
+module.exports = new class SenateRole extends Precondition {
   constructor() {
-    super({name: "modrole"});
+    super({name: "senaterole"});
   }
 
   async run(cmd, msg) {
-    await modRoleUpdate(msg.channel.guild);
+    await senateUpdate(msg.channel.guild);
 
     return PreconditionResult.fromSuccess();
   }

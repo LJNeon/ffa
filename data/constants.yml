@@ -10,7 +10,7 @@ discordErrorCodes: {
   cantDM: 50007,
   internalError: [499, 600],
   noPerm: [403, 50013],
-  timedOut: Request timed out (>15000ms),
+  timedOut: Request timed out,
   userOnly: 20001
 }
 

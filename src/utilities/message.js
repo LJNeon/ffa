@@ -18,8 +18,9 @@
 "use strict";
 const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
+const msgCollector = require("../services/messageCollector.js");
 const random = require("./random.js");
-const {data: {descriptions}} = require("../services/data.js");
+const {data: {descriptions, responses}} = require("../services/data.js");
 const str = require("./string.js");
 
 module.exports = {
@@ -205,5 +206,32 @@ module.exports = {
 
   tag(user) {
     return `${str.escapeFormat(user.username)}#${user.discriminator}`;
+  },
+
+  verify(msg, users) {
+    const response = str.format(
+      responses.nsfw,
+      str.list(users.map(this.tag)),
+      str.list(users.map(u => u.id))
+    );
+
+    return new Promise(res => {
+      this.create(msg.channel, response).then(reply => {
+        const timeout = setTimeout(() => {
+          msgCollector.remove(msg.id);
+          res();
+        }, 3e4);
+
+        msgCollector.add(
+          m => m.author.id === msg.author.id
+            && m.content.toLowerCase() === "yes",
+          () => {
+            clearTimeout(timeout);
+            res(reply);
+          },
+          msg.id
+        );
+      });
+    });
   }
 };

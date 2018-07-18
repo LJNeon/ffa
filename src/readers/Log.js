@@ -16,17 +16,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Group} = require("patron.js");
-const {data: {descriptions}} = require("../services/data.js");
+const {TypeReader, TypeReaderResult} = require("patron.js");
+const logs = require("../services/logs.js");
 
-module.exports = new class Justice extends Group {
+module.exports = new class Log extends TypeReader {
   constructor() {
-    super({
-      description: descriptions.justice,
-      name: "justice",
-      postconditions: ["maxactions"],
-      preconditionOptions: [{column: "senate"}],
-      preconditions: ["top", "maxactions", "senaterole"]
-    });
+    super({type: "log"});
+  }
+
+  async read(cmd, msg, arg, args, val) {
+    const result = logs.get(val);
+
+    if (result == null) {
+      return TypeReaderResult.fromError(
+        cmd,
+        "you have provided an invalid log id."
+      );
+    }
+
+    return TypeReaderResult.fromSucess(result);
   }
 }();

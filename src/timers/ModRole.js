@@ -18,10 +18,10 @@
 "use strict";
 const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
-const modRoleUpdate = require("../services/modRoleUpdate.js");
+const senateUpdate = require("../services/senateUpdate.js");
 const Timer = require("../utilities/Timer.js");
 
 module.exports = new Timer(async () => {
   for (const guild of client.guilds.values())
-    await modRoleUpdate(guild);
-}, config.timer.modRoleUpdate);
+    await senateUpdate(guild);
+}, config.timer.senateUpdate);

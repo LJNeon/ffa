@@ -16,17 +16,31 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Group} = require("patron.js");
-const {data: {descriptions}} = require("../services/data.js");
+module.exports = {
+  collectors: [],
 
-module.exports = new class Justice extends Group {
-  constructor() {
-    super({
-      description: descriptions.justice,
-      name: "justice",
-      postconditions: ["maxactions"],
-      preconditionOptions: [{column: "senate"}],
-      preconditions: ["top", "maxactions", "senaterole"]
+  add(condition, callback, key) {
+    this.collectors.push({
+      callback,
+      condition,
+      key
     });
+  },
+
+  check(msg) {
+    for (let i = 0; i < this.collectors.length; i++) {
+      if (this.collectors[i].condition(msg) === true) {
+        this.collectors[i].callback(msg);
+        this.collectors.splice(i, 1);
+        i--;
+      }
+    }
+  },
+
+  remove(key) {
+    const index = this.collectors.findIndex(c => c.key === key);
+
+    if (index !== -1)
+      this.collectors.splice(index, 1);
   }
-}();
+};

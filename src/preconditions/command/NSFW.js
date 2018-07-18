@@ -16,17 +16,31 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Group} = require("patron.js");
-const {data: {descriptions}} = require("../services/data.js");
+const {Precondition, PreconditionResult} = require("patron.js");
 
-module.exports = new class Justice extends Group {
+module.exports = new class NSFW extends Precondition {
   constructor() {
-    super({
-      description: descriptions.justice,
-      name: "justice",
-      postconditions: ["maxactions"],
-      preconditionOptions: [{column: "senate"}],
-      preconditions: ["top", "maxactions", "senaterole"]
-    });
+    super({name: "nsfw"});
+  }
+
+  async run(cmd, msg) {
+    let readable = true;
+
+    for (const overwrite of msg.channel.permissionOverwrites.values()) {
+      if (overwrite.json.readMessages === false) {
+        readable = false;
+        break;
+      }
+    }
+
+    if (msg.channel.guild == null || msg.channel.nsfw === false
+        || readable === false) {
+      return PreconditionResult.fromError(
+        cmd,
+        "this command may only be used in a public channel marked as NSFW."
+      );
+    }
+
+    return PreconditionResult.fromSuccess();
   }
 }();

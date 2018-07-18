@@ -70,7 +70,20 @@ muteMaxLen: the maximum mute length of this rule is {0}.
 
 noBulkDelete: Discord doesn't allow bulk deletion of messages that are more than two weeks old.
 
+noDeleted: there have been no recent deleted messages in this channel.
+
 notmutedUser: this command may not be used on a muted user.
+
+nsfw: |-
+  The content you are requesting to see may contain illicit material sent by {0} ({1}). As an interactive online service, under Section 230 of the Communications Decency Act, we are not legally responsible for the requested content:
+  ```
+  No provider or user of an interactive computer service shall be treated as the publisher or speaker of any information provided by another information content provider
+  47 U.S.C. § 230
+  ```
+
+  If the requested content does contain illict material, you must contact the Discord Trust and Safety Team (https://dis.gd/contact) and the proper authorities.
+
+  Do you agree to these conditions?
 
 rep: You have successfully {0} **{1}** {2} their reputation to {3}, rewarding you with {4} rep.
 

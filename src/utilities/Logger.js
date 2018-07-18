@@ -78,7 +78,7 @@ module.exports = new class Logger {
 
     const timestamp = time.formatTime(date);
     const formatted = `${timestamp} [${level}] ${msgs
-      .map(i => util.inspect(i, {depth: null}))
+      .map(i => util.inspect(i, {depth: 3}))
       .join(" ")}\n`;
 
     console[level.toLowerCase()](str.format(
@@ -87,7 +87,7 @@ module.exports = new class Logger {
       logColors[level],
       level
     ), ...msgs);
-    this.stream.write(formatted);
+    this.write(formatted);
 
     if (level === "ERROR") {
       await appendFile(

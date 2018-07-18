@@ -16,6 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const catchApi = require("../utilities/catchApi.js");
 const catchPromise = require("../utilities/catchPromise.js");
 const chatService = require("../services/chat.js");
 const client = require("../services/client.js");
@@ -23,8 +24,10 @@ const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
 const handler = require("../services/handler.js");
 const logs = require("../services/logs.js");
+const msgCollector = require("../services/messageCollector.js");
 const resultService = require("../services/result.js");
 const spamService = require("../services/spam.js");
+const delMsg = catchApi(client.deleteMessage);
 const logMsg = catchPromise(logs.message);
 
 client.on("messageCreate", catchPromise(async msg => {
@@ -32,7 +35,9 @@ client.on("messageCreate", catchPromise(async msg => {
       || msg.author.discriminator === "0000")
     return;
   else if (msg.embeds.length !== 0)
-    return msg.delete().catch(() => {});
+    return delMsg(msg.channel.id, msg.id);
+
+  msgCollector.check(msg);
 
   let guild;
 

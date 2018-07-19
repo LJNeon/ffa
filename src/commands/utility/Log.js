@@ -19,7 +19,7 @@
 const {Argument, Command} = require("patron.js");
 const client = require("../../services/client.js");
 const message = require("../../utilities/message.js");
-const str = require("../../utilities/str.js");
+const str = require("../../utilities/string.js");
 
 module.exports = new class Log extends Command {
   constructor() {

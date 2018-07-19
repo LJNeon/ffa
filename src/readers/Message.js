@@ -17,23 +17,41 @@
  */
 "use strict";
 const {TypeReader, TypeReaderResult} = require("patron.js");
-const logs = require("../services/logs.js");
+const db = require("../services/database.js");
+const {data: {regexes, responses, queries}} = require("../services/data.js");
 
-module.exports = new class Log extends TypeReader {
+module.exports = new class Message extends TypeReader {
   constructor() {
-    super({type: "log"});
+    super({type: "msg"});
   }
 
   async read(cmd, msg, arg, args, val) {
-    const result = logs.get(val);
-
-    if (result == null) {
+    if (regexes.onlyId.test(val) === false) {
       return TypeReaderResult.fromError(
         cmd,
-        "you have provided an invalid log id."
+        "please provide a valid message ID."
       );
     }
 
-    return TypeReaderResult.fromSuccess(result);
+    const res = await db.getFirstRow(
+      queries.limitedMessageSelect,
+      [msg.channel.guild.id, val]
+    );
+
+    if (res == null) {
+      return TypeReaderResult.fromError(
+        cmd,
+        responses.invalidMessage
+      );
+    }
+
+    const {rows} = await db.pool.query(
+      "SELECT attachment_ids, content, epoch FROM revisions WHERE msg_id = $1",
+      [val]
+    );
+
+    res.revisions = rows;
+
+    return TypeReaderResult.fromSuccess(res);
   }
 }();

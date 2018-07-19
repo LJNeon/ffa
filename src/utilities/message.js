@@ -225,8 +225,9 @@ module.exports = {
         msgCollector.add(
           m => m.author.id === msg.author.id
             && m.content.toLowerCase() === "yes",
-          () => {
+          yes => {
             clearTimeout(timeout);
+            yes.delete().catch(() => {});
             res(reply);
           },
           msg.id

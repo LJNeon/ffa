@@ -4,6 +4,8 @@ alt: |-
   **Created:** {0}
   **Joined:** {1}{2}
 
+attachment: {0} attachment's sent by {1} ({2})
+
 between: the {0} must be between {1} and {2}.
 
 cantDM: I can't DM you. Please allow direct messages from server members.
@@ -16,7 +18,7 @@ console: "{0} {1}[{2}]\x1b[0m"
 
 cooldownReply: you may use this command in {0}.
 
-hasMsg: the {0} must contain valid message IDs. <https://support.discordapp.com/hc/en-us/articles/206346498>
+hasMsg: the {0} must contain the ID of at least one message sent in this server. Please visit this [Discord blog post](https://support.discordapp.com/hc/en-us/articles/206346498) for information on how to obtain IDs
 
 helpMsg: |-
   FFA's goal is to provide a fully decentralized discord server by allowing the community to control every aspect of the server. The entire system is based around reputation. The most reputable users are the moderators. If you believe a certain user is suitable to moderate, you may enter the following: `{0}rep username#1234`. The opposite can be done with `{0}unrep`.
@@ -31,6 +33,8 @@ incorrectUsage: |-
   you are incorrectly using this command.
   **Usage:** `{0}{1}`
   **Example:** `{0}{2}`
+
+invalidMessage: the provided message is invalid, wasn't collected or wasn't sent in this server.
 
 itemList: "**{0}** {1}"
 
@@ -49,6 +53,8 @@ maxActions: you have reached the {0} maximum moderation actions per hour.
 maxLen: The maximum {0} length is {1} characters.
 
 memberAge: this command may only be used by members who have been in this server for at least {0}.
+
+msg: {0} sent by {1} ({2})
 
 modLog: |-
   **Action:** {0}
@@ -70,18 +76,15 @@ muteMaxLen: the maximum mute length of this rule is {0}.
 
 noBulkDelete: Discord doesn't allow bulk deletion of messages that are more than two weeks old.
 
-noDeleted: there have been no recent deleted messages in this channel.
-
 notmutedUser: this command may not be used on a muted user.
 
 nsfw: |-
   The content you are requesting to see may contain illicit material sent by {0} ({1}). As an interactive online service, under Section 230 of the Communications Decency Act, we are not legally responsible for the requested content:
   ```
   No provider or user of an interactive computer service shall be treated as the publisher or speaker of any information provided by another information content provider
-  47 U.S.C. § 230
-  ```
+  ```47 U.S.C. § 230
 
-  If the requested content does contain illict material, you must contact the Discord Trust and Safety Team (https://dis.gd/contact) and the proper authorities.
+  If the requested content does contain illict material, you must contact the [Discord Trust and Safety Team](https://dis.gd/contact) and the proper authorities.
 
   Do you agree to these conditions?
 
@@ -91,8 +94,12 @@ repRank: |-
   **Reputation:** {0}
   **Rank:** {1}
 
+revisionDoesntExist: "**{0}**, that revision doesn't exist."
+
 rule: "**{0}.** {1} ({2})"
 
 setErr: Table {0} Column {1} has an unsupported type.
 
 setList: "this column is a list, use either `{0}add` or `{0}remove`."
+
+userSentMsg: the evidence must contain the ID of at least one message sent by **{0}**.

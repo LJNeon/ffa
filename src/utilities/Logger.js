@@ -109,8 +109,9 @@ module.exports = new class Logger {
   }
 
   streamWritable() {
-    return new Promise((res, rej) => {
+    return new Promise(res => {
       let done = false;
+
       this.stream.on("open", () => {
         done = true;
         res();

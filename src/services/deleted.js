@@ -29,7 +29,7 @@ module.exports = {
     if (channel.length === config.max.deletedMsgs)
       channel.pop();
 
-    channel.splice(0, 0, msg);
+    channel.splice(0, 0, msg.id);
   },
 
   get(channelId, count) {

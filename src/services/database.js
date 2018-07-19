@@ -17,15 +17,14 @@
  */
 "use strict";
 const cli = require("./cli.js");
+const {Client, Pool} = require("pg");
 const crypto = require("crypto");
 const {data} = require("./data.js");
 const fs = require("fs");
 const path = require("path");
-const pg = require("pg");
 const str = require("../utilities/string.js");
 const util = require("util");
 const yaml = require("js-yaml");
-const {Client, Pool} = pg.native == null ? pg : pg.native;
 const readDir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);

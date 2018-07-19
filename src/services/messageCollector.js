@@ -17,8 +17,6 @@
  */
 "use strict";
 module.exports = {
-  collectors: [],
-
   add(condition, callback, key) {
     this.collectors.push({
       callback,
@@ -36,6 +34,8 @@ module.exports = {
       }
     }
   },
+
+  collectors: [],
 
   remove(key) {
     const index = this.collectors.findIndex(c => c.key === key);

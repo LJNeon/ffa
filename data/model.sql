@@ -8,8 +8,8 @@ ALTER TABLE public.ages OWNER TO {0};
 CREATE TABLE public.channels (
     guild_id varchar(20) PRIMARY KEY,
     ignored_ids varchar(20)[] NOT NULL DEFAULT '{}',
-    log_id varchar(20),
-    rules_id varchar(20)
+    logs_id varchar(20) UNIQUE,
+    rules_id varchar(20) UNIQUE
 );
 ALTER TABLE public.channels OWNER TO {0};
 
@@ -77,9 +77,9 @@ ALTER TABLE public.revisions OWNER TO {0};
 
 CREATE TABLE public.roles (
     guild_id varchar(20) PRIMARY KEY,
-    court_id varchar(20),
-    muted_id varchar(20),
-    senate_id varchar(20)
+    court_id varchar(20) UNIQUE,
+    muted_id varchar(20) UNIQUE,
+    senate_id varchar(20) UNIQUE
 );
 ALTER TABLE public.roles OWNER TO {0};
 

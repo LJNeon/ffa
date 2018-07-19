@@ -18,8 +18,10 @@
 "use strict";
 const {ArgumentPrecondition, PreconditionResult} = require("patron.js");
 const db = require("../../services/database.js");
+const message = require("../../utilities/message.js");
 const {data: {regexes, responses}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
+const {User} = require("eris");
 
 module.exports = new class Between extends ArgumentPrecondition {
   constructor() {
@@ -28,6 +30,13 @@ module.exports = new class Between extends ArgumentPrecondition {
 
   async run(cmd, msg, arg, args, val) {
     const ids = val.match(regexes.ids);
+    let user;
+    let userSent = false;
+
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] instanceof User)
+        user = args[i];
+    }
 
     if (ids == null) {
       return PreconditionResult.fromError(
@@ -38,8 +47,8 @@ module.exports = new class Between extends ArgumentPrecondition {
 
     for (let i = 0; i < ids.length; i++) {
       const res = await db.getFirstRow(
-        "SELECT 1 FROM messages WHERE id = $1",
-        [ids[i]]
+        "SELECT author_id FROM messages WHERE (guild_id, id) = ($1, $2)",
+        [msg.channel.guild.id, ids[i]]
       );
 
       if (res == null) {
@@ -47,7 +56,16 @@ module.exports = new class Between extends ArgumentPrecondition {
           cmd,
           str.format(responses.hasMsg, arg.name)
         );
+      } else if (res.author_id === user.id) {
+        userSent = true;
       }
+    }
+
+    if (userSent === false) {
+      return PreconditionResult.fromError(
+        cmd,
+        str.format(responses.userSentMsg, message.tag(user))
+      );
     }
 
     return PreconditionResult.fromSuccess();

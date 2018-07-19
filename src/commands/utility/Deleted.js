@@ -17,7 +17,9 @@
  */
 "use strict";
 const {Argument, Command} = require("patron.js");
+const client = require("../../services/client.js");
 const {config} = require("../../services/cli.js");
+const db = require("../../services/database.js");
 const deleted = require("../../services/deleted.js");
 const {data: {descriptions, responses}} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
@@ -45,47 +47,70 @@ module.exports = new class Deleted extends Command {
     });
   }
 
-  msgFormat(msg) {
-    let value = msg.content.slice(0, config.max.deletedMsgChars);
+  async run(msg, args) {
+    const ids = deleted.get(msg.channel.id, args.count);
 
-    if (msg.attachments != null && msg.attachments.length !== 0) {
-      const list = msg.attachments.map(a => str.format(
-        descriptions.attachment,
-        a.filename,
-        a.id
-      ));
-
-      value += `\n**Attachments:** ${str.list(list)}`;
+    if (ids.length === 0) {
+      return message.replyError(
+        msg,
+        "there are no recently deleted messages in this channel."
+      );
     }
 
-    return {
-      name: message.tag(msg.author),
-      value
-    };
-  }
+    const {rows: msgs} = await db.pool.query(
+      "SELECT * FROM messages WHERE id = ANY($1)",
+      [ids]
+    );
+    const fields = [];
+    const users = [];
 
-  async run(msg, args) {
-    const msgs = deleted.get(msg.channel.id, args.count);
+    for (let i = 0; i < msgs.length; i++) {
+      const revision = await db.getFirstRow(
+        "SELECT * FROM revisions WHERE msg_id = $1 ORDER BY epoch ASC LIMIT 1",
+        [msgs[i].id]
+      );
 
-    const users = msgs.reduce((a, b) => {
-      if (a.find(u => u.id === b.id) == null)
-        a.push(b);
+      users.push(client.users.get(msgs[i].author_id));
 
-      return a;
-    }, []);
+      if (revision.content.length !== 0) {
+        fields.push({
+          name: str.format(
+            responses.msg,
+            msgs[i].id,
+            message.tag(users[i]),
+            users[i].id
+          ),
+          value: revision.content.slice(0, config.max.deletedMsgChars)
+        });
+      }
+
+      if (revision.attachment_ids.length !== 0) {
+        const {rows: attachments} = await db.pool.query(
+          "SELECT id, name FROM attachments WHERE id = ANY($1)",
+          [revision.attachment_ids]
+        );
+
+        fields.push({
+          name: str.format(
+            responses.attachment,
+            msgs[i].id,
+            message.tag(users[i]),
+            users[i].id
+          ),
+          value: str.list(attachments.map(a => str.format(
+            descriptions.attachment,
+            str.escapeFormat(a.name),
+            a.id
+          )))
+        });
+      }
+    }
 
     const approved = await message.verify(msg, users);
 
     if (approved == null)
       return;
 
-    if (msgs.length === 0) {
-      return approved.edit(message.embedify({
-        color: config.customColors.error,
-        description: responses.noDeleted
-      }));
-    }
-
-    await approved.edit(message.embedify({fields: msgs.map(this.msgFormat)}));
+    await approved.edit(message.embedify({fields}));
   }
 }();

@@ -25,7 +25,16 @@ const mutex = new LimitedMutex(1);
 const selectRep = str.format(queries.selectRep, "DESC LIMIT $2");
 
 module.exports = async guild => mutex.sync(guild.id, async () => {
-  const {roles: {court_id, senate_id}, top: {court, senate}} = await db.getGuild(
+  const {
+    roles: {
+      court_id,
+      senate_id
+    },
+    top: {
+      court,
+      senate
+    }
+  } = await db.getGuild(
     guild.id,
     {
       roles: "court_id, senate_id",
@@ -63,7 +72,6 @@ module.exports = async guild => mutex.sync(guild.id, async () => {
     else
       await member.addRole(senate_id).catch(() => {});
   }
-
 
   for (let i = 0; i < currentCourt.length; i++) {
     const rank = res.rows.findIndex(r => r.user_id === currentCourt[i].id);

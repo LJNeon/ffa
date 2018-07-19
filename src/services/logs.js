@@ -23,10 +23,23 @@ const https = require("https");
 const message = require("../utilities/message.js");
 const mime = require("mime");
 const pako = require("pako");
-const {data: {queries, responses}} = require("./data.js");
+const {data: {constants, queries, responses}} = require("./data.js");
 const sharp = require("sharp");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
+
+async function formatImage(file, type) {
+  if (constants.sharpFormats.includes(type) === true) {
+    try {
+      return sharp(file).jpeg({quality: 50}).toBuffer();
+    } catch (e) {
+      if (e.message == null || e.message.includes("corrupt") === false)
+        throw e;
+    }
+  }
+
+  return file;
+}
 
 function getAttachment(options) {
   return new Promise((res, rej) => {
@@ -43,9 +56,9 @@ function getAttachment(options) {
 
 module.exports = {
   async add(log, color) {
-    const {channels: {log_id}} = await db.getGuild(
+    const {channels: {logs_id}} = await db.getGuild(
       log.guild_id,
-      {channels: "log_id"}
+      {channels: "logs_id"}
     );
     const res = await db.pool.query(
       queries.addLog,
@@ -56,8 +69,8 @@ module.exports = {
         log.type]
     );
 
-    if (log_id != null) {
-      const channel = client.getChannel(log_id);
+    if (logs_id != null) {
+      const channel = client.getChannel(logs_id);
 
       if (channel != null) {
         const id = log.data.mod_id == null ? log.user_id : log.data.mod_id;
@@ -78,38 +91,26 @@ module.exports = {
   },
 
   async describe(log) {
-    if (log.type === "mute" || log.type === "unmute" || log.type === "automute"
-        || log.type === "autounmute" || log.type === "clear") {
-      let action = "Mute";
+    if (Object.keys(constants.modLogTypes).includes(log.type) === true) {
+      const action = constants.modLogTypes[log.type];
       let data = "";
 
-      if (log.type === "unmute")
-        action = "Unmute";
-      else if (log.type === "automute")
-        action = "Automatic Mute";
-      else if (log.type === "autounmute")
-        action = "Automatic Unmute";
-      else if (log.type === "clear")
-        action = "Clear";
+      for (const key in log.data) {
+        if (log.data.hasOwnProperty(key) === false || key === "mod_id")
+          continue;
 
-      if (log.data != null) {
-        for (const key in log.data) {
-          if (log.data.hasOwnProperty(key) === false || key === "mod_id")
-            continue;
+        let val = log.data[key];
 
-          let val = log.data[key];
+        if (val == null)
+          continue;
+        else if (Array.isArray(val))
+          val = str.list(val);
+        else if (key === "length")
+          val = time.format(val);
+        else if (key === "penalty")
+          val = `${val.toFixed(2)} rep`;
 
-          if (val == null)
-            continue;
-          else if (Array.isArray(val))
-            val = str.list(val);
-          else if (key === "length")
-            val = time.format(val);
-          else if (key === "penalty")
-            val = `${val.toFixed(2)} rep`;
-
-          data += `\n**${str.capitalize(key)}:** ${val}`;
-        }
+        data += `\n**${str.capitalize(key)}:** ${val}`;
       }
 
       return str.format(
@@ -137,7 +138,7 @@ module.exports = {
 
   async get(id, columns = "*") {
     return db.getFirstRow(
-      `SELECT ${columns} FROM logs where log_id = $1`,
+      `SELECT ${columns} FROM logs where logs_id = $1`,
       [id]
     );
   },
@@ -183,11 +184,7 @@ module.exports = {
       if (match == null) {
         const type = mime.getType(attachments[i].filename);
 
-        if (type === "image/jpeg" || type === "image/png"
-            || type === "image/webp" || type === "image/svg+xml"
-            || type === "image/tiff")
-          file = await sharp(file).jpeg({quality: 50}).toBuffer();
-
+        file = await formatImage(file, type);
         file = Buffer.from(pako.deflate(file));
         await db.pool.query(
           queries.insertAttachment,

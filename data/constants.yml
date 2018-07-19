@@ -23,6 +23,16 @@ logColors: {
 
 logsDirectory: ./logs/
 
+modLogTypes: {
+  automute: Automatic Mute,
+  autounmute: Automatic Unmute,
+  clear: Clear,
+  mute: Mute,
+  unmute: Unmute
+}
+
+sharpFormats: [image/jpeg, image/png, image/webp, image/svg+xml, image/tiff]
+
 times: {
   day: [864e5],
   hour: [36e4, 24],

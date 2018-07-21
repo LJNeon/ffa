@@ -44,7 +44,7 @@ module.exports = {
 
   colors: config.colors,
 
-  create(channel, msg, color, override = false) {
+  create(channel, msg, color, file) {
     let perms;
 
     if (channel.guild != null)
@@ -62,8 +62,8 @@ module.exports = {
         result = msg.content;
     }
 
-    if (override !== true && (perms == null
-        || perms.has("embedLinks") === true)) {
+    if ((perms == null || perms.has("embedLinks") === true)
+        && result.length !== 0) {
       if (typeof msg === "string") {
         result = this.embedify({
           color,
@@ -77,7 +77,7 @@ module.exports = {
       }
     }
 
-    return channel.createMessage(result);
+    return channel.createMessage(result, file);
   },
 
   // TODO delete when eval is removed
@@ -140,7 +140,7 @@ module.exports = {
 
   errorColor: config.customColors.error,
 
-  reply(msg, reply, color, override = false) {
+  reply(msg, reply, color, file) {
     let perms;
 
     if (msg.channel.guild != null) {
@@ -161,8 +161,8 @@ module.exports = {
         result = reply.content;
     }
 
-    if (override !== true && (perms == null
-        || perms.has("embedLinks") === true)) {
+    if ((perms == null || perms.has("embedLinks") === true)
+        && result.length !== 0) {
       if (typeof reply === "string") {
         result = this.embedify({
           color,
@@ -193,7 +193,7 @@ module.exports = {
       );
     }
 
-    return msg.channel.createMessage(result);
+    return msg.channel.createMessage(result, file);
   },
 
   replyError(msg, reply) {
@@ -208,15 +208,15 @@ module.exports = {
     return `${str.escapeFormat(user.username)}#${user.discriminator}`;
   },
 
-  verify(msg, users) {
+  verify(msg, users, file) {
     const response = str.format(
       responses.nsfw,
-      str.list(users.map(this.tag)),
+      str.list(users.map(u => `**${this.tag(u)}**`)),
       str.list(users.map(u => u.id))
     );
 
     return new Promise(res => {
-      this.create(msg.channel, response).then(reply => {
+      this.create(msg.channel, response, null, file).then(reply => {
         const timeout = setTimeout(() => {
           msgCollector.remove(msg.id);
           res();

@@ -22,6 +22,7 @@ const {data: {queries}} = require("../../services/data.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
 const ruleService = require("../../services/rules.js");
+const time = require("../../utilities/time.js");
 
 module.exports = new class AddRule extends Command {
   constructor() {
@@ -44,10 +45,11 @@ module.exports = new class AddRule extends Command {
         key: "muteLen",
         name: "max mute length",
         preconditionOptions: [{
+          format: time.format,
           max: config.max.mute,
           min: config.min.mute
         }],
-        preconditions: ["betweentime"],
+        preconditions: ["between"],
         type: "timespan"
       })],
       description: "Adds a rule.",

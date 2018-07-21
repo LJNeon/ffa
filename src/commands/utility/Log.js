@@ -38,10 +38,10 @@ module.exports = new class Log extends Command {
   }
 
   async run(msg, args) {
-    let id = args.log.data.mod_id;
+    let id = args.log.user_id;
 
-    if (id == null)
-      id = args.log.user_id;
+    if (args.log.data != null && args.log.data.senate_id != null)
+      id = args.log.data.senate_id;
 
     const user = client.users.get(id);
     const guild = str.escapeFormat(client.guilds.get(args.guild_id).name);

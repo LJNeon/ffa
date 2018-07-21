@@ -162,9 +162,9 @@ module.exports = {
           data: {
             evidence: args.evidence,
             length: args.length,
-            mod_id: msg.author.id,
             msg_ids: args.evidence.match(regexes.ids),
-            rule: args.rule.content
+            rule: args.rule.content,
+            senate_id: msg.author.id
           },
           guild_id: msg.channel.guild.id,
           type: "mute",
@@ -223,7 +223,7 @@ module.exports = {
         {
           data: {
             evidence: args.evidence,
-            mod_id: msg.author.id
+            senate_id: msg.author.id
           },
           guild_id: msg.channel.guild.id,
           type: "unmute",

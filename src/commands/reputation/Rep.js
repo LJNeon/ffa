@@ -63,7 +63,7 @@ module.exports = new class Rep extends Command {
       msg.channel.guild.id,
       {rep: "increase, rep_reward"}
     );
-    const rep = await db.changeRep(
+    const {reputation} = await db.changeRep(
       msg.channel.guild.id,
       args.user.id,
       increase
@@ -75,7 +75,7 @@ module.exports = new class Rep extends Command {
       "repped",
       message.tag(args.user),
       "increasing",
-      rep.toFixed(2),
+      reputation.toFixed(2),
       rep_reward.toFixed(2)
     ));
     await logs.add({

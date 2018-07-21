@@ -58,7 +58,6 @@ module.exports = new class Clear extends Command {
         type: "integer"
       }),
       new Argument({
-        defaultValue: null,
         example: "https://imgur.com/a/sKrBAKD",
         key: "evidence",
         name: "evidence",
@@ -87,10 +86,10 @@ module.exports = new class Clear extends Command {
     await logs.add({
       data: {
         evidence: args.evidence,
-        mod_id: msg.author.id,
         msg_ids: args.evidence.match(regexes.ids),
         quantity: amount,
-        rule: args.rule.content
+        rule: args.rule.content,
+        senate_id: msg.author.id
       },
       guild_id: msg.channel.guild.id,
       type: "clear",

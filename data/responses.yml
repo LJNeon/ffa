@@ -1,16 +1,14 @@
 allCooldowns: All of **{0}** commands are available for use.
 
-alt: |-
-  **Created:** {0}
-  **Joined:** {1}{2}
+attachment: "{0} attachment's sent by {1} ({2})"
 
-attachment: {0} attachment's sent by {1} ({2})
+attachmentUrl: "https://ffabot.com/api/attachments/{0}"
 
 between: the {0} must be between {1} and {2}.
 
-cantDM: I can't DM you. Please allow direct messages from server members.
+cantDM: "I can't DM you. Please allow direct messages from server members."
 
-cantLocate: Unable to locate {0}. Please double-check that it's in the working directory, your home directory, or the {1} argument.
+cantLocate: "Unable to locate {0}. Please double-check that it's in the working directory, your home directory, or the {1} argument."
 
 clearReply: "you have successfully deleted {0} messages sent by **{1}**."
 
@@ -18,7 +16,19 @@ console: "{0} {1}[{2}]\x1b[0m"
 
 cooldownReply: you may use this command in {0}.
 
-hasMsg: the {0} must contain the ID of at least one message sent in this server. Please visit this [Discord blog post](https://support.discordapp.com/hc/en-us/articles/206346498) for information on how to obtain IDs
+data: |-
+  User: {0} ({1})
+
+  Servers:
+  {2}
+
+  Messages:
+  {3}
+
+  Logs:
+  {4}
+
+hasMsg: "the {0} must contain the ID of at least one message sent in this server. Please visit this [Discord blog post](https://support.discordapp.com/hc/en-us/articles/206346498) for information on how to obtain IDs."
 
 helpMsg: |-
   FFA's goal is to provide a fully decentralized discord server by allowing the community to control every aspect of the server. The entire system is based around reputation. The most reputable users are the moderators. If you believe a certain user is suitable to moderate, you may enter the following: `{0}rep username#1234`. The opposite can be done with `{0}unrep`.
@@ -34,7 +44,7 @@ incorrectUsage: |-
   **Usage:** `{0}{1}`
   **Example:** `{0}{2}`
 
-invalidMessage: the provided message is invalid, wasn't collected or wasn't sent in this server.
+invalidMessage: "the provided message is invalid, wasn't collected or wasn't sent in this server."
 
 itemList: "**{0}** {1}"
 
@@ -54,7 +64,13 @@ maxLen: The maximum {0} length is {1} characters.
 
 memberAge: this command may only be used by members who have been in this server for at least {0}.
 
-msg: {0} sent by {1} ({2})
+msg: "{0} sent by {1} ({2})"
+
+msgList: |-
+   * {0}
+     * Server: {1}
+     * Channel: {2}
+     {3}
 
 modLog: |-
   **Action:** {0}
@@ -74,9 +90,9 @@ mutedUser: this command may only be used on a muted user.
 
 muteMaxLen: the maximum mute length of this rule is {0}.
 
-noBulkDelete: Discord doesn't allow bulk deletion of messages that are more than two weeks old.
+noBulkDelete: "Discord doesn't allow bulk deletion of messages that are more than two weeks old."
 
-notmutedUser: this command may not be used on a muted user.
+notMutedUser: this command may not be used on a muted user.
 
 nsfw: |-
   The content you are requesting to see may contain illicit material sent by {0} ({1}). As an interactive online service, under Section 230 of the Communications Decency Act, we are not legally responsible for the requested content:
@@ -88,15 +104,25 @@ nsfw: |-
 
   Do you agree to these conditions?
 
-rep: You have successfully {0} **{1}** {2} their reputation to {3}, rewarding you with {4} rep.
+rep: you have successfully {0} **{1}** {2} their reputation to {3}, rewarding you with {4} rep.
 
 repRank: |-
   **Reputation:** {0}
   **Rank:** {1}
 
-revisionDoesntExist: "**{0}**, that revision doesn't exist."
+revisionList: |-
+    * Revision #{0}
+        * Content: {1}
+        * Attachments:{2}
+        * Created at: {3}
 
 rule: "**{0}.** {1} ({2})"
+
+serverList: |-
+  * {0}
+    * {1} reputation
+    * Currently{2} muted
+    * Currently{3} in this server
 
 setErr: Table {0} Column {1} has an unsupported type.
 

@@ -73,7 +73,11 @@ module.exports = {
       const channel = client.getChannel(logs_id);
 
       if (channel != null) {
-        const id = log.data.mod_id == null ? log.user_id : log.data.mod_id;
+        let id = log.user_id;
+
+        if (log.data != null && log.data.senate_id != null)
+          id = log.data.senate_id;
+
         const user = client.users.get(id);
 
         return message.create(channel, {
@@ -96,7 +100,7 @@ module.exports = {
       let data = "";
 
       for (const key in log.data) {
-        if (log.data.hasOwnProperty(key) === false || key === "mod_id")
+        if (log.data.hasOwnProperty(key) === false || key === "senate_id")
           continue;
 
         let val = log.data[key];

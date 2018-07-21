@@ -26,29 +26,45 @@ module.exports = new class Between extends ArgumentPrecondition {
   }
 
   async run(cmd, msg, arg, args, val, opt) {
-    if (val == null || ((opt.min == null || val >= opt.min) && (opt.max == null
-        || val <= opt.max)))
+    let {max = null, min = null} = opt;
+
+    if (typeof max === "function")
+      max = max(args);
+
+    if (typeof min === "function")
+      min = min(args);
+
+    if (val == null || ((min == null || val >= min) && (max == null
+        || val <= max)))
       return PreconditionResult.fromSuccess();
 
-    if (opt.min == null) {
+    if (typeof opt.format === "function") {
+      if (max != null)
+        max = opt.format(max);
+
+      if (min != null)
+        min = opt.format(min);
+    }
+
+    if (min == null) {
       return PreconditionResult.fromError(
         cmd,
-        `the ${arg.name} must be below ${opt.max}.`
+        `the ${arg.name} must be below or equal to ${max}.`
       );
     }
 
-    if (opt.max == null) {
+    if (max == null) {
       return PreconditionResult.fromError(
         cmd,
-        `the ${arg.name} must be above ${opt.min}.`
+        `the ${arg.name} must be above or equal to ${min}.`
       );
     }
 
     return PreconditionResult.fromError(cmd, str.format(
       responses.between,
       arg.name,
-      opt.min,
-      opt.max
+      min,
+      max
     ));
   }
 }();

@@ -52,6 +52,7 @@ module.exports = new class TimeLeft extends Command {
 
     await message.create(msg.channel, {
       description: `**Time Left:** ${timeStr}`,
+      footer: {text: `Log #${log.log_id}`},
       title: `${message.tag(args.user)}'s Mute`
     });
   }

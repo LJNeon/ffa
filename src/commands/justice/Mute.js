@@ -19,6 +19,7 @@
 const {Argument, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const senate = require("../../services/senate.js");
+const time = require("../../utilities/time.js");
 
 module.exports = new class Mute extends Command {
   constructor() {
@@ -41,10 +42,11 @@ module.exports = new class Mute extends Command {
         key: "length",
         name: "mute length",
         preconditionOptions: [{
+          format: time.format,
           max: config.max.mute,
           min: config.min.mute
         }],
-        preconditions: ["betweentime"],
+        preconditions: ["between"],
         type: "timespan"
       }),
       new Argument({

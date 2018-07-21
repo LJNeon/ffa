@@ -21,6 +21,10 @@ const client = require("../services/client.js");
 const logs = require("../services/logs.js");
 
 client.on("messageUpdate", catchPromise(async msg => {
+  // eslint-disable-next-line no-undefined
+  if (msg.author === undefined)
+    console.log(msg);
+
   if (msg.type === 0 && msg.author.bot === false
       && msg.author.discriminator !== "0000" && msg.embeds.length === 0)
     await logs.message(msg);

@@ -18,9 +18,8 @@
 "use strict";
 const {Argument, Command} = require("patron.js");
 const client = require("../../services/client.js");
-const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
-const {data: {descriptions, responses}} = require("../../services/data.js");
+const {data: {descriptions}} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
 const str = require("../../utilities/string.js");
 
@@ -38,6 +37,11 @@ module.exports = new class Message extends Command {
         example: "1",
         key: "edit",
         name: "revision",
+        preconditionOptions: [{
+          max: args => args.msg.revisions.length,
+          min: 1
+        }],
+        preconditions: ["between"],
         remainder: true,
         type: "integer"
       })],
@@ -49,30 +53,29 @@ module.exports = new class Message extends Command {
   }
 
   async run(msg, args) {
+    if (args.msg.revisions.length < args.edit)
+      return message.replyError(msg, "that revision doesn't exist.");
+
     const approved = await message.verify(
       msg,
       [client.users.get(args.msg.author_id)]
     );
 
-    if (approved == null) {
+    if (approved == null)
       return;
-    } else if (args.msg.revisions.length < args.edit) {
-      return approved.edit(message.embedify({
-        color: config.customColors.error,
-        description: str.format(
-          responses.revisionDoesntExist,
-          message.tag(msg.author)
-        )
-      }));
-    }
 
     const {rows: attachments} = await db.pool.query(
       "SELECT id, name FROM attachments WHERE id = ANY($1)",
       [args.msg.revisions[args.edit - 1].attachment_ids]
     );
+    const author = client.users.get(args.msg.author_id);
+    const channel = client.getChannel(args.msg.channel_id);
 
     await approved.edit(message.embedify({
-      author: {name: message.tag(client.users.get(args.msg.author_id))},
+      author: {
+        icon_url: author.avatarURL,
+        name: `${message.tag(author)} (${author.id})`
+      },
       description: args.msg.revisions[args.edit - 1].content,
       fields: attachments.length === 0 ? null : [{
         name: "Attachments",
@@ -81,7 +84,10 @@ module.exports = new class Message extends Command {
           str.escapeFormat(a.name),
           a.id
         )))
-      }]
+      }],
+      footer: {text: `#${channel.name} (${channel.id})`},
+      timestamp: args.msg.revisions[args.edit - 1].epoch,
+      title: `Revision ${args.edit} of ${args.msg.revisions.length}`
     }));
   }
 }();

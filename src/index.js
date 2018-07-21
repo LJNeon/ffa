@@ -19,7 +19,6 @@
 process.env.TZ = "utc";
 
 const data = require("./services/data.js");
-let Logger;
 const reqAbs = require("./utilities/reqAbs.js");
 
 (async () => {
@@ -28,7 +27,6 @@ const reqAbs = require("./utilities/reqAbs.js");
 
   const cli = require("./services/cli.js");
 
-  Logger = require("./utilities/Logger.js");
   await cli.checkLicense();
   await cli.fetch();
 
@@ -53,10 +51,6 @@ const reqAbs = require("./utilities/reqAbs.js");
   await reqAbs(__dirname, "./events");
   await client.connect();
 })().catch(e => {
-  if (Logger == null)
-    console.error(e);
-  else
-    Logger.error(e);
-
+  console.error(e);
   process.exit(1);
 });

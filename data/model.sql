@@ -7,6 +7,7 @@ ALTER TABLE public.ages OWNER TO {0};
 
 CREATE TABLE public.channels (
     guild_id varchar(20) PRIMARY KEY,
+    cases_id varchar(20) UNIQUE,
     ignored_ids varchar(20)[] NOT NULL DEFAULT '{}',
     logs_id varchar(20) UNIQUE,
     rules_id varchar(20) UNIQUE
@@ -96,10 +97,12 @@ ALTER TABLE public.rules OWNER TO {0};
 CREATE TABLE public.senate (
     guild_id varchar(20) PRIMARY KEY,
     auto_mute boolean NOT NULL DEFAULT true,
+    ban_evidence int NOT NULL CHECK (ban_evidence > 0) DEFAULT 100,
     ban_sigs smallint NOT NULL CHECK (ban_sigs > 0) DEFAULT 7,
     case_count int NOT NULL DEFAULT 0,
     max_actions smallint NOT NULL CHECK (max_actions > 0) DEFAULT 15,
-    mute_length int NOT NULL CHECK (mute_length > 0) DEFAULT 21600000
+    mute_length int NOT NULL CHECK (mute_length > 0) DEFAULT 21600000,
+    vote_opinion int NOT NULL CHECK (vote_opinion > 0) DEFAULT 50
 );
 ALTER TABLE public.senate OWNER TO {0};
 

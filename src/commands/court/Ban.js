@@ -103,7 +103,6 @@ module.exports = new class Ban extends Command {
       courtMembers.splice(index, 1);
 
     await logs.add({
-      guild_id: msg.channel.guild.id,
       data: {
         court: courtMembers.map(c => c.user_id),
         evidence: args.evidence,
@@ -113,6 +112,7 @@ module.exports = new class Ban extends Command {
         resolved: false,
         rule: args.rule.content
       },
+      guild_id: msg.channel.guild.id,
       type: "ban_request",
       user_id: args.user.id
     });

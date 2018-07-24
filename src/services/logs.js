@@ -62,16 +62,28 @@ module.exports = {
     );
     const res = await db.pool.query(
       queries.addLog,
-      [log.guild_id,
-        log.user_id,
-        log.data,
-        log.type]
+      [log.guild_id, log.user_id, log.data, log.type]
     );
 
     if (log.data.msg_ids != null) {
       await db.pool.query(
         "UPDATE messages SET used = true WHERE used = false AND id = ANY($1)",
         [log.data.msg_ids]
+      );
+
+      const {rows} = await db.pool.query(
+        "SELECT attachment_ids FROM revisions WHERE msg_id = ANY($1)",
+        [log.data.msg_ids]
+      );
+      const attachmentIds = rows.reduce((a, b) => {
+        a.push(...b.attachment_ids);
+
+        return a;
+      }, []).filter((e, i, a) => i === a.lastIndexOf(e));
+
+      await db.pool.query(
+        queries.markUsedAttachments,
+        [attachmentIds]
       );
     }
 
@@ -166,12 +178,13 @@ module.exports = {
     const {attachments} = msg;
 
     for (let i = 0; i < attachments.length; i++) {
+      const {filename, id, url} = attachments[i];
       let end;
       let file = [];
       let response;
 
       try {
-        const req = await getAttachment(attachments[i].url);
+        const req = await getAttachment(url);
 
         ({end, response} = req);
       } catch (e) {
@@ -192,21 +205,18 @@ module.exports = {
       );
 
       if (match == null) {
-        const type = mime.getType(attachments[i].filename);
+        const type = mime.getType(filename);
 
         file = await formatImage(file, type);
         file = Buffer.from(pako.deflate(file));
         await db.pool.query(
           queries.insertAttachment,
-          [attachments[i].id,
-            attachments[i].filename,
-            file.toString("hex"),
-            hash]
+          [id, filename, file.toString("hex"), hash]
         );
-        attachments[i] = attachments[i].id;
+        attachments[i] = id;
       } else {
         await db.pool.query(
-          "UPDATE attachments set epoch = $1 WHERE id = $2",
+          "UPDATE attachments set time = $1 WHERE id = $2",
           [new Date(), match.id]
         );
         attachments[i] = match.id;

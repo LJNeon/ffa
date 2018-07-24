@@ -59,7 +59,7 @@ function getMessageList(msgs) {
           i + 1,
           r.content.length === 0 ? "None" : r.content,
           attachments,
-          r.epoch.toLocaleDateString("en-US", {
+          r.time.toLocaleDateString("en-US", {
             day: "2-digit",
             hour: "2-digit",
             minute: "2-digit",
@@ -90,7 +90,7 @@ module.exports = new class Data extends Command {
   constructor() {
     super({
       cooldown: 3e5,
-      description: "View all your collected data in a PDF.",
+      description: "View all your collected data in a text file.",
       groupName: "privacy",
       names: ["data"],
       usableContexts: [Context.DM, Context.Guild]
@@ -119,7 +119,7 @@ module.exports = new class Data extends Command {
     );
 
     if (msgs.length !== 0) {
-      msgs = msgs.sort((a, b) => a.epoch - b.epoch).slice(0, 1e4);
+      msgs = msgs.sort((a, b) => a.time - b.time).slice(0, 1e4);
 
       const {rows: revisions} = await db.pool.query(
         "SELECT * FROM revisions WHERE msg_id = ANY($1)",
@@ -129,7 +129,7 @@ module.exports = new class Data extends Command {
       for (let i = 0; i < msgs.length; i++) {
         msgs[i].revisions = revisions
           .filter(r => r.msg_id === msgs[i].id)
-          .sort((a, b) => a.epoch - b.epoch);
+          .sort((a, b) => a.time - b.time);
       }
     }
 

@@ -1,5 +1,7 @@
 attachment: "[{0}](https://ffabot.com/api/attachments/{1})"
 
+banReq: " - {0} ({1}) case #{2} to ban {3} ({4}): {5}"
+
 clear: Delete a specified amount of messages sent by any server member.
 
 command: |-
@@ -8,6 +10,8 @@ command: |-
   **Example:** `{1}{3}`
 
 cooldown: "**{0}**: {1}"
+
+delete: Request all of your currently collected data to be deleted in a week.
 
 justice: Commands reserved for the most reputable users to moderate the server.
 

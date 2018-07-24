@@ -17,7 +17,6 @@
  */
 "use strict";
 const {TypeReader, TypeReaderResult} = require("patron.js");
-const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
 const message = require("../utilities/message.js");
 const {data: {regexes}} = require("../services/data.js");
@@ -34,6 +33,7 @@ module.exports = new class User extends TypeReader {
 
     if (id != null || (id = val.match(regexes.id)) != null) {
       id = id[id.length - 1];
+
       const user = await message.getUser(id);
 
       if (user == null)

@@ -16,8 +16,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {config} = require("../services/cli.js");
-const senateUpdate = require("../services/senateUpdate.js");
-const UpdateTimer = require("../utilities/UpdateTimer.js");
+const client = require("../services/client.js");
+const Timer = require("./Timer.js");
 
-module.exports = new UpdateTimer(senateUpdate, config.timer.senateUpdate);
+module.exports = class UpdateTimer extends Timer {
+  constructor(update, wait) {
+    super(async () => {
+      for (const guild of client.guilds.values())
+        await update(guild);
+    }, wait);
+  }
+};

@@ -18,13 +18,14 @@
 "use strict";
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
+const {data: {queries}} = require("../services/data.js");
 const Timer = require("../utilities/Timer.js");
 
 module.exports = new Timer(async () => {
-  const epoch = Date.now();
+  const time = Date.now();
   const {rows: msgs} = await db.pool.query(
-    "SELECT id FROM messages WHERE epoch < $1 AND used = false",
-    [new Date(epoch - 6048e5)]
+    "SELECT id FROM messages WHERE time < $1 AND used = false",
+    [new Date(time - 6048e5)]
   );
 
   for (let i = 0; i < msgs.length; i++) {
@@ -36,7 +37,26 @@ module.exports = new Timer(async () => {
   }
 
   await db.pool.query(
-    "DELETE FROM attachments WHERE epoch < $1 AND used = false",
-    [new Date(epoch - 864e5)]
+    "DELETE FROM attachments WHERE time < $1 AND used = false",
+    [new Date(time - 864e5)]
   );
+
+  let {rows: users} = await db.pool.query(
+    "SELECT user_id FROM users WHERE delete_at > $1",
+    [new Date()]
+  );
+
+  users = users.map(u => u.user_id)
+    .filter(u => users.indexOf(u) === users.lastIndexOf(u));
+
+  for (let i = 0; i < users.length; i++) {
+    await db.pool.query(
+      "UPDATE users SET delete_at = null WHERE user_id = $1",
+      [users[i]]
+    );
+    await db.pool.query(
+      queries.deleteRevisions,
+      [users[i]]
+    );
+  }
 }, config.timer.dbClean);

@@ -20,6 +20,7 @@ const {Argument, Command, Context} = require("patron.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
+const {data: {queries}} = require("../../services/data.js");
 
 module.exports = new class For extends Command {
   constructor() {
@@ -65,16 +66,16 @@ module.exports = new class For extends Command {
       }
 
       const {rows: votes} = await db.pool.query(
-        "SELECT 1 FROM logs WHERE type = 'ban_vote' AND (data->'req')::text = $1 AND user_id = $2",
-        [args.log.log_id, msg.author.id]
+        queries.selectBanVotes,
+        [args.log.log_id]
       );
 
-      if (votes.length !== 0) {
+      if (votes.findIndex(v => v.user_id === msg.author.id) !== -1) {
         return message.replyError(
           msg,
           "you already voted on that ban request."
         );
-      } else if (Date.now() - args.log.epoch > ban_req * 2) {
+      } else if (Date.now() - args.log.time > ban_req * 2) {
         return message.replyError(msg, "that ban request is too old.");
       } else if (args.log.data.reached_court === false) {
         return message.replyError(

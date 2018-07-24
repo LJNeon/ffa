@@ -59,12 +59,11 @@ module.exports = new class AddRule extends Command {
   }
 
   async run(msg, args) {
+    const {category, content, muteLen} = args;
+
     await db.pool.query(
       queries.addRule,
-      [msg.channel.guild.id,
-        args.category.toLowerCase(),
-        args.content,
-        args.muteLen]
+      [msg.channel.guild.id, category.toLowerCase(), content, muteLen]
     );
     await message.reply(msg, "you have successfully added a new rule.");
     await ruleService.update(msg.channel.guild.id);

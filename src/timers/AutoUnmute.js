@@ -22,10 +22,10 @@ const senate = require("../services/senate.js");
 const Timer = require("../utilities/Timer.js");
 
 module.exports = new Timer(async () => {
-  const epoch = Date.now();
+  const time = Date.now();
   const res = await db.pool.query(
-    "SELECT * FROM logs WHERE epoch > $1 AND type != 'clear'",
-    [new Date(epoch - config.max.mute)]
+    "SELECT * FROM logs WHERE time > $1 AND type != 'clear'",
+    [new Date(time - config.max.mute)]
   );
 
   for (let i = 0; i < res.rows.length; i++) {
@@ -34,12 +34,12 @@ module.exports = new Timer(async () => {
     if (row.type === "mute" || row.type === "automute") {
       const unmute = res.rows.find(r => r.guild_id === row.guild_id
         && r.user_id === row.user_id && (r.type === "unmute"
-        || r.type === "autounmute") && r.epoch > row.epoch);
+        || r.type === "autounmute") && r.time > row.time);
 
       if (unmute != null)
         continue;
 
-      if (row.epoch < Date.now() - row.data.length)
+      if (row.time < Date.now() - row.data.length)
         await senate.autoUnmute(row);
     }
   }

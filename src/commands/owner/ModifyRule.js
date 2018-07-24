@@ -67,7 +67,7 @@ module.exports = new class ModifyRule extends Command {
         args.muteLen,
         msg.channel.guild.id,
         args.rule.category,
-        args.rule.epoch]
+        args.rule.time]
     );
     await message.reply(msg, "you have successfully modified this rule.");
     await ruleService.update(msg.channel.guild.id);

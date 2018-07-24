@@ -17,7 +17,6 @@
  */
 "use strict";
 const {Argument, Command} = require("patron.js");
-const client = require("../../services/client.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
@@ -53,9 +52,8 @@ module.exports = new class UnrepLeaderboard extends Command {
     );
     const tags = [];
 
-    for (let i = 0; i < res.rows.length; i++) {
+    for (let i = 0; i < res.rows.length; i++)
       tags.push(await message.getUser(res.rows[i].user_id));
-    }
 
     await message.create(msg.channel, {
       description: res.rows.map((r, i) => str.format(

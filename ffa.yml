@@ -81,6 +81,8 @@ cd: {
 
 timer: {
   autoUnmute: 6e4,
+  banUpdate: 9e5,
+  casesUpdate: 3e5,
   dbClean: 6e5,
   modRoleUpdate: 3e5,
   repDecay: 36e5,

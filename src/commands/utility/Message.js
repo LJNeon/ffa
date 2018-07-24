@@ -86,7 +86,7 @@ module.exports = new class Message extends Command {
         )))
       }],
       footer: {text: `#${channel.name} (${channel.id})`},
-      timestamp: args.msg.revisions[args.edit - 1].epoch,
+      timestamp: args.msg.revisions[args.edit - 1].time,
       title: `Revision ${args.edit} of ${args.msg.revisions.length}`
     }));
   }

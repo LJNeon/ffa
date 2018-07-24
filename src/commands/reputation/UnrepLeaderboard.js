@@ -51,12 +51,17 @@ module.exports = new class UnrepLeaderboard extends Command {
       this.lbQuery,
       [msg.channel.guild.id, args.count]
     );
+    const tags = [];
+
+    for (let i = 0; i < res.rows.length; i++) {
+      tags.push(await message.getUser(res.rows[i].user_id));
+    }
 
     await message.create(msg.channel, {
       description: res.rows.map((r, i) => str.format(
         responses.lbEntry,
         i + 1,
-        message.tag(client.users.get(r.user_id)),
+        message.tag(tags[i]),
         r.reputation.toFixed(2)
       )).join("\n"),
       title: "The Least Reputable Users"

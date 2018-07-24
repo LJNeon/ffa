@@ -21,12 +21,13 @@ clientOptions: {
   compress: true,
   defaultImageFormat: png,
   defaultImageSize: 1024,
-  getAllUsers: true,
-  latencyThreshold: 1e3,
   disableEvents: {
     TYPING_START: true,
     VOICE_STATE_UPDATE: true
-  }
+  },
+  getAllUsers: true,
+  latencyThreshold: 1e3,
+  restMode: true
 }
 
 # patron.js Handler options. See more at: https://vim2meta.github.io/patron.js/global.html#HandlerOptions
@@ -45,21 +46,21 @@ ratelimits: {
 }
 
 max: {
-  lb: 30,
   clear: 100,
-  evidenceLen: 600,
   cmdNewLines: 10,
   deletedMsgChars: 100,
   deletedMsgs: 10,
+  evidenceLen: 600,
+  lb: 30,
   typos: 2,
   userResults: 3,
   mute: 2592e6
 }
 
 min: {
-  lb: 5,
   clear: 3,
   deletedMsgs: 1,
+  lb: 5,
   mute: 3e5
 }
 
@@ -74,7 +75,8 @@ cd: {
   unrep: 72e5,
   color: 36e5,
   modCmd: 36e5,
-  removeCmd: 36e5
+  removeCmd: 36e5,
+  sign: 144e5
 }
 
 timer: {

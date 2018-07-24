@@ -56,9 +56,10 @@ module.exports = new class Message extends Command {
     if (args.msg.revisions.length < args.edit)
       return message.replyError(msg, "that revision doesn't exist.");
 
+    const author = await message.getUser(args.msg.author_id);
     const approved = await message.verify(
       msg,
-      [client.users.get(args.msg.author_id)]
+      [author]
     );
 
     if (approved == null)
@@ -68,7 +69,6 @@ module.exports = new class Message extends Command {
       "SELECT id, name FROM attachments WHERE id = ANY($1)",
       [args.msg.revisions[args.edit - 1].attachment_ids]
     );
-    const author = client.users.get(args.msg.author_id);
     const channel = client.getChannel(args.msg.channel_id);
 
     await approved.edit(message.embedify({

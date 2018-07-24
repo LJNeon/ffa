@@ -70,7 +70,7 @@ module.exports = new class Deleted extends Command {
         [msgs[i].id]
       );
 
-      users.push(client.users.get(msgs[i].author_id));
+      users.push(await message.getUser(msgs[i].author_id));
 
       if (revision.content.length !== 0) {
         fields.push({

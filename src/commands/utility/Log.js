@@ -43,7 +43,7 @@ module.exports = new class Log extends Command {
     if (args.log.data != null && args.log.data.senate_id != null)
       id = args.log.data.senate_id;
 
-    const user = client.users.get(id);
+    const user = await message.getUser(id);
     const guild = str.escapeFormat(client.guilds.get(args.guild_id).name);
 
     await message.create(msg.channel, {

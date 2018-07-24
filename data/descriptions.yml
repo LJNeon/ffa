@@ -1,6 +1,6 @@
 attachment: "[{0}](https://ffabot.com/api/attachments/{1})"
 
-clear: Delete a specified amount of messages sent by any guild user.
+clear: Delete a specified amount of messages sent by any server member.
 
 command: |-
   **Description:** {0}
@@ -9,7 +9,7 @@ command: |-
 
 cooldown: "**{0}**: {1}"
 
-justice: Commands reserved for the most reputable users to moderate the guild.
+justice: Commands reserved for the most reputable users to moderate the server.
 
 module: List of all commands in a module if one is provided. If not, all modules are listed.
 

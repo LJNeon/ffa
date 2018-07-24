@@ -64,7 +64,6 @@ module.exports = new class AddRule extends Command {
       [msg.channel.guild.id,
         args.category.toLowerCase(),
         args.content,
-        new Date(),
         args.muteLen]
     );
     await message.reply(msg, "you have successfully added a new rule.");

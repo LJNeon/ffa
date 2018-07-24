@@ -17,7 +17,6 @@
  */
 "use strict";
 const {Argument, Command} = require("patron.js");
-const client = require("../../services/client.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const deleted = require("../../services/deleted.js");
@@ -66,7 +65,7 @@ module.exports = new class Deleted extends Command {
 
     for (let i = 0; i < msgs.length; i++) {
       const revision = await db.getFirstRow(
-        "SELECT * FROM revisions WHERE msg_id = $1 ORDER BY epoch ASC LIMIT 1",
+        "SELECT * FROM revisions WHERE msg_id = $1 ORDER BY time ASC LIMIT 1",
         [msgs[i].id]
       );
 

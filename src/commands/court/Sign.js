@@ -21,6 +21,7 @@ const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
+const {data: {queries}} = require("../../services/data.js");
 
 module.exports = new class Sign extends Command {
   constructor() {
@@ -47,13 +48,13 @@ module.exports = new class Sign extends Command {
         {ages: "ban_req"}
       );
       const {rows: signs} = await db.pool.query(
-        "SELECT 1 FROM logs WHERE type = 'ban_sign' AND (data->'for')::text = $1 AND user_id = $2",
-        [args.log.log_id, msg.author.id]
+        queries.selectBanSigns,
+        [args.log.log_id]
       );
 
-      if (signs.length !== 0)
+      if (signs.findIndex(s => s.user_id === msg.author.id) !== -1)
         return message.replyError(msg, "you already signed that ban request.");
-      else if (Date.now() - args.log.epoch > ban_req)
+      else if (Date.now() - args.log.time > ban_req)
         return message.replyError(msg, "that ban request is too old.");
 
       await logs.add({
@@ -63,7 +64,10 @@ module.exports = new class Sign extends Command {
         user_id: msg.author.id
       });
 
-      return message.reply(msg, "you have successfully signed this ban request.");
+      return message.reply(
+        msg,
+        "you have successfully signed this ban request."
+      );
     }
 
     await message.replyError(msg, "that log can't be signed.");

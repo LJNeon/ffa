@@ -23,27 +23,25 @@ const str = require("../../utilities/string.js");
 
 module.exports = new class NoCourt extends Precondition {
   constructor() {
-    super({name: "top"});
+    super({name: "nocourt"});
     this.lbQuery = str.format(queries.selectRep, "DESC LIMIT $2");
   }
 
-  async run(cmd, msg, opt) {
+  async run(cmd, msg) {
     const {top: {court: count}} = await db.getGuild(
       msg.channel.guild.id,
       {top: "court"}
     );
-
     const res = await db.pool.query(
       this.lbQuery,
       [msg.channel.guild.id, count]
     );
-
     const result = res.rows.some(r => r.user_id === msg.author.id);
 
     if (result === true) {
       return PreconditionResult.fromError(
         cmd,
-        `this command may not be used by Supreme Court members.`
+        "this command may not be used by Supreme Court members."
       );
     }
 

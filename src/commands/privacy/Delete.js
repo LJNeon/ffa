@@ -16,34 +16,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Argument, Command} = require("patron.js");
+const {Command, Context} = require("patron.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
-const ruleService = require("../../services/rules.js");
+const {data: {descriptions}} = require("../../services/data.js");
 
-module.exports = new class RemoveRule extends Command {
+module.exports = new class Delete extends Command {
   constructor() {
     super({
-      args: [new Argument({
-        example: "2d",
-        key: "rule",
-        name: "rule",
-        type: "rule"
-      })],
-      description: "Removes a rule.",
-      groupName: "owner",
-      names: ["removerule", "deleterule", "eraserule"]
+      cooldown: 3e5,
+      description: descriptions.delete,
+      groupName: "privacy",
+      names: ["delete"],
+      usableContexts: [Context.DM, Context.Guild]
     });
   }
 
-  async run(msg, args) {
-    const category = args.rule.category.toLowerCase();
-
+  async run(msg) {
     await db.pool.query(
-      "DELETE FROM rules WHERE (guild_id, category, time) = ($1, $2, $3)",
-      [msg.channel.guild.id, category, args.rule.time]
+      "UPDATE users SET delete_at = $1 WHERE user_id = $2",
+      [new Date(Date.now() + 6048e5)]
     );
-    await message.reply(msg, "you have successfully removed this rule.");
-    await ruleService.update(msg.channel.guild.id);
+    await message.reply(
+      msg,
+      "your currently collected data will be deleted in a week."
+    );
   }
 }();

@@ -17,7 +17,7 @@
  */
 "use strict";
 const {config} = require("../services/cli.js");
-const senateUpdate = require("../services/senateUpdate.js");
+const bans = require("../services/bans.js");
 const UpdateTimer = require("../utilities/UpdateTimer.js");
 
-module.exports = new UpdateTimer(senateUpdate, config.timer.senateUpdate);
+module.exports = new UpdateTimer(bans.update, config.timer.banUpdate);

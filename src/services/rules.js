@@ -113,11 +113,14 @@ module.exports = {
         return;
 
       const msgs = await channel.getMessages(100);
+      const remove = [];
 
       for (let i = 0; i < msgs.length; i++) {
         if (msgs[i].author.id === client.user.id)
-          await msgs[i].delete();
+          remove.push(msgs[i].id);
       }
+
+      await channel.deleteMessages(remove);
 
       const categories = await this.getCategories(guildId);
       const colors = [...message.colors];

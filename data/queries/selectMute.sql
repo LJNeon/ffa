@@ -1,6 +1,6 @@
-SELECT epoch, data
+SELECT time, data
     FROM logs
-        WHERE epoch > $1
+        WHERE time > $1
             AND (type = 'mute' OR type = 'automute')
             AND user_id = $2
-    ORDER BY epoch DESC LIMIT 1
+    ORDER BY time DESC LIMIT 1

@@ -26,24 +26,20 @@ const str = require("../utilities/string.js");
 
 module.exports = {
   async get(guildId, userId) {
-    const {ages: {ban_req}} = await db.getGuild(guildId, {ages: "ban_req"});
-    const {rows: [request]} = await db.pool.query(
+    return db.getFirstRow(
       queries.selectBanReq,
-      [new Date(Date.now() - ban_req * 2), userId]
+      [userId]
     );
-
-    if (request != null)
-      return request;
   },
 
-  async update(guildId) {
-    const {ages: {ban_req}, senate: {ban_sigs}} = await db.getGuild(guildId, {
+  async update(guild) {
+    const {ages: {ban_req}, senate: {ban_sigs}} = await db.getGuild(guild.id, {
       ages: "ban_req",
       senate: "ban_sigs"
     });
     let {rows: requests} = await db.pool.query(
-      "SELECT * FROM logs WHERE guild_id = $1 AND type = 'ban_request' AND epoch < $1 AND data->'reached_court' IS NULL",
-      [guildId, new Date(Date.now() - ban_req)]
+      queries.selectPrecourtBanReqs,
+      [guild.id, new Date(Date.now() - ban_req)]
     );
 
     for (let i = 0; i < requests.length; i++) {
@@ -52,58 +48,62 @@ module.exports = {
         [requests[i].log_id]
       );
 
-      for (let i = 0; i < signs.length; i++)
-        signs[i] = await message.getUser(signs[i].user_id);
+      for (let j = 0; j < signs.length; j++)
+        signs[j] = await message.getUser(signs[j].user_id);
 
       if (signs.length < ban_sigs) {
         requests[i].data.reached_court = false;
+        requests[i].data.resolved = true;
         await db.pool.query(
           "UPDATE logs SET data = $1 WHERE log_id = $2",
           [requests[i].data, requests[i].log_id]
         );
-      } else {
-        requests[i].data.reached_court = true;
-        await db.pool.query(
-          "UPDATE logs SET data = $1 WHERE log_id = $2",
-          [requests[i].data, requests[i].log_id]
-        );
+        continue;
+      }
 
-        const user = await message.getUser(requests[i].user_id);
-        const requester = await message.getUser(requests[i].data.requester);
+      requests[i].data.reached_court = true;
+      await db.pool.query(
+        "UPDATE logs SET data = $1 WHERE log_id = $2",
+        [requests[i].data, requests[i].log_id]
+      );
 
-        const description = str.format(
-          requests[i].data.rule,
-          requests[i].data.evidence,
-          message.tag(requester),
-          requester.id,
-          str.list(signs.map(s => `**${message.tag(s)}** (${s.id})`))
-        );
-        const title = `Ban Request for ${message.tag(user)} (${user.id})`;
+      const user = await message.getUser(requests[i].user_id);
+      const requester = await message.getUser(requests[i].data.requester);
+      const description = str.format(
+        requests[i].data.rule,
+        requests[i].data.evidence,
+        message.tag(requester),
+        requester.id,
+        str.list(signs.map(s => `**${message.tag(s)}** (${s.id})`))
+      );
+      const title = `Ban Request for ${message.tag(user)} (${user.id})`;
 
-        for (let i = 0; i < requests[i].data.court.length; i++) {
-          try {
-            await message.dm(await message.getUser(requests[i].data.court[i]), {
-              description,
-              title
-            });
-          } catch(e) {
-            if (e.code === 50007) {
-              await db.pool.query(
-                queries.resetRep,
-                [requests[i].guild_id, requests[i].data.court[i]]
-              );
-              await senateUpdate(requests[i].guild_id);
-            } else {
-              throw e;
-            }
+      for (let j = 0; j < requests[i].data.court.length; j++) {
+        const guildId = requests[i].guild_id;
+        const userId = requests[i].data.court[j];
+
+        await message.dm(
+          await message.getUser(userId),
+          {
+            description,
+            title
           }
-        }
+        ).catch(e => {
+          if (e.code === 50007) {
+            db.pool.query(
+              queries.resetRep,
+              [guildId, userId]
+            ).then(() => senateUpdate(guildId));
+          } else {
+            throw e;
+          }
+        });
       }
     }
 
     ({rows: requests} = await db.pool.query(
-      "SELECT * FROM logs WHERE guild_id = $1 AND type = 'ban_request' AND epoch < $1 AND data->'reached_court' IS NOT NULL AND (data->'resolved')::bool = false",
-      [guildId, new Date(Date.now() - ban_req * 2)]
+      queries.selectResolvedBanReqs,
+      [guild.id, new Date(Date.now() - (ban_req * 2))]
     ));
 
     for (let i = 0; i < requests.length; i++) {
@@ -119,25 +119,23 @@ module.exports = {
       );
       const {data} = requests[i];
 
-      if (data.court.length != votes.length) {
-        for (let i = 0; i < data.court.length; i++) {
-          if (votes.findIndex(v => v.user_id === data.court[i]) === -1) {
-            await db.pool.query(
-              queries.resetRep,
-              [requests[i].guild_id, data.court[i]]
-            );
-            await senateUpdate(requests[i].guild_id);
-          }
+      for (let j = 0; j < data.court.length; j++) {
+        if (votes.findIndex(v => v.user_id === data.court[j]) === -1) {
+          await db.pool.query(
+            queries.resetRep,
+            [requests[i].guild_id, data.court[j]]
+          );
+          await senateUpdate(requests[i].guild_id);
         }
       }
 
       if (votes.length !== 0 && votes.findIndex(v => v.for === false) === -1) {
         await logs.add({
-          guild_id: guildId,
+          guild_id: guild.id,
           type: "member_ban",
           user_id: requests[i].user_id
         });
-        await client.guilds.get(guildId).banMember(requests[i].user_id);
+        await client.guilds.get(guild.id).banMember(requests[i].user_id);
       }
     }
   }

@@ -58,7 +58,7 @@ module.exports = new class Clear extends Command {
         type: "integer"
       }),
       new Argument({
-        example: "https://imgur.com/a/sKrBAKD",
+        example: "470668822165192704 and 470668206034386944",
         key: "evidence",
         name: "evidence",
         preconditionOptions: [{max: config.max.evidenceLen}],
@@ -66,7 +66,7 @@ module.exports = new class Clear extends Command {
         remainder: true,
         type: "string"
       })],
-      botPermissions: ["manageRoles"],
+      botPermissions: ["manageMessages"],
       description: descriptions.clear,
       groupName: "justice",
       names: ["clear", "prune", "purge"]

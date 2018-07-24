@@ -65,9 +65,15 @@ module.exports = {
       [log.guild_id,
         log.user_id,
         log.data,
-        new Date(),
         log.type]
     );
+
+    if (log.data.msg_ids != null) {
+      await db.pool.query(
+        "UPDATE messages SET used = true WHERE used = false AND id = ANY($1)",
+        [log.data.msg_ids]
+      );
+    }
 
     if (logs_id != null) {
       const channel = client.getChannel(logs_id);
@@ -78,7 +84,7 @@ module.exports = {
         if (log.data != null && log.data.senate_id != null)
           id = log.data.senate_id;
 
-        const user = client.users.get(id);
+        const user = await message.getUser(id);
 
         return message.create(channel, {
           author: {
@@ -120,7 +126,7 @@ module.exports = {
       return str.format(
         responses.modLog,
         action,
-        message.tag(client.users.get(log.user_id)),
+        message.tag(await message.getUser(log.user_id)),
         log.user_id,
         data
       );
@@ -194,7 +200,6 @@ module.exports = {
           queries.insertAttachment,
           [attachments[i].id,
             attachments[i].filename,
-            new Date(),
             file.toString("hex"),
             hash]
         );
@@ -208,9 +213,11 @@ module.exports = {
       }
     }
 
+    const timestamp = msg.editedTimestamp || msg.timestamp;
+
     await db.pool.query(
       queries.insertRevisions,
-      [msg.id, attachments, msg.content, new Date()]
+      [msg.id, attachments, msg.content, new Date(timestamp)]
     );
   }
 };

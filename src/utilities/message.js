@@ -140,6 +140,21 @@ module.exports = {
 
   errorColor: config.customColors.error,
 
+  async getUser(id) {
+    const user = client.users.get(id);
+
+    if (user == null) {
+      try {
+        return client.getRESTUser(id);
+      } catch (e) {
+        if (e.code !== 10013)
+          throw e;
+      }
+    } else {
+      return user;
+    }
+  },
+
   reply(msg, reply, color, file) {
     let perms;
 

@@ -16,37 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Argument, Command} = require("patron.js");
-const {config} = require("../../services/cli.js");
-const senate = require("../../services/senate.js");
+const {Group} = require("patron.js");
 
-module.exports = new class Unmute extends Command {
+module.exports = new class Court extends Group {
   constructor() {
     super({
-      args: [new Argument({
-        example: "Billy#6969",
-        key: "user",
-        name: "user",
-        preconditions: ["noself"],
-        type: "user"
-      }),
-      new Argument({
-        example: "apologized",
-        key: "evidence",
-        name: "evidence",
-        preconditionOptions: [{max: config.max.evidenceLen}],
-        preconditions: ["maxlength"],
-        remainder: true,
-        type: "string"
-      })],
-      botPermissions: ["manageRoles"],
-      description: "Unmute any guild user.",
-      groupName: "justice",
-      names: ["unmute"]
+      description: "Commands that involve the Supreme Court.",
+      name: "court"
     });
-  }
-
-  async run(msg, args) {
-    return senate.unmute(msg, args);
   }
 }();

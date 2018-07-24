@@ -182,7 +182,7 @@ module.exports = {
         time.format(args.length),
         str.code(args.rule.content, ""),
         args.evidence == null ? "" : args.evidence,
-        message.tag(client.users.get(msg.channel.guild.ownerID)),
+        message.tag(await message.getUser(msg.channel.guild.ownerID)),
         config.bot.prefix
       ), null, msg.channel.guild).catch(() => {});
     });
@@ -223,6 +223,7 @@ module.exports = {
         {
           data: {
             evidence: args.evidence,
+            msg_ids: args.evidence.match(regexes.ids),
             senate_id: msg.author.id
           },
           guild_id: msg.channel.guild.id,

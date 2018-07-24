@@ -33,10 +33,13 @@ module.exports = new class User extends TypeReader {
     let id = val.match(regexes.mention);
 
     if (id != null || (id = val.match(regexes.id)) != null) {
-      const user = client.users.get(id[id.length - 1]);
+      id = id[id.length - 1];
+      const user = await message.getUser(id);
 
-      if (user != null)
-        return TypeReaderResult.fromSuccess(user);
+      if (user == null)
+        return TypeReaderResult.fromError(cmd, "User not found.");
+
+      return TypeReaderResult.fromSuccess(user);
     }
 
     if (msg.channel.guild == null)

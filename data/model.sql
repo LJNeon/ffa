@@ -34,7 +34,7 @@ CREATE TABLE public.logs (
     guild_id varchar(20) NOT NULL,
     log_id serial,
     data jsonb,
-    epoch timestamptz NOT NULL,
+    epoch timestamptz NOT NULL DEFAULT now(),
     type logtype NOT NULL,
     user_id varchar(20) NOT NULL
 );
@@ -45,7 +45,7 @@ CREATE TABLE public.messages (
     author_id varchar(20) NOT NULL,
     channel_id varchar(20) NOT NULL,
     guild_id varchar(20) NOT NULL,
-    epoch timestamptz NOT NULL,
+    epoch timestamptz NOT NULL DEFAULT now(),
     used bool NOT NULL DEFAULT false
 );
 ALTER TABLE public.messages OWNER TO {0};
@@ -53,8 +53,8 @@ ALTER TABLE public.messages OWNER TO {0};
 CREATE TABLE public.attachments (
     id varchar(20) PRIMARY KEY,
     name text NOT NULL,
-    epoch timestamptz NOT NULL,
-    file bytea,
+    epoch timestamptz NOT NULL DEFAULT now(),
+    file bytea NOT NULL,
     hash text NOT NULL UNIQUE,
     used bool NOT NULL DEFAULT false
 );
@@ -72,7 +72,7 @@ CREATE TABLE public.revisions (
     msg_id varchar(20) NOT NULL REFERENCES messages(id),
     attachment_ids varchar(20)[] NOT NULL,
     content varchar(2000) NOT NULL,
-    epoch timestamptz NOT NULL
+    epoch timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE public.revisions OWNER TO {0};
 
@@ -88,7 +88,7 @@ CREATE TABLE public.rules (
     guild_id varchar(20) NOT NULL,
     content varchar(512) NOT NULL,
     category varchar(32) NOT NULL,
-    epoch timestamptz NOT NULL,
+    epoch timestamptz NOT NULL DEFAULT now(),
     mute_length int
 );
 CREATE INDEX rules_id_idx ON public.rules USING btree(guild_id);

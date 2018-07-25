@@ -42,10 +42,12 @@ module.exports = new class Resign extends Command {
     );
     await senateUpdate(msg.channel.guild);
     await logs.add({
-      data: {rank},
+      data: {
+        rank,
+        senate_id: msg.author.id
+      },
       guild_id: msg.channel.guild.id,
-      type: "resign",
-      user_id: msg.author.id
+      type: "resign"
     });
     await message.reply(msg, "you have successfully resigned.");
   }

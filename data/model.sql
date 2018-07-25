@@ -35,8 +35,7 @@ CREATE TABLE public.logs (
     log_id serial,
     data jsonb,
     time timestamptz NOT NULL DEFAULT now(),
-    type logtype NOT NULL,
-    user_id varchar(20) NOT NULL
+    type logtype NOT NULL
 );
 ALTER TABLE public.logs OWNER TO {0};
 

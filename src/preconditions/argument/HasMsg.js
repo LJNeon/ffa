@@ -21,7 +21,6 @@ const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
 const {data: {regexes, responses}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
-const {User} = require("eris");
 
 module.exports = new class Between extends ArgumentPrecondition {
   constructor() {
@@ -30,13 +29,8 @@ module.exports = new class Between extends ArgumentPrecondition {
 
   async run(cmd, msg, arg, args, val) {
     const ids = val.match(regexes.ids);
-    let user;
+    const {user} = args;
     let userSent = false;
-
-    for (let i = 0; i < args.length; i++) {
-      if (args[i] instanceof User)
-        user = args[i];
-    }
 
     if (ids == null) {
       return PreconditionResult.fromError(

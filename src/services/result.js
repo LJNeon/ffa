@@ -90,6 +90,9 @@ module.exports = async (msg, result) => {
       || result.commandError === CommandError.Precondition
       || result.commandError === CommandError.TypeReader) {
     reply = result.errorReason;
+  } else if (result.error == null) {
+    Logger.error(result);
+    reply = "unknown error";
   } else {
     Logger.error(result.error);
     reply = result.error.message;

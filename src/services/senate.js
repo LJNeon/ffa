@@ -64,11 +64,11 @@ module.exports = {
         {
           data: {
             length,
-            penalty
+            penalty,
+            user_id: msg.author.id
           },
           guild_id: msg.channel.guild.id,
-          type: "automute",
-          user_id: msg.author.id
+          type: "automute"
         },
         config.customColors.mute
       );
@@ -88,8 +88,12 @@ module.exports = {
       if (muted_id == null || guild.roles.get(muted_id) == null)
         return false;
 
-      const isMuted = await this.isMuted(log.guild_id, log.user_id, muted_id);
-      const member = guild.members.get(log.user_id);
+      const isMuted = await this.isMuted(
+        log.guild_id,
+        log.data.user_id,
+        muted_id
+      );
+      const member = guild.members.get(log.data.user_id);
 
       if (isMuted === false || member == null
           || member.roles.includes(muted_id) === false)
@@ -100,12 +104,12 @@ module.exports = {
       if (res === false)
         return res;
 
-      await db.pool.query(unmuteUserQuery, [log.guild_id, log.user_id]);
+      await db.pool.query(unmuteUserQuery, [log.guild_id, log.data.user_id]);
       await logs.add(
         {
+          data: {user_id: log.data.user_id},
           guild_id: log.guild_id,
-          type: "autounmute",
-          user_id: log.user_id
+          type: "autounmute"
         },
         config.customColors.unmute
       );
@@ -164,11 +168,11 @@ module.exports = {
             length: args.length,
             msg_ids: args.evidence.match(regexes.ids),
             rule: args.rule.content,
-            senate_id: msg.author.id
+            senate_id: msg.author.id,
+            user_id: args.user.id
           },
           guild_id: msg.channel.guild.id,
-          type: "mute",
-          user_id: args.user.id
+          type: "mute"
         },
         config.customColors.mute
       );
@@ -224,11 +228,11 @@ module.exports = {
           data: {
             evidence: args.evidence,
             msg_ids: args.evidence.match(regexes.ids),
-            senate_id: msg.author.id
+            senate_id: msg.author.id,
+            user_id: args.user.id
           },
           guild_id: msg.channel.guild.id,
-          type: "unmute",
-          user_id: args.user.id
+          type: "unmute"
         },
         config.customColors.unmute
       );

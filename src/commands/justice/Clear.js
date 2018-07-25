@@ -89,11 +89,11 @@ module.exports = new class Clear extends Command {
         msg_ids: args.evidence.match(regexes.ids),
         quantity: amount,
         rule: args.rule.content,
-        senate_id: msg.author.id
+        senate_id: msg.author.id,
+        user_id: args.user.id
       },
       guild_id: msg.channel.guild.id,
-      type: "clear",
-      user_id: args.user.id
+      type: "clear"
     }, config.customColors.clear);
     await message.reply(msg, str.format(
       responses.clearReply,

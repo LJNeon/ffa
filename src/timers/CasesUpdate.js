@@ -25,9 +25,10 @@ const str = require("../utilities/string.js");
 const UpdateTimer = require("../utilities/UpdateTimer.js");
 const msgs = new Map();
 
-async function setup(channel, content) {
+async function setup(channel, active, recent) {
   const channelMsgs = await channel.getMessages(100);
   const remove = [];
+  const res = [];
 
   for (let i = 0; i < channelMsgs.length; i++) {
     if (channelMsgs[i].author.id === client.user.id)
@@ -35,8 +36,10 @@ async function setup(channel, content) {
   }
 
   await channel.deleteMessages(remove);
+  res.push(await channel.createMessage(active));
+  res.push(await channel.createMessage(recent));
 
-  return channel.createMessage(content);
+  return res;
 }
 
 module.exports = new UpdateTimer(async guild => {
@@ -50,7 +53,8 @@ module.exports = new UpdateTimer(async guild => {
 
   const channel = client.getChannel(cases_id);
 
-  if (channel == null)
+  if (channel == null
+      || channel.permissionsOf(client.user.id).has("sendMessages") === false)
     return;
 
   let {rows: reqs} = await db.pool.query(queries.activeBanReqs);
@@ -72,78 +76,85 @@ module.exports = new UpdateTimer(async guild => {
       if (rows.some(r => r.for === false) === true) {
         reqs.splice(i, 1);
         i--;
+        continue;
       } else {
         reqs[i].status = `${rows.length}-0`;
       }
     }
+
+    reqs[i].user = await message.getUser(reqs[i].data.offender);
+    reqs[i].requester = await message.getUser(reqs[i].data.requester);
   }
 
-  const content = message.embedify({fields: [{
-    name: "Active Cases",
-    value: reqs.map(r => {
-      const user = message.getUser(r.user_id);
-      const requester = message.getUser(r.data.requester);
-
-      return str.format(
-        descriptions.banReq,
-        message.tag(requester),
-        requester.id,
-        r.log_id,
-        message.tag(user),
-        user.id,
-        r.status
-      );
-    }).slice(0, 10).join("\n")
-  }]});
+  const text = str.format(descriptions.casesFooter, config.bot.prefix);
+  const active = message.embedify({
+    description: reqs.length === 0 ? "None" : reqs.map(r => str.format(
+      descriptions.banReq,
+      message.tag(r.requester),
+      r.requester.id,
+      r.log_id,
+      message.tag(r.user),
+      r.user.id,
+      r.data.rule,
+      r.status
+    )).slice(0, 10).join("\n"),
+    footer: {text},
+    title: "Active Cases"
+  });
 
   ({rows: reqs} = await db.pool.query(queries.recentBanReqs));
 
   for (let i = 0; i < reqs.length; i++) {
-    const {rows} = await db.pool.query(
-      queries.selectBanVotes,
-      [reqs[i].log_id]
-    );
-    let yes = 0;
-    let no = 0;
+    if (reqs[i].data.reached_court === true) {
+      let {rows} = await db.pool.query(
+        queries.selectBanVotes,
+        [reqs[i].log_id]
+      );
 
-    for (let j = 0; j < rows.length; j++) {
-      if (rows[j].data.for === true)
-        yes++;
-      else
-        no++;
+      rows = rows.reduce((a, b) => {
+        const counter = a;
+
+        counter[b.data.for === true ? "yes" : "no"]++;
+
+        return counter;
+      }, {
+        no: 0,
+        yes: 0
+      });
+      reqs[i].status = `${rows.yes}-${rows.no}`;
+    } else {
+      reqs[i].status = "didn't reach court";
     }
 
-    reqs[i].status = `${yes}-${no}`;
+    reqs[i].user = await message.getUser(reqs[i].data.offender);
+    reqs[i].requester = await message.getUser(reqs[i].data.requester);
   }
 
-  content.embed.fields.push({
-    name: "Recent Cases",
-    value: reqs.map(r => {
-      const user = message.getUser(r.user_id);
-      const requester = message.getUser(r.data.requester);
-
-      return str.format(
-        descriptions.banReq,
-        message.tag(requester),
-        requester.id,
-        r.log_id,
-        message.tag(user),
-        user.id,
-        r.status
-      );
-    }).join("\n")
+  const recent = message.embedify({
+    description: reqs.length === 0 ? "None" : reqs.map(r => str.format(
+      descriptions.banReq,
+      message.tag(r.requester),
+      r.requester.id,
+      r.log_id,
+      message.tag(r.user),
+      r.user.id,
+      r.data.rule,
+      r.status
+    )).join("\n"),
+    footer: {text},
+    title: "Recent Cases"
   });
-
   const msg = msgs.get(guild.id);
 
   if (msg == null) {
-    msgs.set(guild.id, await setup(channel, content));
+    msgs.set(guild.id, await setup(channel, active, recent));
   } else {
     try {
-      await msg.edit(content);
+      await msg[0].edit(active);
+      await msg[1].edit(recent);
     } catch (e) {
       if (e.code === 10008)
-        msgs.set(guild.id, await setup(channel, content));
+        msgs.set(guild.id, await setup(channel, active, recent));
       else
         throw e;
     }

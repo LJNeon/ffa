@@ -18,6 +18,7 @@
 "use strict";
 const db = require("./database.js");
 const LimitedMutex = require("../utilities/LimitedMutex.js");
+const logs = require("./logs.js");
 const message = require("../utilities/message.js");
 const {data: {queries}} = require("./data.js");
 const str = require("../utilities/string.js");
@@ -76,8 +77,14 @@ module.exports = async guild => mutex.sync(guild.id, async () => {
   for (let i = 0; i < currentCourt.length; i++) {
     const rank = res.rows.findIndex(r => r.user_id === currentCourt[i].id);
 
-    if (rank === -1 || rank >= court)
+    if (rank === -1 || rank >= court) {
       await currentCourt[i].removeRole(court_id).catch(() => {});
+      await logs.add({
+        data: {senate_id: currentCourt[i].id},
+        guild_id: guild.id,
+        type: "court_change"
+      });
+    }
   }
 
   for (let i = 0; i < currentSenate.length; i++) {

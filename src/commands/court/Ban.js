@@ -17,18 +17,10 @@
  */
 "use strict";
 const {Argument, Command} = require("patron.js");
-const bans = require("../../services/bans.js");
-const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
-const {
-  data: {
-    queries,
-    regexes,
-    responses
-  }
-} = require("../../services/data.js");
+const {data: {queries, regexes}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class Ban extends Command {
@@ -52,7 +44,7 @@ module.exports = new class Ban extends Command {
         example: "470668653449445376, nsfw images",
         key: "evidence",
         name: "evidence",
-        preconditionOptions: [null, 1e3],
+        preconditionOptions: [null, {max: 1e3}],
         preconditions: ["hasmsg", "maxlength"],
         remainder: true,
         type: "string"
@@ -80,17 +72,6 @@ module.exports = new class Ban extends Command {
       );
     }
 
-    const current = await bans.get(msg.channel.guild.id, args.user.id);
-
-    if (current != null) {
-      return message.replyError(msg, str.format(
-        responses.anotherBanReq,
-        message.tag(args.user),
-        config.prefix,
-        current.log_id
-      ));
-    }
-
     const {rows: courtMembers} = await db.pool.query(
       this.lbQuery,
       [msg.channel.guild.id, court + 1]
@@ -107,14 +88,14 @@ module.exports = new class Ban extends Command {
         court: courtMembers.map(c => c.user_id),
         evidence: args.evidence,
         msg_ids: args.evidence.match(regexes.ids),
+        offender: args.user.id,
         reached_court: null,
         requester: msg.author.id,
         resolved: false,
         rule: args.rule.content
       },
       guild_id: msg.channel.guild.id,
-      type: "ban_request",
-      user_id: args.user.id
+      type: "ban_request"
     });
   }
 }();

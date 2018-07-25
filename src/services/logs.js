@@ -27,6 +27,7 @@ const {data: {constants, queries, responses}} = require("./data.js");
 const sharp = require("sharp");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
+const lbQuery = str.format(queries.selectRep, "DESC LIMIT $2");
 
 async function formatImage(file, type) {
   if (constants.sharpFormats.includes(type) === true) {
@@ -62,7 +63,7 @@ module.exports = {
     );
     const res = await db.pool.query(
       queries.addLog,
-      [log.guild_id, log.user_id, log.data, log.type]
+      [log.guild_id, log.data, log.type]
     );
 
     if (log.data.msg_ids != null) {
@@ -91,18 +92,8 @@ module.exports = {
       const channel = client.getChannel(logs_id);
 
       if (channel != null) {
-        let id = log.user_id;
-
-        if (log.data != null && log.data.senate_id != null)
-          id = log.data.senate_id;
-
-        const user = await message.getUser(id);
-
         return message.create(channel, {
-          author: {
-            icon_url: user.avatarURL,
-            name: `${message.tag(user)} (${id})`
-          },
+          author: await this.getAuthor(log),
           color,
           description: await this.describe(log),
           footer: {text: `ID: ${res.rows[0].log_id}`},
@@ -138,8 +129,8 @@ module.exports = {
       return str.format(
         responses.modLog,
         action,
-        message.tag(await message.getUser(log.user_id)),
-        log.user_id,
+        message.tag(await message.getUser(log.data.user_id)),
+        log.data.user_id,
         data
       );
     } else if (log.type === "rep") {
@@ -155,14 +146,103 @@ module.exports = {
       const level = log.data.rank < court ? "Supreme Court" : "Senate";
 
       return `Retired from the ${level}.`;
+    } else if (log.type === "member_ban" || log.type === "ban_request") {
+      let {data, log_id} = log;
+      let signs = "None";
+
+      if (log.type === "member_ban") {
+        ({data, log_id} = await db.getFirstRow(
+          "SELECT data, log_id FROM logs WHERE log_id = $1",
+          [log.data.log_id]
+        ));
+
+        const {rows} = await db.pool.query(
+          queries.selectBanVotes,
+          [log_id]
+        );
+        let yes = 0;
+        let no = 0;
+
+        for (let j = 0; j < rows.length; j++) {
+          if (rows[j].data.for === true)
+            yes++;
+          else
+            no++;
+        }
+
+        ({rows: signs} = await db.pool.query(
+          queries.selectBanSigns,
+          [log_id]
+        ));
+        signs = str.list(signs.map(s => `**${message.tag(s)}** (${s.id})`));
+        signs += `\n**Result:** ${yes}-${no}`;
+      }
+
+      const requester = await message.getUser(data.requester);
+
+      return str.format(
+        responses.banReq,
+        data.rule,
+        data.evidence,
+        message.tag(requester),
+        requester.id,
+        log.type === "member_ban",
+        signs
+      );
+    } else if (log.type === "ban_sign") {
+      return `Signed log #${log.data.for}.`;
+    } else if (log.type === "ban_vote") {
+      const which = log.data.for === true ? "for" : "against";
+
+      return `Voted ${which} log #${log.data.log_id}`;
+    } else if (log.type === "court_change") {
+      const {top: {court}} = await db.getGuild(log.guild_id, {top: "court"});
+      let {rows: newCourt} = await db.pool.query(
+        lbQuery,
+        [log.guild_id, court]
+      );
+
+      for (let i = 0; i < newCourt.length; i++) {
+        const user = await message.getUser(newCourt[i].user_id);
+
+        newCourt[i] = `${message.tag(user)} (${user.id})`;
+      }
+
+      newCourt = str.list(newCourt);
+
+      return `Is no longer a Supreme Court member.\nNew Members:${newCourt}`;
     }
   },
 
   async get(id, columns = "*") {
     return db.getFirstRow(
-      `SELECT ${columns} FROM logs where logs_id = $1`,
+      `SELECT ${columns} FROM logs where log_id = $1`,
       [id]
     );
+  },
+
+  async getAuthor(log) {
+    let id;
+
+    if (Object.keys(constants.modLogTypes).includes(log.type) === true)
+      id = log.data.senate_id == null ? log.data.user_id : log.data.senate_id;
+    else if (log.type === "rep" || log.type === "unrep")
+      id = log.data.user_id;
+    else if (log.type === "resign" || log.type === "court_change")
+      id = log.data.senate_id;
+    else if (log.type === "member_ban" || log.type === "ban_request")
+      id = log.data.offender;
+    else if (log.type === "ban_sign")
+      id = log.data.signer_id;
+    else if (log.type === "ban_vote")
+      id = log.data.voter_id;
+
+    const user = await message.getUser(id);
+
+    return {
+      icon_url: user.avatarURL,
+      name: `${message.tag(user)} (${id})`
+    };
   },
 
   async message(msg) {

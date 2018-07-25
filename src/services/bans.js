@@ -20,7 +20,7 @@ const client = require("./client.js");
 const db = require("./database.js");
 const logs = require("./logs.js");
 const message = require("../utilities/message.js");
-const {data: {queries}} = require("./data.js");
+const {data: {queries, responses}} = require("./data.js");
 const senateUpdate = require("./senateUpdate.js");
 const str = require("../utilities/string.js");
 
@@ -49,7 +49,7 @@ module.exports = {
       );
 
       for (let j = 0; j < signs.length; j++)
-        signs[j] = await message.getUser(signs[j].user_id);
+        signs[j] = await message.getUser(signs[j].data.signer_id);
 
       if (signs.length < ban_sigs) {
         requests[i].data.reached_court = false;
@@ -67,9 +67,10 @@ module.exports = {
         [requests[i].data, requests[i].log_id]
       );
 
-      const user = await message.getUser(requests[i].user_id);
+      const user = await message.getUser(requests[i].data.offender);
       const requester = await message.getUser(requests[i].data.requester);
       const description = str.format(
+        responses.banReq,
         requests[i].data.rule,
         requests[i].data.evidence,
         message.tag(requester),
@@ -120,7 +121,7 @@ module.exports = {
       const {data} = requests[i];
 
       for (let j = 0; j < data.court.length; j++) {
-        if (votes.findIndex(v => v.user_id === data.court[j]) === -1) {
+        if (votes.findIndex(v => v.voter_id === data.court[j]) === -1) {
           await db.pool.query(
             queries.resetRep,
             [requests[i].guild_id, data.court[j]]
@@ -131,11 +132,14 @@ module.exports = {
 
       if (votes.length !== 0 && votes.findIndex(v => v.for === false) === -1) {
         await logs.add({
+          data: {
+            log_id: requests[i].log_id,
+            offender: requests[i].data.offender
+          },
           guild_id: guild.id,
-          type: "member_ban",
-          user_id: requests[i].user_id
+          type: "member_ban"
         });
-        await client.guilds.get(guild.id).banMember(requests[i].user_id);
+        await client.guilds.get(guild.id).banMember(requests[i].data.offender);
       }
     }
   }

@@ -29,7 +29,7 @@ module.exports = new class Message extends Command {
       args: [new Argument({
         example: "411412361526902786",
         key: "msg",
-        name: "messageId",
+        name: "message ID",
         type: "msg"
       }),
       new Argument({

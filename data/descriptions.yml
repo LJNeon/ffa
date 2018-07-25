@@ -1,6 +1,8 @@
 attachment: "[{0}](https://ffabot.com/api/attachments/{1})"
 
-banReq: " - {0} ({1}) case #{2} to ban {3} ({4}): {5}"
+banReq: "**{0}** ({1}) case #{2} to ban **{3}** ({4}) for breaking the following rule \"{5}\": {6}"
+
+casesFooter: Use {0}log <log ID> for more information on any case.
 
 clear: Delete a specified amount of messages sent by any server member.
 

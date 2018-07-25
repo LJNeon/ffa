@@ -18,6 +18,7 @@
 "use strict";
 const {Argument, Command} = require("patron.js");
 const client = require("../../services/client.js");
+const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
 const str = require("../../utilities/string.js");
 
@@ -27,7 +28,7 @@ module.exports = new class Log extends Command {
       args: [new Argument({
         example: "15",
         key: "log",
-        name: "logId",
+        name: "log ID",
         remainder: true,
         type: "log"
       })],
@@ -38,22 +39,13 @@ module.exports = new class Log extends Command {
   }
 
   async run(msg, args) {
-    let id = args.log.user_id;
-
-    if (args.log.data != null && args.log.data.senate_id != null)
-      id = args.log.data.senate_id;
-
-    const user = await message.getUser(id);
     const guild = str.escapeFormat(client.guilds.get(args.guild_id).name);
 
     await message.create(msg.channel, {
-      author: {
-        icon_url: user.avatarURL,
-        name: `${message.tag(user)} (${id})`
-      },
-      description: await this.describe(args.log),
+      author: await logs.getAuthor(args.log),
+      description: await logs.describe(args.log),
       footer: {text: `Guild: ${guild}`},
-      timestamp: new Date()
+      timestamp: new Date(args.log.time)
     });
   }
 }();

@@ -21,7 +21,8 @@ const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
-const {data: {queries}} = require("../../services/data.js");
+const {data: {queries, responses}} = require("../../services/data.js");
+const str = require("../../utilities/string.js");
 
 module.exports = new class Sign extends Command {
   constructor() {
@@ -35,13 +36,31 @@ module.exports = new class Sign extends Command {
       cooldown: config.cd.sign,
       description: "Sign a log.",
       groupName: "court",
-      names: ["sign"],
-      preconditionOptions: [{column: "senate"}],
-      preconditions: ["top", "nocourt"]
+      names: ["sign"]
     });
+    this.lbQuery = str.format(queries.selectRep, "DESC LIMIT $2");
   }
 
   async run(msg, args) {
+    const {top: {court, senate}} = await db.getGuild(
+      args.log.guild_id,
+      {top: "court, senate"}
+    );
+    const {rows} = await db.pool.query(
+      this.lbQuery,
+      [msg.channel.guild.id, court + senate]
+    );
+    const result = rows.findIndex(r => r.user_id === msg.author.id);
+
+    if (result === -1) {
+      return message.replyError(msg, str.format(responses.top, senate));
+    } else if (result < court) {
+      return message.replyError(
+        msg,
+        "this command may not be used by Supreme Court members."
+      );
+    }
+
     if (args.log.type === "ban_request") {
       const {ages: {ban_req}} = await db.getGuild(
         msg.channel.guild.id,
@@ -52,16 +71,18 @@ module.exports = new class Sign extends Command {
         [args.log.log_id]
       );
 
-      if (signs.findIndex(s => s.user_id === msg.author.id) !== -1)
+      if (signs.findIndex(s => s.data.signer_id === msg.author.id) !== -1)
         return message.replyError(msg, "you already signed that ban request.");
       else if (Date.now() - args.log.time > ban_req)
         return message.replyError(msg, "that ban request is too old.");
 
       await logs.add({
-        data: {for: args.log.log_id},
+        data: {
+          for: args.log.log_id,
+          signer_id: msg.author.id
+        },
         guild_id: msg.channel.guild.id,
-        type: "ban_sign",
-        user_id: msg.author.id
+        type: "ban_sign"
       });
 
       return message.reply(

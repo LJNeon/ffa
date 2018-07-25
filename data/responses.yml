@@ -1,7 +1,5 @@
 allCooldowns: All of **{0}** commands are available for use.
 
-anotherBanReq: "there's already a ban request for **{0}**, please refer to `{1}log {2}`."
-
 attachment: "{0} attachment's sent by {1} ({2})"
 
 attachmentUrl: "https://ffabot.com/api/attachments/{0}"
@@ -135,5 +133,7 @@ serverList: |-
 setErr: Table {0} Column {1} has an unsupported type.
 
 setList: "this column is a list, use either `{0}add` or `{0}remove`."
+
+top: this command may only be used by the top {0} most reputable users.
 
 userSentMsg: the evidence must contain the ID of at least one message sent by **{0}**.

@@ -70,7 +70,7 @@ module.exports = new class For extends Command {
         [args.log.log_id]
       );
 
-      if (votes.findIndex(v => v.user_id === msg.author.id) !== -1) {
+      if (votes.findIndex(v => v.data.voter_id === msg.author.id) !== -1) {
         return message.replyError(
           msg,
           "you already voted on that ban request."
@@ -87,11 +87,11 @@ module.exports = new class For extends Command {
       await logs.add({
         data: {
           for: true,
-          log_id: args.log.log_id
+          log_id: args.log.log_id,
+          voter_id: msg.author.id
         },
         guild_id: msg.channel.guild.id,
-        type: "ban_vote",
-        user_id: msg.author.id
+        type: "ban_vote"
       });
 
       return message.reply(

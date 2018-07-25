@@ -79,10 +79,12 @@ module.exports = new class Rep extends Command {
       rep_reward.toFixed(2)
     ));
     await logs.add({
-      data: {target_id: args.user.id},
+      data: {
+        target_id: args.user.id,
+        user_id: msg.author.id
+      },
       guild_id: msg.channel.guild.id,
-      type: "rep",
-      user_id: msg.author.id
+      type: "rep"
     });
   }
 }();

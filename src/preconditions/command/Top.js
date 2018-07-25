@@ -18,7 +18,7 @@
 "use strict";
 const {Precondition, PreconditionResult} = require("patron.js");
 const db = require("../../services/database.js");
-const {data: {queries}} = require("../../services/data.js");
+const {data: {queries, responses}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class Top extends Precondition {
@@ -29,7 +29,15 @@ module.exports = new class Top extends Precondition {
 
   async run(cmd, msg, opt) {
     let res = await db.getGuild(msg.channel.guild.id, {top: opt.column});
-    const count = res.top[opt.column];
+    let count;
+
+    if (opt.column.includes(",") === true) {
+      count = opt.column.split(",")
+        .map(c => res.top[c.trim()])
+        .reduce((a, b) => a + b);
+    } else {
+      count = res.top[opt.column];
+    }
 
     res = await db.pool.query(
       this.lbQuery,
@@ -41,9 +49,6 @@ module.exports = new class Top extends Precondition {
     if (result === true)
       return PreconditionResult.fromSuccess();
 
-    return PreconditionResult.fromError(
-      cmd,
-      `this command may only be used by the top ${count} most reputable users.`
-    );
+    return PreconditionResult.fromError(cmd, str.format(responses.top, count));
   }
 }();

@@ -20,4 +20,4 @@ const {config} = require("../services/cli.js");
 const senateUpdate = require("../services/senateUpdate.js");
 const UpdateTimer = require("../utilities/UpdateTimer.js");
 
-module.exports = new UpdateTimer(senateUpdate, config.timer.senateUpdate);
+module.exports = new UpdateTimer(senateUpdate, config.timer.senateRoleUpdate);

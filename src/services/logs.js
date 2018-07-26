@@ -130,6 +130,9 @@ module.exports = {
         else if (key === "penalty")
           val = `${val.toFixed(2)} rep`;
 
+        if (key === "msg_ids")
+          key = "Message IDs";
+
         data += `\n**${str.capitalize(key)}:** ${val}`;
       }
 
@@ -155,7 +158,7 @@ module.exports = {
       return `**Action:** Resignation\n**From:** ${level}`;
     } else if (log.type === "member_ban" || log.type === "ban_request") {
       let {data, log_id} = log;
-      let signs = "None";
+      let signs = "";
       let action = "Ban Request";
 
       if (log.type === "member_ban") {
@@ -183,23 +186,25 @@ module.exports = {
           queries.selectBanSigns,
           [log_id]
         ));
+        signs += "\n**Signed By:** ";
         signs = str.list(signs.map(s => `**${message.tag(s)}** (${s.id})`));
         signs += `\n**Result:** ${yes}-${no}`;
       }
 
-      const requester = await message.getUser(data.requester);
+      const offender = await message.getUser(data.offender);
 
       return str.format(
         responses.banReq,
         action,
         data.rule,
         data.evidence,
-        message.tag(requester),
-        requester.id,
+        str.list(data.msg_ids),
+        message.tag(offender),
+        offender.id,
         signs
       );
     } else if (log.type === "ban_sign") {
-      return `**Action:** Sign\n**Log ID:** ${log.data.for}.`;
+      return `**Action:** Ban Signature\n**Log ID:** ${log.data.for}`;
     } else if (log.type === "ban_vote") {
       const {log_id, opinion} = log.data;
       const which = log.data.for === true ? "For" : "Against";
@@ -241,7 +246,7 @@ module.exports = {
     else if (log.type === "resign" || log.type === "court_change")
       id = log.data.senate_id;
     else if (log.type === "member_ban" || log.type === "ban_request")
-      id = log.data.offender;
+      id = log.data.requester;
     else if (log.type === "ban_sign")
       id = log.data.signer_id;
     else if (log.type === "ban_vote")

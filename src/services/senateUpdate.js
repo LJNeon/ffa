@@ -70,7 +70,7 @@ module.exports = async guild => mutex.sync(guild.id, async () => {
 
     if (i < court && member.roles.includes(court_id) === false)
       await member.addRole(court_id).catch(() => {});
-    else
+    else if (i >= court && member.roles.includes(senate_id) === false)
       await member.addRole(senate_id).catch(() => {});
   }
 
@@ -89,7 +89,6 @@ module.exports = async guild => mutex.sync(guild.id, async () => {
 
   for (let i = 0; i < currentSenate.length; i++) {
     const rank = res.rows.findIndex(r => r.user_id === currentSenate[i].id);
-
     if (rank === -1 || rank < court)
       await currentSenate[i].removeRole(senate_id).catch(() => {});
   }

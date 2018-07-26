@@ -1,6 +1,12 @@
 attachment: "[{0}](https://ffabot.com/api/attachments/{1})"
 
-banReq: "**{0}** ({1}) case #{2} to ban **{3}** ({4}) for breaking the following rule \"{5}\": {6}"
+banReq: "**{0}** ({1}) case {2} to ban **{3}** ({4}) for breaking the following rule \"{5}\": {6}"
+
+banVote: |-
+  **Action:** Vote
+  **Decision:** {0}
+  **Opinion:** {1}
+  **Log ID:** {2}
 
 casesFooter: Use {0}log <log ID> for more information on any case.
 
@@ -20,3 +26,7 @@ justice: Commands reserved for the most reputable users to moderate the server.
 module: List of all commands in a module if one is provided. If not, all modules are listed.
 
 msg: "**{0}**, {1}"
+
+unrep: |-
+  **Action:** Unrep
+  **User:** {0} ({1})

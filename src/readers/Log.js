@@ -25,7 +25,7 @@ module.exports = new class Log extends TypeReader {
   }
 
   async read(cmd, msg, arg, args, val) {
-    const result = logs.get(val);
+    const result = await logs.get(val);
 
     if (result == null) {
       return TypeReaderResult.fromError(

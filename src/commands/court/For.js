@@ -88,6 +88,7 @@ module.exports = new class For extends Command {
         data: {
           for: true,
           log_id: args.log.log_id,
+          opinion: args.evidence,
           voter_id: msg.author.id
         },
         guild_id: msg.channel.guild.id,

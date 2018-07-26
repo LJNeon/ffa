@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Argument, Command} = require("patron.js");
+const {Argument, Command, CommandResult} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
@@ -52,10 +52,12 @@ module.exports = new class Unrep extends Command {
 
     for (let i = 0; i < res.rows.length; i++) {
       if (res.rows[0].data.target_id === args.user.id) {
-        return message.replyError(
+        await message.replyError(
           msg,
           `you already unrepped ${message.tag(args.user)} in the past week.`
         );
+
+        return CommandResult.fromError();
       }
     }
 

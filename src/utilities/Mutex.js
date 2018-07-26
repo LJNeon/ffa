@@ -46,9 +46,9 @@ module.exports = class Mutex {
 
         // TODO remove this for stable release version
         /* eslint-disable-next-line max-len */
-        throw new Error(`Record took over 10s to finish: ${record.task.toString()}`);
+        throw new Error(`Record took over 30s to finish: ${record.task.toString()}`);
       }
-    }, 1e4);
+    }, 3e4);
   }
 
   sync(task) {

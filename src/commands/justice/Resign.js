@@ -22,6 +22,7 @@ const message = require("../../utilities/message.js");
 const senateUpdate = require("../../services/senateUpdate.js");
 const logs = require("../../services/logs.js");
 const {data: {queries}} = require("../../services/data.js");
+const str = require("../../utilities/string.js");
 
 module.exports = new class Resign extends Command {
   constructor() {
@@ -30,10 +31,18 @@ module.exports = new class Resign extends Command {
       groupName: "justice",
       names: ["resign"]
     });
+    this.lbQuery = str.format(queries.selectRep, "DESC LIMIT $2");
   }
 
   async run(msg) {
-    const res = await db.pool.query(this.lbQuery, [msg.channel.guild.id]);
+    const {top: {court, senate}} = await db.getGuild(
+      msg.channel.guild.id,
+      {top: "court, senate"}
+    );
+    const res = await db.pool.query(
+      this.lbQuery,
+      [msg.channel.guild.id, court + senate]
+    );
     const rank = res.rows.findIndex(r => r.user_id === msg.author.id);
 
     await db.pool.query(

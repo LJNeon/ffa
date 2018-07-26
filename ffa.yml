@@ -5,6 +5,7 @@ colors: [0xFF269A, 0x66FFCC, 0x00FF00, 0xB10DC9, 0x00E828, 0xFFFF00, 0x08F8FF,
   0xBF255F]
 
 customColors: {
+  ban: 0xFF0000,
   error: 0xFF0000,
   mute: 0xFF3E29,
   unmute: 0x72FF65,
@@ -84,7 +85,7 @@ timer: {
   banUpdate: 9e5,
   casesUpdate: 3e5,
   dbClean: 6e5,
-  modRoleUpdate: 3e5,
   repDecay: 36e5,
-  resetActions: 36e5
+  resetActions: 36e5,
+  senateRoleUpdate: 3e5
 }

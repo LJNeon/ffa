@@ -39,7 +39,7 @@ module.exports = new class Log extends Command {
   }
 
   async run(msg, args) {
-    const guild = str.escapeFormat(client.guilds.get(args.guild_id).name);
+    const guild = str.escapeFormat(client.guilds.get(args.log.guild_id).name);
 
     await message.create(msg.channel, {
       author: await logs.getAuthor(args.log),

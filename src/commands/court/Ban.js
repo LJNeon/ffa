@@ -20,7 +20,13 @@ const {Argument, Command} = require("patron.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
-const {data: {queries, regexes}} = require("../../services/data.js");
+const {
+  data: {
+    queries,
+    descriptions,
+    regexes
+  }
+} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class Ban extends Command {
@@ -41,7 +47,7 @@ module.exports = new class Ban extends Command {
         type: "rule"
       }),
       new Argument({
-        example: "470668653449445376, nsfw images",
+        example: descriptions.banEvidence,
         key: "evidence",
         name: "evidence",
         preconditionOptions: [null, {max: 1e3}],
@@ -99,7 +105,7 @@ module.exports = new class Ban extends Command {
     });
     await message.reply(
       msg,
-      `ban request for ${message.tag(args.user)} successfully created.`
+      `ban request for **${message.tag(args.user)}** successfully created.`
     );
   }
 }();

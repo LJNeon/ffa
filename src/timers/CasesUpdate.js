@@ -59,27 +59,18 @@ module.exports = new UpdateTimer(async guild => {
 
   let {rows: reqs} = await db.pool.query(queries.activeBanReqs);
 
-  for (let i = 0; i < reqs; i++) {
-    if (reqs[i].data.reached_court == null) {
-      const {rows} = await db.pool.query(
-        queries.selectBanSigns,
-        [reqs[i].log_id]
-      );
+  for (let i = 0; i < reqs.length; i++) {
+    const {rows} = await db.pool.query(
+      queries.selectBanVotes,
+      [reqs[i].log_id]
+    );
 
-      reqs[i].status = `${rows.length} signatures`;
+    if (rows.some(r => r.for === false) === true) {
+      reqs.splice(i, 1);
+      i--;
+      continue;
     } else {
-      const {rows} = await db.pool.query(
-        queries.selectBanVotes,
-        [reqs[i].log_id]
-      );
-
-      if (rows.some(r => r.for === false) === true) {
-        reqs.splice(i, 1);
-        i--;
-        continue;
-      } else {
-        reqs[i].status = `${rows.length}-0`;
-      }
+      reqs[i].status = `${rows.length}-0`;
     }
 
     reqs[i].user = await message.getUser(reqs[i].data.offender);

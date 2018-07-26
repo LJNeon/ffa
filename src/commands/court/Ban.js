@@ -30,7 +30,7 @@ module.exports = new class Ban extends Command {
         example: "PrinceElmo#7720",
         key: "user",
         name: "user",
-        preconditions: ["noself", "noffa", "nobanned"],
+        preconditions: ["noself", "noffa"],
         type: "user"
       }),
       new Argument({
@@ -97,5 +97,9 @@ module.exports = new class Ban extends Command {
       guild_id: msg.channel.guild.id,
       type: "ban_request"
     });
+    await message.reply(
+      msg,
+      `ban request for ${message.tag(args.user)} successfully created.`
+    );
   }
 }();

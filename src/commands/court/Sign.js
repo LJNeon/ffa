@@ -48,7 +48,7 @@ module.exports = new class Sign extends Command {
     );
     const {rows} = await db.pool.query(
       this.lbQuery,
-      [msg.channel.guild.id, court + senate]
+      [args.log.guild_id, court + senate]
     );
     const result = rows.findIndex(r => r.user_id === msg.author.id);
 
@@ -63,7 +63,7 @@ module.exports = new class Sign extends Command {
 
     if (args.log.type === "ban_request") {
       const {ages: {ban_req}} = await db.getGuild(
-        msg.channel.guild.id,
+        args.log.guild_id,
         {ages: "ban_req"}
       );
       const {rows: signs} = await db.pool.query(
@@ -81,7 +81,7 @@ module.exports = new class Sign extends Command {
           for: args.log.log_id,
           signer_id: msg.author.id
         },
-        guild_id: msg.channel.guild.id,
+        guild_id: args.log.guild_id,
         type: "ban_sign"
       });
 

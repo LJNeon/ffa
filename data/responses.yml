@@ -5,10 +5,11 @@ attachment: "{0} attachment's sent by {1} ({2})"
 attachmentUrl: "https://ffabot.com/api/attachments/{0}"
 
 banReq: |-
-  **Rule:** {0}
-  **Evidence:** {1}
-  **Requested By:** {2} ({3})
-  **Signed By:** {4}
+  **Action**: {0}
+  **Rule:** {1}
+  **Evidence:** {2}
+  **Requested By:** {3} ({4})
+  **Signed By:** {5}
 
 between: the {0} must be between {1} and {2}.
 

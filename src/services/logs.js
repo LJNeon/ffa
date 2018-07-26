@@ -23,7 +23,14 @@ const https = require("https");
 const message = require("../utilities/message.js");
 const mime = require("mime");
 const pako = require("pako");
-const {data: {constants, queries, responses}} = require("./data.js");
+const {
+  data: {
+    constants,
+    descriptions,
+    queries,
+    responses
+  }
+} = require("./data.js");
 const sharp = require("sharp");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
@@ -134,23 +141,25 @@ module.exports = {
         data
       );
     } else if (log.type === "rep") {
-      const {target_id} = log.data;
+      const target = await message.getUser(log.data.target_id);
 
-      return `Repped **${message.tag(target_id)}** (${target_id}).`;
+      return `**Action:** Rep\n**User:** ${message.tag(target)} (${target.id})`;
     } else if (log.type === "unrep") {
-      const {target_id} = log.data;
+      const target = await message.getUser(log.data.target_id);
 
-      return `Unrepped **${message.tag(target_id)}** (${target_id}).`;
+      return str.format(descriptions.unrep, message.tag(target), target.id);
     } else if (log.type === "resign") {
       const {top: {court}} = await db.getGuild(log.guild_id, {top: "court"});
       const level = log.data.rank < court ? "Supreme Court" : "Senate";
 
-      return `Retired from the ${level}.`;
+      return `**Action:** Resignation\n**From:** ${level}`;
     } else if (log.type === "member_ban" || log.type === "ban_request") {
       let {data, log_id} = log;
       let signs = "None";
+      let action = "Ban Request";
 
       if (log.type === "member_ban") {
+        action = "Member Ban";
         ({data, log_id} = await db.getFirstRow(
           "SELECT data, log_id FROM logs WHERE log_id = $1",
           [log.data.log_id]
@@ -182,19 +191,20 @@ module.exports = {
 
       return str.format(
         responses.banReq,
+        action,
         data.rule,
         data.evidence,
         message.tag(requester),
         requester.id,
-        log.type === "member_ban",
         signs
       );
     } else if (log.type === "ban_sign") {
-      return `Signed log #${log.data.for}.`;
+      return `**Action:** Sign\n**Log ID:** ${log.data.for}.`;
     } else if (log.type === "ban_vote") {
-      const which = log.data.for === true ? "for" : "against";
+      const {log_id, opinion} = log.data;
+      const which = log.data.for === true ? "For" : "Against";
 
-      return `Voted ${which} log #${log.data.log_id}`;
+      return str.format(descriptions.banVote, which, opinion, log_id);
     } else if (log.type === "court_change") {
       const {top: {court}} = await db.getGuild(log.guild_id, {top: "court"});
       let {rows: newCourt} = await db.pool.query(
@@ -210,7 +220,7 @@ module.exports = {
 
       newCourt = str.list(newCourt);
 
-      return `Is no longer a Supreme Court member.\nNew Members:${newCourt}`;
+      return `**Action:** Court Change\n**New Members:** ${newCourt}`;
     }
   },
 

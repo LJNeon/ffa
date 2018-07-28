@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Argument, Command} = require("patron.js");
+const {Argument, Command, Context} = require("patron.js");
 const client = require("../../services/client.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
@@ -34,17 +34,28 @@ module.exports = new class Log extends Command {
       })],
       description: "See more information on a log from it's ID.",
       groupName: "utility",
-      names: ["log"]
+      names: ["log"],
+      usableContexts: [Context.DM, Context.Guild]
     });
   }
 
   async run(msg, args) {
-    const guild = str.escapeFormat(client.guilds.get(args.log.guild_id).name);
+    const guild = client.guilds.get(args.log.guild_id);
+    let footer = null;
+
+    if (msg.channel.guild == null) {
+      footer = {};
+
+      if (guild == null)
+        footer.text = `Guild: ${args.log.guild_id}`;
+      else
+        footer.text = `Guild: ${str.escapeFormat(guild.name)}`;
+    }
 
     await message.create(msg.channel, {
       author: await logs.getAuthor(args.log),
       description: await logs.describe(args.log),
-      footer: {text: `Guild: ${guild}`},
+      footer,
       timestamp: new Date(args.log.time)
     });
   }

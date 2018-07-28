@@ -70,7 +70,7 @@ module.exports = new UpdateTimer(async guild => {
       i--;
       continue;
     } else {
-      reqs[i].status = `${rows.length}-0`;
+      reqs[i].status = `${rows.length} - 0`;
     }
 
     reqs[i].user = await message.getUser(reqs[i].data.offender);
@@ -81,14 +81,11 @@ module.exports = new UpdateTimer(async guild => {
   const active = message.embedify({
     description: reqs.length === 0 ? "None" : reqs.map(r => str.format(
       descriptions.banReq,
-      message.tag(r.requester),
-      r.requester.id,
       r.log_id,
       message.tag(r.user),
-      r.user.id,
-      r.data.rule,
+      str.max(str.eraseFormat(r.data.rule), 50),
       r.status
-    )).slice(0, 10).join("\n"),
+    )).slice(0, 10).join("\n\n"),
     footer: {text},
     title: "Active Cases"
   });
@@ -112,9 +109,11 @@ module.exports = new UpdateTimer(async guild => {
         no: 0,
         yes: 0
       });
-      reqs[i].status = `${rows.yes}-${rows.no}`;
+      reqs[i].status = `${rows.yes} - ${rows.no}`;
     } else {
-      reqs[i].status = "didn't reach court";
+      reqs.splice(i, 1);
+      i--;
+      continue;
     }
 
     reqs[i].user = await message.getUser(reqs[i].data.offender);
@@ -124,14 +123,11 @@ module.exports = new UpdateTimer(async guild => {
   const recent = message.embedify({
     description: reqs.length === 0 ? "None" : reqs.map(r => str.format(
       descriptions.banReq,
-      message.tag(r.requester),
-      r.requester.id,
       r.log_id,
       message.tag(r.user),
-      r.user.id,
-      r.data.rule,
+      str.max(str.eraseFormat(r.data.rule), 50),
       r.status
-    )).join("\n"),
+    )).slice(0, 10).join("\n\n"),
     footer: {text},
     title: "Recent Cases"
   });

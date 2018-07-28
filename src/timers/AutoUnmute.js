@@ -31,10 +31,10 @@ module.exports = new Timer(async () => {
   for (let i = 0; i < res.rows.length; i++) {
     const row = res.rows[i];
 
-    if (row.type === "mute" || row.type === "automute") {
+    if (row.type === "mute" || row.type === "auto_mute") {
       const unmute = res.rows.find(r => r.guild_id === row.guild_id
         && r.data.user_id === row.data.user_id && (r.type === "unmute"
-        || r.type === "autounmute") && r.time > row.time);
+        || r.type === "auto_unmute") && r.time > row.time);
 
       if (unmute != null)
         continue;

@@ -18,13 +18,7 @@
 "use strict";
 const {Argument, Command, CommandResult} = require("patron.js");
 const {config} = require("../../services/cli.js");
-const {
-  data: {
-    descriptions,
-    regexes,
-    responses
-  }
-} = require("../../services/data.js");
+const {data: {descriptions, responses}} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
 const logs = require("../../services/logs.js");
 const str = require("../../utilities/string.js");
@@ -86,7 +80,7 @@ module.exports = new class Clear extends Command {
     await logs.add({
       data: {
         evidence: args.evidence,
-        msg_ids: args.evidence.match(regexes.ids),
+        msg_ids: message.getIds(args.evidence),
         quantity: amount,
         rule: args.rule.content,
         senate_id: msg.author.id,

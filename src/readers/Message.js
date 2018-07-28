@@ -46,7 +46,7 @@ module.exports = new class Message extends TypeReader {
     }
 
     const {rows} = await db.pool.query(
-      "SELECT attachment_ids, content, time FROM revisions WHERE msg_id = $1",
+      "SELECT * FROM revisions WHERE msg_id = $1",
       [val]
     );
 

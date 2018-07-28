@@ -116,7 +116,7 @@ ALTER TABLE public.spam OWNER TO {0};
 CREATE TABLE public.top (
     guild_id varchar(20) PRIMARY KEY,
     court smallint NOT NULL CHECK (court > 0 AND court < senate) DEFAULT 5,
-    senate smallint NOT NULL CHECK (senate > 0) DEFAULT 20
+    senate smallint NOT NULL CHECK (senate > 0) DEFAULT 15
 );
 ALTER TABLE public.top OWNER TO {0};
 

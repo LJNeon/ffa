@@ -99,7 +99,7 @@ module.exports = {
       const channel = client.getChannel(logs_id);
 
       if (channel != null) {
-        return message.create(channel, {
+        await message.create(channel, {
           author: await this.getAuthor(log),
           color,
           description: await this.describe(log),
@@ -108,6 +108,8 @@ module.exports = {
         });
       }
     }
+
+    return res.rows[0].log_id;
   },
 
   async describe(log) {
@@ -115,7 +117,7 @@ module.exports = {
       const action = constants.modLogTypes[log.type];
       let data = "";
 
-      for (const key in log.data) {
+      for (let key in log.data) {
         if (log.data.hasOwnProperty(key) === false || key === "senate_id")
           continue;
 
@@ -132,6 +134,8 @@ module.exports = {
 
         if (key === "msg_ids")
           key = "Message IDs";
+        else if (key === "user_id")
+          key = "User ID";
 
         data += `\n**${str.capitalize(key)}:** ${val}`;
       }
@@ -182,20 +186,26 @@ module.exports = {
             no++;
         }
 
-        ({rows: signs} = await db.pool.query(
+        let {rows: signers} = await db.pool.query(
           queries.selectBanSigns,
           [log_id]
-        ));
-        signs += "\n**Signed By:** ";
-        signs = str.list(signs.map(s => `**${message.tag(s)}** (${s.id})`));
-        signs += `\n**Result:** ${yes}-${no}`;
+        );
+
+        for (let i = 0; i < signers.length; i++) {
+          const user = await message.getUser(signers[i].data.signer_id);
+
+          signers[i] = `${message.tag(user)} (${user.id})`;
+        }
+
+        signers = str.list(signers);
+        signs = `\n**Signed By:** ${signers}\n**Result:** ${yes}-${no}`;
       }
 
       const offender = await message.getUser(data.offender);
 
       return str.format(
         responses.banReq,
-        action,
+        `**Action:** ${action}\n`,
         data.rule,
         data.evidence,
         str.list(data.msg_ids),
@@ -216,6 +226,7 @@ module.exports = {
         lbQuery,
         [log.guild_id, court]
       );
+      let removed = await message.getUser(log.data.senate_id);
 
       for (let i = 0; i < newCourt.length; i++) {
         const user = await message.getUser(newCourt[i].user_id);
@@ -224,8 +235,9 @@ module.exports = {
       }
 
       newCourt = str.list(newCourt);
+      removed = `${message.tag(removed)} (${removed.id})`;
 
-      return `**Action:** Court Change\n**New Members:** ${newCourt}`;
+      return str.format(descriptions.courtChange, removed, newCourt);
     }
   },
 
@@ -237,13 +249,16 @@ module.exports = {
   },
 
   async getAuthor(log) {
+    if (log.type === "court_change")
+      return;
+
     let id;
 
     if (Object.keys(constants.modLogTypes).includes(log.type) === true)
       id = log.data.senate_id == null ? log.data.user_id : log.data.senate_id;
     else if (log.type === "rep" || log.type === "unrep")
       id = log.data.user_id;
-    else if (log.type === "resign" || log.type === "court_change")
+    else if (log.type === "resign")
       id = log.data.senate_id;
     else if (log.type === "member_ban" || log.type === "ban_request")
       id = log.data.requester;

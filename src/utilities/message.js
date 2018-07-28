@@ -20,7 +20,13 @@ const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
 const msgCollector = require("../services/messageCollector.js");
 const random = require("./random.js");
-const {data: {descriptions, responses}} = require("../services/data.js");
+const {
+  data: {
+    descriptions,
+    regexes,
+    responses
+  }
+} = require("../services/data.js");
 const str = require("./string.js");
 
 module.exports = {
@@ -85,20 +91,22 @@ module.exports = {
     return this.create(channel, msg, this.errorColor);
   },
 
-  async dm(user, msg, color, guild) {
+  async dm(user, msg, color, guild, file) {
     const channel = await user.getDMChannel();
     let result;
 
-    if (typeof msg === "string") {
-      result = this.embedify({
-        color,
-        description: msg
-      });
-    } else {
-      result = this.embedify({
-        color,
-        ...msg
-      });
+    if (msg.length !== 0) {
+      if (typeof msg === "string") {
+        result = this.embedify({
+          color,
+          description: msg
+        });
+      } else {
+        result = this.embedify({
+          color,
+          ...msg
+        });
+      }
     }
 
     if (guild != null) {
@@ -118,7 +126,7 @@ module.exports = {
       }
     }
 
-    return channel.createMessage(result);
+    return channel.createMessage(result, file);
   },
 
   embedify(options) {
@@ -139,6 +147,12 @@ module.exports = {
   },
 
   errorColor: config.customColors.error,
+
+  getIds(content) {
+    const ids = content.match(regexes.ids);
+
+    return ids.filter((e, i) => ids.indexOf(e) === i);
+  },
 
   async getUser(id) {
     const user = client.users.get(id);

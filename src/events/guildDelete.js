@@ -16,33 +16,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {TypeReader, TypeReaderResult} = require("patron.js");
-const logs = require("../services/logs.js");
+const client = require("../services/client.js");
+const db = require("../services/database.js");
+const {data: {queries}} = require("../services/data.js");
 
-module.exports = new class Log extends TypeReader {
-  constructor() {
-    super({type: "log"});
+client.on("guildDelete", async guild => {
+  const {rows: reqs} = await db.pool.query(
+    queries.unresolvedBanReqs,
+    [guild.id]
+  );
+
+  for (let i = 0; i < reqs.length; i++) {
+    reqs[i].data.resolved = true;
+    await db.pool.query(
+      "UPDATE logs SET data = $1 WHERE log_id = $2",
+      [reqs[i].data, reqs[i].log_id]
+    );
   }
-
-  async read(cmd, msg, arg, args, val) {
-    let result = Number(val);
-
-    if (Number.isInteger(result) === false) {
-      return TypeReaderResult.fromError(
-        cmd,
-        "you have provided an invalid log id."
-      );
-    }
-
-    result = await logs.get(result);
-
-    if (result == null) {
-      return TypeReaderResult.fromError(
-        cmd,
-        "you have provided an invalid log id."
-      );
-    }
-
-    return TypeReaderResult.fromSuccess(result);
-  }
-}();
+});

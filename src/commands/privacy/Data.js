@@ -133,7 +133,7 @@ module.exports = new class Data extends Command {
       }
     }
 
-    await message.dm(msg.author, "", null, {
+    await message.dm(msg.author, "", null, null, {
       file: Buffer.from(str.format(
         responses.data,
         message.tag(msg.author),

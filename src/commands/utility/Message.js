@@ -38,7 +38,7 @@ module.exports = new class Message extends Command {
         key: "edit",
         name: "revision",
         preconditionOptions: [{
-          max: args => args.msg.revisions.length,
+          max: args => args.msg.revisions.length || 1,
           min: 1
         }],
         preconditions: ["between"],
@@ -53,7 +53,7 @@ module.exports = new class Message extends Command {
   }
 
   async run(msg, args) {
-    if (args.msg.revisions.length < args.edit)
+    if (args.msg.revisions.length < args.edit - 1)
       return message.replyError(msg, "that revision doesn't exist.");
 
     const author = await message.getUser(args.msg.author_id);

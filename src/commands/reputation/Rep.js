@@ -51,7 +51,7 @@ module.exports = new class Rep extends Command {
     );
 
     for (let i = 0; i < res.rows.length; i++) {
-      if (res.rows[0].data.target_id === args.user.id) {
+      if (res.rows[i].data.target_id === args.user.id) {
         await message.replyError(
           msg,
           `you already repped ${message.tag(args.user)} in the past week.`

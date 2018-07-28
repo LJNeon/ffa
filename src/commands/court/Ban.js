@@ -24,7 +24,7 @@ const {
   data: {
     queries,
     descriptions,
-    regexes
+    responses
   }
 } = require("../../services/data.js");
 const str = require("../../utilities/string.js");
@@ -63,12 +63,9 @@ module.exports = new class Ban extends Command {
   }
 
   async run(msg, args) {
-    const {senate: {ban_evidence}, top: {court}} = await db.getGuild(
+    const {senate: {ban_evidence}} = await db.getGuild(
       msg.channel.guild.id,
-      {
-        senate: "ban_evidence",
-        top: "court"
-      }
+      {senate: "ban_evidence"}
     );
 
     if (args.evidence.length < ban_evidence) {
@@ -78,22 +75,11 @@ module.exports = new class Ban extends Command {
       );
     }
 
-    const {rows: courtMembers} = await db.pool.query(
-      this.lbQuery,
-      [msg.channel.guild.id, court + 1]
-    );
-    const index = courtMembers.findIndex(c => c.user_id === args.user.id);
-
-    if (index === -1)
-      courtMembers.pop();
-    else
-      courtMembers.splice(index, 1);
-
-    await logs.add({
+    const logId = await logs.add({
       data: {
-        court: courtMembers.map(c => c.user_id),
+        court: null,
         evidence: args.evidence,
-        msg_ids: args.evidence.match(regexes.ids),
+        msg_ids: message.getIds(args.evidence),
         offender: args.user.id,
         reached_court: null,
         requester: msg.author.id,
@@ -103,9 +89,10 @@ module.exports = new class Ban extends Command {
       guild_id: msg.channel.guild.id,
       type: "ban_request"
     });
+
     await message.reply(
       msg,
-      `ban request for **${message.tag(args.user)}** successfully created.`
+      str.format(responses.banCreate, message.tag(args.user), logId)
     );
   }
 }();

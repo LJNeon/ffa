@@ -35,6 +35,10 @@ module.exports = {
     return `\`\`\`${lang}\n${str}\`\`\``;
   },
 
+  eraseFormat(str) {
+    return str.replace(markdown, "");
+  },
+
   escapeFormat(str) {
     return str.replace(markdown, "\\$&");
   },
@@ -53,6 +57,10 @@ module.exports = {
       or === false ? "" : `${or} `,
       arr[arr.length - 1]
     );
+  },
+
+  max(str, len) {
+    return str.length > len ? `${str.slice(0, len - 3)}...` : str;
   },
 
   pluralize(str) {

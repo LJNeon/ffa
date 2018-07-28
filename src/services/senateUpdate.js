@@ -89,6 +89,7 @@ module.exports = async guild => mutex.sync(guild.id, async () => {
 
   for (let i = 0; i < currentSenate.length; i++) {
     const rank = res.rows.findIndex(r => r.user_id === currentSenate[i].id);
+
     if (rank === -1 || rank < court)
       await currentSenate[i].removeRole(senate_id).catch(() => {});
   }

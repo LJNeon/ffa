@@ -19,7 +19,7 @@
 const {ArgumentPrecondition, PreconditionResult} = require("patron.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
-const {data: {regexes, responses}} = require("../../services/data.js");
+const {data: {responses}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class Between extends ArgumentPrecondition {
@@ -28,7 +28,7 @@ module.exports = new class Between extends ArgumentPrecondition {
   }
 
   async run(cmd, msg, arg, args, val) {
-    const ids = val.match(regexes.ids);
+    const ids = message.getIds(val);
     const {user} = args;
     let userSent = false;
 

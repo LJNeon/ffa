@@ -16,7 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Argument, Command} = require("patron.js");
+const {Argument, Command, CommandResult} = require("patron.js");
+const bans = require("../../services/bans.js");
+const client = require("../../services/client.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
@@ -53,12 +55,16 @@ module.exports = new class Sign extends Command {
     const result = rows.findIndex(r => r.user_id === msg.author.id);
 
     if (result === -1) {
-      return message.replyError(msg, str.format(responses.top, senate));
+      await message.replyError(msg, str.format(responses.top, senate));
+
+      return CommandResult.fromError();
     } else if (result < court) {
-      return message.replyError(
+      await message.replyError(
         msg,
         "this command may not be used by Supreme Court members."
       );
+
+      return CommandResult.fromError();
     }
 
     if (args.log.type === "ban_request") {
@@ -71,10 +77,15 @@ module.exports = new class Sign extends Command {
         [args.log.log_id]
       );
 
-      if (signs.findIndex(s => s.data.signer_id === msg.author.id) !== -1)
-        return message.replyError(msg, "you already signed that ban request.");
-      else if (Date.now() - args.log.time > ban_req)
-        return message.replyError(msg, "that ban request is too old.");
+      if (signs.findIndex(s => s.data.signer_id === msg.author.id) !== -1) {
+        await message.replyError(msg, "you already signed that ban request.");
+
+        return CommandResult.fromError();
+      } else if (Date.now() - args.log.time > ban_req) {
+        await message.replyError(msg, "that ban request is too old.");
+
+        return CommandResult.fromError();
+      }
 
       await logs.add({
         data: {
@@ -84,6 +95,7 @@ module.exports = new class Sign extends Command {
         guild_id: args.log.guild_id,
         type: "ban_sign"
       });
+      await bans.update(client.guilds.get(args.log.guild_id));
 
       return message.reply(
         msg,
@@ -92,5 +104,7 @@ module.exports = new class Sign extends Command {
     }
 
     await message.replyError(msg, "that log can't be signed.");
+
+    return CommandResult.fromError();
   }
 }();

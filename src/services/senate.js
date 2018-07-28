@@ -16,20 +16,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchApi = require("../utilities/catchApi.js");
 const client = require("./client.js");
 const {CommandResult} = require("patron.js");
 const {config} = require("./cli.js");
-const {data: {regexes, responses, queries}} = require("./data.js");
+const {data: {responses, queries}} = require("./data.js");
 const db = require("./database.js");
 const logs = require("./logs.js");
 const message = require("../utilities/message.js");
 const MultiMutex = require("../utilities/MultiMutex.js");
+const senateUpdate = require("./senateUpdate.js");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
-const addRole = catchApi(client.addGuildMemberRole);
 const muteUserQuery = str.format(queries.muteUser, "true");
-const removeRole = catchApi(client.removeGuildMemberRole);
 const unmuteUserQuery = str.format(queries.muteUser, "false");
 
 module.exports = {
@@ -54,7 +52,7 @@ module.exports = {
           || member.roles.includes(muted_id) === true)
         return false;
 
-      const res = await addRole(msg.channel.guild.id, member.id, muted_id);
+      const res = await member.addRole(muted_id);
 
       if (res === false)
         return res;
@@ -68,10 +66,11 @@ module.exports = {
             user_id: msg.author.id
           },
           guild_id: msg.channel.guild.id,
-          type: "automute"
+          type: "auto_mute"
         },
         config.customColors.mute
       );
+      senateUpdate(msg.channel.guild);
 
       return true;
     });
@@ -85,7 +84,8 @@ module.exports = {
       );
       const guild = client.guilds.get(log.guild_id);
 
-      if (muted_id == null || guild.roles.get(muted_id) == null)
+      if (guild == null || muted_id == null
+          || guild.roles.get(muted_id) == null)
         return false;
 
       const isMuted = await this.isMuted(
@@ -99,7 +99,7 @@ module.exports = {
           || member.roles.includes(muted_id) === false)
         return false;
 
-      const res = await removeRole(log.guild_id, member.id, muted_id);
+      const res = await member.removeRole(muted_id);
 
       if (res === false)
         return res;
@@ -109,10 +109,11 @@ module.exports = {
         {
           data: {user_id: log.data.user_id},
           guild_id: log.guild_id,
-          type: "autounmute"
+          type: "auto_unmute"
         },
         config.customColors.unmute
       );
+      senateUpdate(guild);
 
       return true;
     });
@@ -150,12 +151,11 @@ module.exports = {
         return CommandResult.fromError(responses.notMutedUser);
 
       const member = msg.channel.guild.members.get(args.user.id);
-      const tag = message.tag(args.user);
 
       if (member == null || member.roles.includes(muted_id) === true)
         return false;
 
-      const res = await addRole(msg.channel.guild.id, member.id, muted_id);
+      const res = await member.addRole(muted_id);
 
       if (res === false)
         return res;
@@ -166,7 +166,7 @@ module.exports = {
           data: {
             evidence: args.evidence,
             length: args.length,
-            msg_ids: args.evidence.match(regexes.ids),
+            msg_ids: message.getIds(args.evidence),
             rule: args.rule.content,
             senate_id: msg.author.id,
             user_id: args.user.id
@@ -176,16 +176,17 @@ module.exports = {
         },
         config.customColors.mute
       );
+      senateUpdate(msg.channel.guild);
       await message.reply(
         msg,
         `you have successfully muted **${message.tag(args.user)}**.`
       );
       message.dm(args.user, str.format(
         responses.muted,
-        tag,
+        message.tag(await message.getUser(msg.author.id)),
         time.format(args.length),
-        str.code(args.rule.content, ""),
-        args.evidence == null ? "" : args.evidence,
+        args.rule.content,
+        args.evidence,
         message.tag(await message.getUser(msg.channel.guild.ownerID)),
         config.bot.prefix
       ), null, msg.channel.guild).catch(() => {});
@@ -218,7 +219,7 @@ module.exports = {
       if (member == null || member.roles.includes(muted_id) === false)
         return false;
 
-      await removeRole(msg.channel.guild.id, member.id, muted_id);
+      await member.removeRole(muted_id);
       await db.pool.query(
         unmuteUserQuery,
         [msg.channel.guild.id, args.user.id]
@@ -227,7 +228,7 @@ module.exports = {
         {
           data: {
             evidence: args.evidence,
-            msg_ids: args.evidence.match(regexes.ids),
+            msg_ids: message.getIds(args.evidence),
             senate_id: msg.author.id,
             user_id: args.user.id
           },
@@ -236,6 +237,7 @@ module.exports = {
         },
         config.customColors.unmute
       );
+      senateUpdate(msg.channel.guild);
       await message.reply(
         msg,
         `you have successfully unmuted **${message.tag(args.user)}**.`

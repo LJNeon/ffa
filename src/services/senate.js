@@ -30,6 +30,39 @@ const time = require("../utilities/time.js");
 const muteUserQuery = str.format(queries.muteUser, "true");
 const unmuteUserQuery = str.format(queries.muteUser, "false");
 
+async function mute(msg, args) {
+  await db.pool.query(muteUserQuery, [msg.channel.guild.id, args.user.id]);
+  await logs.add(
+    {
+      data: {
+        evidence: args.evidence,
+        length: args.length,
+        msg_ids: message.getIds(args.evidence),
+        rule: args.rule.content,
+        senate_id: msg.author.id,
+        user_id: args.user.id
+      },
+      guild_id: msg.channel.guild.id,
+      type: "mute"
+    },
+    config.customColors.mute
+  );
+  senateUpdate(msg.channel.guild);
+  await message.reply(
+    msg,
+    `you have successfully muted **${message.tag(args.user)}**.`
+  );
+  message.dm(args.user, str.format(
+    responses.muted,
+    message.tag(await message.getUser(msg.author.id)),
+    time.format(args.length),
+    args.rule.content,
+    args.evidence,
+    message.tag(await message.getUser(msg.channel.guild.ownerID)),
+    config.bot.prefix
+  ), null, msg.channel.guild).catch(() => {});
+}
+
 module.exports = {
   autoMute(msg, length, penalty) {
     return this.mutex.sync(msg.channel.guild.id, async () => {
@@ -155,41 +188,8 @@ module.exports = {
       if (member == null || member.roles.includes(muted_id) === true)
         return false;
 
-      const res = await member.addRole(muted_id);
-
-      if (res === false)
-        return res;
-
-      await db.pool.query(muteUserQuery, [msg.channel.guild.id, args.user.id]);
-      await logs.add(
-        {
-          data: {
-            evidence: args.evidence,
-            length: args.length,
-            msg_ids: message.getIds(args.evidence),
-            rule: args.rule.content,
-            senate_id: msg.author.id,
-            user_id: args.user.id
-          },
-          guild_id: msg.channel.guild.id,
-          type: "mute"
-        },
-        config.customColors.mute
-      );
-      senateUpdate(msg.channel.guild);
-      await message.reply(
-        msg,
-        `you have successfully muted **${message.tag(args.user)}**.`
-      );
-      message.dm(args.user, str.format(
-        responses.muted,
-        message.tag(await message.getUser(msg.author.id)),
-        time.format(args.length),
-        args.rule.content,
-        args.evidence,
-        message.tag(await message.getUser(msg.channel.guild.ownerID)),
-        config.bot.prefix
-      ), null, msg.channel.guild).catch(() => {});
+      await member.addRole(muted_id);
+      await mute(msg, args);
     });
   },
 

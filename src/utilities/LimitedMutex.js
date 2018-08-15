@@ -16,10 +16,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const {config} = require("../services/cli.js");
 const MultiMutex = require("./MultiMutex.js");
 
 module.exports = class LimitedMutex {
-  constructor(limit = 2) {
+  constructor(limit = config.default.mutexLimit) {
     this.limit = limit;
     this.mutex = new MultiMutex();
   }

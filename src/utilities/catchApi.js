@@ -18,9 +18,7 @@
 "use strict";
 const {
   data: {
-    constants: {
-      discordErrorCodes
-    }
+    constants: {discordErrorCodes}
   }
 } = require("../services/data.js");
 
@@ -31,12 +29,14 @@ module.exports = func => async (...args) => {
     res = await func(...args);
   } catch (e) {
     const serverErr = e.constructor.name === "DiscordHTTPError"
-        && (e.code > 599 || e.code < 500);
+        && (e.code > discordErrorCodes.internalError[0]
+          && e.code < discordErrorCodes.internalError[1]);
     const permErr = e.constructor.name === "DiscordRESTError"
-        && e.code !== 50013 && e.code !== 403;
+        && (e.code === discordErrorCodes.noPerm[0]
+        || e.code === discordErrorCodes.noPerm[1]);
     const timedOutErr = e.message.startsWith(discordErrorCodes.timedOut);
 
-    if (serverErr === true || permErr === true || timedOutErr === false)
+    if (serverErr === false && permErr === false && timedOutErr === false)
       throw e;
 
     return false;

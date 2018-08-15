@@ -19,7 +19,13 @@
 const {Argument, ArgumentDefault, Command} = require("patron.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
-const {data: {responses, queries}} = require("../../services/data.js");
+const {
+  data: {
+    constants,
+    responses,
+    queries
+  }
+} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class GetRep extends Command {
@@ -55,7 +61,11 @@ module.exports = new class GetRep extends Command {
     }
 
     await message.create(msg.channel, {
-      description: str.format(responses.repRank, reputation.toFixed(2), pos),
+      description: str.format(
+        responses.repRank,
+        reputation.toFixed(constants.numPrecision),
+        pos
+      ),
       title: `${str.pluralize(message.tag(args.user))} Reputation`
     });
   }

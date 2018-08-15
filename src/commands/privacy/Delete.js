@@ -19,7 +19,7 @@
 const {Command, Context} = require("patron.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
-const {data: {descriptions}} = require("../../services/data.js");
+const {data: {constants, descriptions}} = require("../../services/data.js");
 
 module.exports = new class Delete extends Command {
   constructor() {
@@ -35,7 +35,7 @@ module.exports = new class Delete extends Command {
   async run(msg) {
     await db.pool.query(
       "UPDATE users SET delete_at = $1 WHERE user_id = $2",
-      [new Date(Date.now() + 6048e5)]
+      [new Date(Date.now() + constants.week), msg.author.id]
     );
     await message.reply(
       msg,

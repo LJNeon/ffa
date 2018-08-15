@@ -159,9 +159,8 @@ module.exports = {
       if (cli.auth.pg.database == null) {
         cli.auth.pg.database = "ffa";
         cli.auth.pg.password = cli.auth.pg.password == null ? crypto
-          .randomBytes(16)
-          .toString("hex")
-          .slice(-32) : cli.auth.pg.password;
+          .randomBytes(data.constants.hexBase).toString("hex")
+          .slice(data.constants.randomLenSlice) : cli.auth.pg.password;
         await client.query(
           `ALTER USER ${user} WITH PASSWORD $1`,
           [cli.auth.pg.password]
@@ -172,22 +171,20 @@ module.exports = {
         ));
       }
 
-      await client.query(`CREATE DATABASE ${db}`);
-      this.pool = new Pool(cli.auth.pg);
-
       const queries = data.model.replace(data.regexes.newline, "");
 
+      await client.query(`CREATE DATABASE ${db}`);
+      this.pool = new Pool(cli.auth.pg);
       await this.pool.query(str.format(queries, user));
       await this.pool.query(
         "INSERT INTO info(version) VALUES($1)",
         [data.db.version]
       );
+    } else {
+      this.pool = new Pool(cli.auth.pg);
     }
 
     await client.end();
-
-    if (this.pool == null)
-      this.pool = new Pool(cli.auth.pg);
   },
 
   sortDefaultValues(row, needed) {
@@ -210,10 +207,11 @@ module.exports = {
   },
 
   stringifyQuery(count) {
-    const len = count + 2;
+    const start = 2;
+    const len = count + start;
     let values = "$1";
 
-    for (let i = 2; i < len; i++)
+    for (let i = start; i < len; i++)
       values += `, $${i}`;
 
     return values;

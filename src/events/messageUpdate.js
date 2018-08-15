@@ -19,10 +19,9 @@
 const catchPromise = require("../utilities/catchPromise.js");
 const client = require("../services/client.js");
 const logs = require("../services/logs.js");
+const message = require("../utilities/message.js");
 
 client.on("messageUpdate", catchPromise(async msg => {
-  if (msg.type === 0 && msg.author != null && msg.author.bot === false
-      && msg.author.discriminator !== "0000" && msg.embeds != null
-      && msg.embeds.length === 0)
+  if (message.isValid(msg))
     await logs.message(msg);
 }));

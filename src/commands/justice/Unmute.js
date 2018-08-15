@@ -31,7 +31,7 @@ module.exports = new class Unmute extends Command {
         type: "user"
       }),
       new Argument({
-        example: "apologized",
+        example: "was meme muted",
         key: "evidence",
         name: "evidence",
         preconditionOptions: [{max: config.max.evidenceLen}],

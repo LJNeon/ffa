@@ -17,20 +17,40 @@
  */
 "use strict";
 const {ArgumentPrecondition, PreconditionResult} = require("patron.js");
+const client = require("../../services/client.js");
 
-module.exports = new class BannableRule extends ArgumentPrecondition {
+module.exports = new class BannableUser extends ArgumentPrecondition {
   constructor() {
-    super({name: "bannablerule"});
+    super({name: "bannableuser"});
   }
 
   async run(cmd, msg, arg, args, val) {
-    if (val.mute_length != null) {
-      return PreconditionResult.fromError(
-        cmd,
-        "that rule isn't a bannable offense."
-      );
+    const {guild} = msg.channel;
+    const clientMember = guild.members.get(client.user.id);
+    const member = guild.members.get(val.id);
+    let highest = 0;
+    let userHighest = 0;
+
+    for (let i = 0; i < clientMember.roles.length; i++) {
+      const {position} = guild.roles.get(clientMember.roles[i]);
+
+      if (position > highest)
+        highest = position;
     }
 
-    return PreconditionResult.fromSuccess();
+    for (let i = 0; i < member.roles.length; i++) {
+      const {position} = guild.roles.get(member.roles[i]);
+
+      if (position > userHighest)
+        userHighest = position;
+    }
+
+    if (guild.ownerID !== val.id && highest > userHighest)
+      return PreconditionResult.fromSuccess();
+
+    return PreconditionResult.fromError(
+      cmd,
+      "I don't have permission to ban that user."
+    );
   }
 }();

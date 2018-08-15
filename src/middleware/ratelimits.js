@@ -18,6 +18,7 @@
 "use strict";
 const store = new Map();
 const {config} = require("../services/cli.js");
+const {data: {constants}} = require("../services/data.js");
 
 module.exports = async (req, res, next) => {
   let limits = store.get(req.ip);
@@ -25,22 +26,28 @@ module.exports = async (req, res, next) => {
   if (limits == null || limits.reset >= Date.now()) {
     store.set(req.ip, {
       count: 1,
-      reset: Date.now() + config.duration
+      reset: Date.now() + config.ratelimits.duration
     });
     limits = store.get(req.ip);
   } else {
     limits.count++;
   }
 
-  res.setHeader("X-RateLimit-Limit", config.max);
+  res.setHeader("X-RateLimit-Limit", config.ratelimits.max);
   res.setHeader(
     "X-RateLimit-Remaining",
-    Math.max(config.max - limits.count, 0)
+    Math.max(config.ratelimits.max - limits.count, 0)
   );
-  res.setHeader("X-RateLimit-Reset", Math.floor(limits.reset / 1e3));
+  res.setHeader(
+    "X-RateLimit-Reset",
+    Math.floor(limits.reset / constants.times.second[0])
+  );
 
-  if (limits.count >= config.max) {
-    res.writeHead(429, {"Retry-After": limits.reset - Date.now()});
+  if (limits.count >= config.ratelimits.max) {
+    res.writeHead(
+      constants.httpStatusCodes.tooManyReqs,
+      {"Retry-After": limits.reset - Date.now()}
+    );
 
     return res.end("Too many requests, please try again later.");
   }

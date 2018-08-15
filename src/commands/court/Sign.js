@@ -26,6 +26,37 @@ const message = require("../../utilities/message.js");
 const {data: {queries, responses}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
+async function banReq(msg, log) {
+  const {ages: {ban_req}} = await db.getGuild(
+    log.guild_id,
+    {ages: "ban_req"}
+  );
+  const {rows: signs} = await db.pool.query(
+    queries.selectBanSigns,
+    [log.log_id]
+  );
+
+  if (signs.findIndex(s => s.data.signer_id === msg.author.id) !== -1)
+    return CommandResult.fromError("you already signed that ban request.");
+  else if (Date.now() - log.time > ban_req)
+    return CommandResult.fromError("that ban request is too old.");
+
+  await logs.add({
+    data: {
+      for: log.log_id,
+      signer_id: msg.author.id
+    },
+    guild_id: log.guild_id,
+    type: "ban_sign"
+  });
+  await bans.update(client.guilds.get(log.guild_id));
+
+  return message.reply(
+    msg,
+    "you have successfully signed this ban request."
+  );
+}
+
 module.exports = new class Sign extends Command {
   constructor() {
     super({
@@ -55,56 +86,15 @@ module.exports = new class Sign extends Command {
     const result = rows.findIndex(r => r.user_id === msg.author.id);
 
     if (result === -1) {
-      await message.replyError(msg, str.format(responses.top, senate));
-
-      return CommandResult.fromError();
+      return CommandResult.fromError(str.format(responses.top, senate));
     } else if (result < court) {
-      await message.replyError(
-        msg,
+      return CommandResult.fromError(
         "this command may not be used by Supreme Court members."
       );
-
-      return CommandResult.fromError();
+    } else if (args.log.type === "ban_request") {
+      return banReq(msg, args.log);
     }
 
-    if (args.log.type === "ban_request") {
-      const {ages: {ban_req}} = await db.getGuild(
-        args.log.guild_id,
-        {ages: "ban_req"}
-      );
-      const {rows: signs} = await db.pool.query(
-        queries.selectBanSigns,
-        [args.log.log_id]
-      );
-
-      if (signs.findIndex(s => s.data.signer_id === msg.author.id) !== -1) {
-        await message.replyError(msg, "you already signed that ban request.");
-
-        return CommandResult.fromError();
-      } else if (Date.now() - args.log.time > ban_req) {
-        await message.replyError(msg, "that ban request is too old.");
-
-        return CommandResult.fromError();
-      }
-
-      await logs.add({
-        data: {
-          for: args.log.log_id,
-          signer_id: msg.author.id
-        },
-        guild_id: args.log.guild_id,
-        type: "ban_sign"
-      });
-      await bans.update(client.guilds.get(args.log.guild_id));
-
-      return message.reply(
-        msg,
-        "you have successfully signed this ban request."
-      );
-    }
-
-    await message.replyError(msg, "that log can't be signed.");
-
-    return CommandResult.fromError();
+    return CommandResult.fromError("that log can't be signed.");
   }
 }();

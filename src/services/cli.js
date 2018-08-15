@@ -50,16 +50,14 @@ const str = require("../utilities/string.js");
 const readDir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 
-async function parse(bool, filepath, files, file) {
-  if (bool === false && files.includes(file) === true)
+async function parse(arg, filepath, files, file) {
+  if (arg == null && files.includes(file) === true)
     return yaml.safeLoad(await readFile(filepath, "utf8"));
 
-  return bool;
+  return arg;
 }
 
 module.exports = {
-  auth: false,
-
   async checkLicense() {
     if (argv.license === true) {
       console.clear();
@@ -71,10 +69,8 @@ module.exports = {
     }
   },
 
-  config: false,
-
   async fetch() {
-    if (this.auth === false || this.config === false) {
+    if (this.auth == null || this.config == null) {
       if (argv.auth != null) {
         this.authPath = path.join(__dirname, `../${argv.auth}`);
         this.auth = yaml.safeLoad(fs.readFileSync(
@@ -94,7 +90,7 @@ module.exports = {
       await this.searchIfNeeded(path.join(__dirname, "../../"));
       await this.searchIfNeeded(homedir);
 
-      if (this.auth === false || this.config === false) {
+      if (this.auth == null || this.config == null) {
         console.error(str.format(
           responses.cantLocate,
           `ffa${this.auth === false ? "Auth" : ""}.yml`,
@@ -106,21 +102,21 @@ module.exports = {
   },
 
   async searchIfNeeded(dir) {
-    if (this.auth === false || this.config === false) {
+    if (this.auth == null || this.config == null) {
       const files = await readDir(dir);
       const authPath = path.join(dir, "ffaAuth.yml");
       const auth = await parse(this.auth, authPath, files, "ffaAuth.yml");
       const configPath = path.join(dir, "ffa.yml");
       const config = await parse(this.config, configPath, files, "ffa.yml");
 
-      if (auth !== false) {
+      if (auth != null) {
         this.auth = auth;
 
         if (this.authPath == null)
           this.authPath = authPath;
       }
 
-      if (config !== false) {
+      if (config != null) {
         this.config = config;
 
         if (this.configPath == null)

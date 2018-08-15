@@ -47,6 +47,9 @@ ratelimits: {
 }
 
 max: {
+  actionsLife: 36e5,
+  caseRule: 50,
+  cases: 10,
   clear: 100,
   cmdNewLines: 10,
   deletedMsgChars: 100,
@@ -67,8 +70,10 @@ min: {
 
 default: {
   clear: 20,
+  deletedMsgs: 5,
   lb: 10,
-  deletedMsgs: 5
+  mutexLimit: 2,
+  timePrecision: 2
 }
 
 cd: {
@@ -83,9 +88,10 @@ cd: {
 timer: {
   autoUnmute: 6e4,
   banUpdate: 9e5,
-  casesUpdate: 3e5,
+  casesUpdate: 3e4,
   dbClean: 6e5,
   repDecay: 36e5,
   resetActions: 36e5,
-  senateRoleUpdate: 3e5
+  senateRoleUpdate: 3e5,
+  verifyTimeout: 3e5
 }

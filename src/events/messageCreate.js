@@ -16,7 +16,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const catchApi = require("../utilities/catchApi.js");
 const catchPromise = require("../utilities/catchPromise.js");
 const chatService = require("../services/chat.js");
 const client = require("../services/client.js");
@@ -24,30 +23,29 @@ const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
 const handler = require("../services/handler.js");
 const logs = require("../services/logs.js");
+const message = require("../utilities/message.js");
 const msgCollector = require("../services/messageCollector.js");
 const resultService = require("../services/result.js");
 const spamService = require("../services/spam.js");
-const delMsg = catchApi(client.deleteMessage);
-const logMsg = catchPromise(logs.message);
 
 client.on("messageCreate", catchPromise(async msg => {
-  if (msg.type !== 0 || msg.author.bot === true
-      || msg.author.discriminator === "0000")
+  if (msg.embeds.length !== 0 && msg.author != null
+      && msg.author.bot === false)
+    return msg.delete().catch(() => {});
+  else if (message.isValid(msg) === false)
     return;
-  else if (msg.embeds.length !== 0)
-    return delMsg(msg.channel.id, msg.id);
 
   msgCollector.check(msg);
 
   let guild;
 
   if (msg.channel.guild != null) {
-    logMsg(msg);
+    logs.message(msg).catch(() => {});
     guild = await db.getGuild(msg.channel.guild.id, {
       channels: "ignored_ids",
       chat: "delay, reward",
       roles: "muted_id",
-      senate: "auto_mute, case_count, mute_length",
+      senate: "auto_mute, mute_length",
       spam: "duration, msg_limit, rep_penalty"
     });
 

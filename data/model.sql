@@ -98,7 +98,6 @@ CREATE TABLE public.senate (
     auto_mute boolean NOT NULL DEFAULT true,
     ban_evidence int NOT NULL CHECK (ban_evidence > 0) DEFAULT 100,
     ban_sigs smallint NOT NULL CHECK (ban_sigs > 0) DEFAULT 7,
-    case_count int NOT NULL DEFAULT 0,
     max_actions smallint NOT NULL CHECK (max_actions > 0) DEFAULT 15,
     mute_length int NOT NULL CHECK (mute_length > 0) DEFAULT 21600000,
     vote_opinion int NOT NULL CHECK (vote_opinion > 0) DEFAULT 50

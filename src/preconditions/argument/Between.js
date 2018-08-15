@@ -49,14 +49,14 @@ module.exports = new class Between extends ArgumentPrecondition {
     if (min == null) {
       return PreconditionResult.fromError(
         cmd,
-        `the ${arg.name} must be below or equal to ${max}.`
+        `the ${arg.name} must be smaller than or equal to ${max}.`
       );
     }
 
     if (max == null) {
       return PreconditionResult.fromError(
         cmd,
-        `the ${arg.name} must be above or equal to ${min}.`
+        `the ${arg.name} must be greater than or equal to ${min}.`
       );
     }
 

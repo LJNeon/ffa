@@ -40,14 +40,15 @@ module.exports = class Mutex {
       finished = true;
       this.dequeue();
     });
+    // TODO remove this for stable release version
     setTimeout(async () => {
       if (finished === false) {
         this.dequeue();
 
-        // TODO remove this for stable release version
         /* eslint-disable-next-line max-len */
         throw new Error(`Record took over 30s to finish: ${record.task.toString()}`);
       }
+    /* eslint-disable-next-line no-magic-numbers */
     }, 3e4);
   }
 

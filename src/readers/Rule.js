@@ -17,7 +17,7 @@
  */
 "use strict";
 const {TypeReader, TypeReaderResult} = require("patron.js");
-const {data: {regexes: {number}}} = require("../services/data.js");
+const {data: {constants, regexes: {number}}} = require("../services/data.js");
 const ruleService = require("../services/rules.js");
 
 module.exports = new class Rule extends TypeReader {
@@ -48,7 +48,7 @@ module.exports = new class Rule extends TypeReader {
 
     let rule = val.slice(result.length - 1);
 
-    if (rule.length < 3) {
+    if (rule.length < constants.minList) {
       rule = ruleService.countLetters(rule);
 
       if (rule !== -1 && rule < categories[category].length)

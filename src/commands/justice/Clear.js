@@ -18,7 +18,13 @@
 "use strict";
 const {Argument, Command, CommandResult} = require("patron.js");
 const {config} = require("../../services/cli.js");
-const {data: {descriptions, responses}} = require("../../services/data.js");
+const {
+  data: {
+    constants,
+    descriptions,
+    responses
+  }
+} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
 const logs = require("../../services/logs.js");
 const str = require("../../utilities/string.js");
@@ -70,7 +76,7 @@ module.exports = new class Clear extends Command {
   async run(msg, args) {
     let quota = 0;
     const amount = await msg.channel.purge(
-      100,
+      constants.maxMessages,
       m => m.author.id === args.user.id && ++quota <= args.quantity
     );
 

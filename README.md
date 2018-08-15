@@ -8,3 +8,6 @@
 
 # FFA
 The core control of a free-for-all discord server.
+
+# Database
+FFA uses PostgreSQL 10, any previous versions may or may not work. Once PostgreSQL is installed and running you just need to create a `ffaAuth.yml` file using the example as a reference. FFA will use the default postgres account to create the database to use for you, and will automatically update the database as needed when you update FFA.

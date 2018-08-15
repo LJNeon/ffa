@@ -43,15 +43,14 @@ module.exports = new class TimeLeft extends Command {
 
   async run(msg, args) {
     const now = Date.now();
-    const res = await db.pool.query(
+    const log = await db.getFirstRow(
       queries.selectMute,
       [new Date(now - config.max.mute), args.user.id]
     );
-    const [log] = res.rows;
     const timeStr = time.format(log.time.getTime() + log.data.length - now);
 
     await message.create(msg.channel, {
-      description: `**Time Left:** ${timeStr}`,
+      description: `${timeStr} remaining.`,
       footer: {text: `Log #${log.log_id}`},
       title: `${message.tag(args.user)}'s Mute`
     });

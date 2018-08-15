@@ -22,12 +22,16 @@ const mime = require("mime");
 const pako = require("pako");
 const Polka = require("polka")();
 const ratelimits = require("../middleware/ratelimits.js");
-const {data: {regexes}} = require("./data.js");
+const {
+  data: {
+    constants: {httpStatusCodes},
+    regexes
+  }
+} = require("./data.js");
 
-Polka.use("/api", ratelimits);
-Polka.get("/api/attachments/:id", async (req, res) => {
+async function getAttachment(req, res) {
   if (regexes.onlyId.test(req.params.id) === false) {
-    res.writeHead(400, {"Content-Type": "text/plain"});
+    res.writeHead(httpStatusCodes.badReq, {"Content-Type": "text/plain"});
 
     return res.end(`Invalid attachment. (ID: ${req.params.id})`);
   }
@@ -41,22 +45,32 @@ Polka.get("/api/attachments/:id", async (req, res) => {
     );
   } catch (e) {
     Logger.error(e);
-    res.writeHead(500, {"Content-Type": "text/plain"});
+    res.writeHead(httpStatusCodes.internalErr, {"Content-Type": "text/plain"});
 
     return res.end("Error occurred while accessing database.");
   }
 
   if (attachment == null) {
-    res.writeHead(404, {"Content-Type": "text/plain"});
+    res.writeHead(httpStatusCodes.notFound, {"Content-Type": "text/plain"});
 
     return res.end(`Attachment not found. (ID: ${req.params.id})`);
   }
+
+  return attachment;
+}
+
+Polka.use("/api", ratelimits);
+Polka.get("/api/attachments/:id", async (req, res) => {
+  const attachment = await getAttachment(req, res);
+
+  if (Buffer.isBuffer(attachment) === false)
+    return attachment;
 
   const type = mime.getType(attachment.name);
 
   if (type === false) {
     Logger.error("Unknown mime type:", attachment.name);
-    res.writeHead(500, {"Content-Type": "text/plain"});
+    res.writeHead(httpStatusCodes.internalErr, {"Content-Type": "text/plain"});
 
     return res.end("Error occurred while determining file's mime type.");
   }
@@ -65,12 +79,16 @@ Polka.get("/api/attachments/:id", async (req, res) => {
     attachment.file = Buffer.from(pako.inflate(attachment.file));
   } catch (e) {
     Logger.error("Inflation error", e);
-    res.writeHead(500, {"Content-Type": "text/plain"});
+    res.writeHead(httpStatusCodes.internalErr, {"Content-Type": "text/plain"});
 
     return res.end("Error occurred while decompressing file.");
   }
 
-  res.writeHead(200, {"Content-Type": type});
+  res.writeHead(httpStatusCodes.ok, {"Content-Type": type});
   res.end(attachment.file);
 });
+/**
+ * TODO pretty sure process.env.PORT is a c9 thing,
+ * should replace with auth option?
+ */
 Polka.listen(process.env.PORT).then(() => Logger.info("POLKA_READY"));

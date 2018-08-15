@@ -112,7 +112,7 @@ module.exports = {
       if (channel == null)
         return;
 
-      const msgs = await channel.getMessages(100);
+      const msgs = await channel.getMessages(constants.maxMessages);
       const remove = [];
 
       for (let i = 0; i < msgs.length; i++) {
@@ -120,7 +120,14 @@ module.exports = {
           remove.push(msgs[i].id);
       }
 
-      await channel.deleteMessages(remove);
+      const oldestAllowedSnowflake = message.getOldest();
+
+      if (remove.some(i => i < oldestAllowedSnowflake)) {
+        for (let i = 0; i < remove.length; i++)
+          await channel.deleteMessage(remove[i]);
+      } else {
+        await channel.deleteMessages(remove);
+      }
 
       const categories = await this.getCategories(guildId);
       const colors = [...message.colors];

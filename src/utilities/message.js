@@ -22,12 +22,63 @@ const msgCollector = require("../services/messageCollector.js");
 const random = require("./random.js");
 const {
   data: {
+    constants,
     descriptions,
     regexes,
     responses
   }
 } = require("../services/data.js");
 const str = require("./string.js");
+
+function addGuildFooter(footer, guild) {
+  if (footer == null) {
+    return {
+      icon_url: guild.iconURL,
+      text: guild.name
+    };
+  }
+
+  const result = footer;
+
+  if (footer.text == null)
+    result.text = guild.name;
+  else
+    result.text += ` | ${guild.name}`;
+
+  if (footer.icon_url == null)
+    result.icon_url = guild.iconURL;
+
+  return result;
+}
+
+function getRevisions(msg) {
+  return msg.revisions.map((r, i) => {
+    let attachments = " None";
+    const time = r.time.toLocaleDateString("en-US", {
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+
+    if (r.attachment_ids.length !== 0) {
+      attachments = `\n${r.attachment_ids.map(a => {
+        const url = str.format(responses.attachmentUrl, a);
+
+        return `      * ${url}`;
+      })}`;
+    }
+
+    return str.format(
+      responses.revisionList,
+      i + 1,
+      r.content.length === 0 ? "None" : r.content,
+      attachments,
+      time
+    );
+  });
+}
 
 module.exports = {
   canUseRole(guild, role) {
@@ -50,38 +101,28 @@ module.exports = {
 
   colors: config.colors,
 
-  create(channel, msg, color, file) {
-    let perms;
+  create(channel, msg, color, file, guild) {
+    const perms = this.verifyPerms(channel);
 
-    if (channel.guild != null)
-      perms = channel.permissionsOf(channel.guild.shard.client.user.id);
-
-    if (perms != null && perms.has("sendMessages") === false)
+    if (perms === false)
       return;
 
-    let result = msg.description;
+    let result = msg;
 
-    if (result == null) {
-      if (msg.content == null)
-        result = msg;
-      else
-        result = msg.content;
+    if (typeof msg === "string") {
+      result = this.embedify({
+        color,
+        description: msg
+      });
+    } else {
+      result = this.embedify({
+        color,
+        ...msg
+      });
     }
 
-    if ((perms == null || perms.has("embedLinks") === true)
-        && result.length !== 0) {
-      if (typeof msg === "string") {
-        result = this.embedify({
-          color,
-          description: msg
-        });
-      } else {
-        result = this.embedify({
-          color,
-          ...msg
-        });
-      }
-    }
+    if (channel.guild == null && guild != null)
+      result.embed.footer = addGuildFooter(result.embed.footer, guild);
 
     return channel.createMessage(result, file);
   },
@@ -92,41 +133,7 @@ module.exports = {
   },
 
   async dm(user, msg, color, guild, file) {
-    const channel = await user.getDMChannel();
-    let result;
-
-    if (msg.length !== 0) {
-      if (typeof msg === "string") {
-        result = this.embedify({
-          color,
-          description: msg
-        });
-      } else {
-        result = this.embedify({
-          color,
-          ...msg
-        });
-      }
-    }
-
-    if (guild != null) {
-      if (result.footer == null) {
-        result.footer = {
-          icon_url: guild.iconURL,
-          text: guild.name
-        };
-      } else {
-        if (result.footer.text == null)
-          result.footer.text = guild.name;
-        else
-          result.footer.text += ` | ${guild.name}`;
-
-        if (result.footer.icon_url == null)
-          result.footer.icon_url = guild.iconURL;
-      }
-    }
-
-    return channel.createMessage(result, file);
+    return this.create(await user.getDMChannel(), msg, color, file, guild);
   },
 
   embedify(options) {
@@ -151,17 +158,21 @@ module.exports = {
   getIds(content) {
     const ids = content.match(regexes.ids);
 
-    return ids.filter((e, i) => ids.indexOf(e) === i);
+    return ids == null ? [] : ids.filter((e, i) => ids.indexOf(e) === i);
   },
 
-  async getUser(id) {
+  getOldest() {
+    return (Date.now() - constants.discordEpoch) * constants.snowflakeMult;
+  },
+
+  getUser(id) {
     const user = client.users.get(id);
 
     if (user == null) {
       try {
         return client.getRESTUser(id);
       } catch (e) {
-        if (e.code !== 10013)
+        if (e.code !== constants.discordErrorCodes.unknownUser)
           throw e;
       }
     } else {
@@ -169,60 +180,52 @@ module.exports = {
     }
   },
 
+  isValid(msg) {
+    const notBot = msg.author != null && msg.author.bot === false
+      && msg.author.discriminator !== "0000";
+    const notEmbed = msg.embeds != null && msg.embeds.length === 0;
+
+    return msg.type === 0 && notBot && notEmbed;
+  },
+
+  list(msgs) {
+    if (msgs.length === 0)
+      return "None";
+
+    return msgs.map(msg => {
+      const channel = client.getChannel(msg.channel_id);
+      const guild = client.guilds.get(msg.guild_id);
+      const revisions = getRevisions(msg);
+
+      return str.format(
+        responses.msgList,
+        msg.id,
+        guild == null ? msg.guild_id : `${guild.name} (${guild.id})`,
+        channel == null ? msg.channel_id : `#${channel.name} (${channel.id})`,
+        revisions.join("\n  ")
+      );
+    }).join("\n");
+  },
+
   reply(msg, reply, color, file) {
-    let perms;
+    let result;
 
-    if (msg.channel.guild != null) {
-      const clientId = msg.channel.guild.shard.client.user.id;
-
-      perms = msg.channel.permissionsOf(clientId);
-    }
-
-    if (perms != null && perms.has("sendMessages") === false)
-      return;
-
-    let result = reply.description;
-
-    if (result == null) {
-      if (reply.content == null)
-        result = reply;
-      else
-        result = reply.content;
-    }
-
-    if ((perms == null || perms.has("embedLinks") === true)
-        && result.length !== 0) {
-      if (typeof reply === "string") {
-        result = this.embedify({
-          color,
-          description: str.format(
-            descriptions.msg,
-            this.tag(msg.author),
-            reply
-          )
-        });
-      } else {
-        result = reply;
-        result.color = color;
-        result.description = str.format(
-          descriptions.msg,
-          this.tag(msg.author),
-          result.description
-        );
-        result = this.embedify({
-          color,
-          ...result
-        });
-      }
-    } else {
+    if (typeof reply === "string") {
       result = str.format(
         descriptions.msg,
         this.tag(msg.author),
-        result
+        reply
+      );
+    } else {
+      result = this.embedify(reply);
+      result.description = str.format(
+        descriptions.msg,
+        this.tag(msg.author),
+        result.description
       );
     }
 
-    return msg.channel.createMessage(result, file);
+    return this.create(msg.channel, result, color, file);
   },
 
   replyError(msg, reply) {
@@ -249,7 +252,7 @@ module.exports = {
         const timeout = setTimeout(() => {
           msgCollector.remove(msg.id);
           res();
-        }, 3e4);
+        }, config.timer.verifyTimeout);
 
         msgCollector.add(
           m => m.author.id === msg.author.id
@@ -263,5 +266,17 @@ module.exports = {
         );
       });
     });
+  },
+
+  verifyPerms(channel) {
+    if (channel.guild == null)
+      return true;
+
+    const perms = channel.permissionsOf(channel.guild.shard.client.user.id);
+
+    if (perms.has("sendMessages") === true && perms.has("embedLinks") === true)
+      return true;
+
+    return false;
   }
 };

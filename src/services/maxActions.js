@@ -16,6 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const {config} = require("./cli.js");
+
 module.exports = {
   actions: new Map(),
 
@@ -23,7 +25,7 @@ module.exports = {
     const key = `${guildId}-${userId}`;
 
     if (this.actions.has(key) === false
-        || Date.now() - this.actions.get(key).first > 36e5) {
+        || Date.now() - this.actions.get(key).first > config.max.actionsLife) {
       this.actions.set(key, {
         count: 1,
         first: Date.now()

@@ -16,13 +16,193 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const casesUpdate = require("./casesUpdate.js");
 const db = require("./database.js");
 const logs = require("./logs.js");
 const message = require("../utilities/message.js");
-const {data: {queries, responses}} = require("./data.js");
+const {
+  data: {
+    constants,
+    queries,
+    responses
+  }
+} = require("./data.js");
 const senateUpdate = require("./senateUpdate.js");
 const str = require("../utilities/string.js");
+const time = require("../utilities/time.js");
 const lbQuery = str.format(queries.selectRep, "DESC LIMIT $2");
+
+async function ban(guild, data, req, court, senate) {
+  const requester = await message.getUser(data.requester);
+  const logId = await logs.add({
+    data: {
+      log_id: req.log_id,
+      offender: data.offender,
+      requester: data.requester
+    },
+    guild_id: guild.id,
+    type: "member_ban"
+  });
+  const res = await db.pool.query(
+    lbQuery,
+    [guild.id, senate + court]
+  );
+  const senators = [];
+
+  for (let i = court; i < res.rows.length; i++) {
+    const user = await message.getUser(res.rows[i].user_id);
+
+    senators.push(message.tag(user));
+  }
+
+  await message.dm(
+    await message.getUser(data.offender),
+    str.format(
+      responses.banned,
+      message.tag(requester),
+      data.rule,
+      data.evidence,
+      logId,
+      str.list(senators)
+    ),
+    null,
+    guild
+  ).catch(() => {});
+  await guild.banMember(data.offender);
+}
+
+async function dmCourt(guild, req, signs, courtMembers, banReq) {
+  const description = str.format(
+    responses.courtBanDm,
+    "Ban request",
+    req.log_id,
+    message.tag(await message.getUser(req.data.requester)),
+    time.format(banReq)
+  );
+
+  for (let i = 0; i < courtMembers.length; i++) {
+    await message.dm(courtMembers[i], {description}, null, guild).catch(e => {
+      if (e.code === constants.discordErrorCodes.cantDM) {
+        db.pool.query(
+          queries.resetRep,
+          [guild.id, courtMembers[i].id]
+        ).then(() => senateUpdate(guild));
+      } else {
+        throw e;
+      }
+    });
+  }
+}
+
+async function getCourt(guild, data, court) {
+  const {rows: courtMembers} = await db.pool.query(
+    lbQuery,
+    [guild.id, court + 1]
+  );
+
+  for (let i = 0; i < courtMembers.length; i++)
+    courtMembers[i] = await message.getUser(courtMembers[i].user_id);
+
+  const index = courtMembers.findIndex(c => c.id === data.offender);
+
+  if (index === -1)
+    courtMembers.pop();
+  else
+    courtMembers.splice(index, 1);
+
+  return courtMembers;
+}
+
+function updateLog(req) {
+  return db.pool.query(
+    "UPDATE logs SET data = $1 WHERE log_id = $2",
+    [req.data, req.log_id]
+  );
+}
+
+async function updatePrecourt(guild, request, banReq, court) {
+  const req = request;
+  const {senate: {ban_sigs}} = await db.getGuild(
+    guild.id,
+    {senate: "ban_sigs"}
+  );
+  const {rows: signs} = await db.pool.query(
+    queries.selectBanSigns,
+    [req.log_id]
+  );
+  const courtMembers = await getCourt(guild, req.data, court);
+
+  if (request.time.getTime() > Date.now() - banReq && signs.length < ban_sigs)
+    return;
+
+  for (let i = 0; i < signs.length; i++) {
+    const user = await message.getUser(signs[i].data.signer_id);
+
+    signs[i] = `${message.tag(user)} (${user.id})`;
+  }
+
+  if (signs.length < ban_sigs) {
+    req.data.reached_court = false;
+    req.data.resolved = true;
+    await updateLog(req);
+    await casesUpdate(guild);
+
+    return;
+  }
+
+  req.data.reached_court = true;
+  req.data.court = courtMembers.map(c => c.id);
+  await updateLog(req);
+  await casesUpdate(guild);
+  await message.dm(
+    await message.getUser(req.data.offender),
+    str.format(
+      responses.banWarning,
+      message.tag(await message.getUser(req.data.requester)),
+      req.log_id,
+      str.list(courtMembers.map(c => `**${message.tag(c)}**`))
+    )
+  ).catch(() => {});
+  await dmCourt(guild, req, signs, courtMembers, banReq);
+}
+
+async function updateResolved(guild, request, banReq, court) {
+  const req = request;
+  const {data} = req;
+  const {top: {senate}} = await db.getGuild(guild.id, {top: "senate"});
+  const {rows: votes} = await db.pool.query(
+    queries.selectBanVotes,
+    [req.log_id]
+  );
+
+  if (request.time.getTime() > Date.now() - (banReq * constants.double)
+      && votes.length < court)
+    return;
+
+  req.data.resolved = true;
+  await updateLog(req);
+  await casesUpdate(guild);
+
+  for (let i = 0; i < data.court.length; i++) {
+    if (votes.findIndex(v => v.data.voter_id === data.court[i]) === -1) {
+      await db.pool.query(
+        queries.resetRep,
+        [guild.id, data.court[i]]
+      );
+      await message.dm(
+        await message.getUser(data.court[i]),
+        str.format(responses.courtReset, req.log_id, time.format(banReq)),
+        null,
+        guild
+      ).catch(() => {});
+      await senateUpdate(guild);
+    }
+  }
+
+  if (votes.length !== 0
+      && votes.findIndex(v => v.data.for === false) === -1)
+    await ban(guild, data, req, court, senate);
+}
 
 module.exports = {
   async get(guildId, userId) {
@@ -33,173 +213,24 @@ module.exports = {
   },
 
   async update(guild) {
-    const {
-      ages: {ban_req},
-      senate: {ban_sigs},
-      top: {court, senate}
-    } = await db.getGuild(guild.id, {
+    const {ages: {ban_req}, top: {court}} = await db.getGuild(guild.id, {
       ages: "ban_req",
-      senate: "ban_sigs",
-      top: "court, senate"
+      top: "court"
     });
     let {rows: requests} = await db.pool.query(
       queries.selectPrecourtBanReqs,
-      [guild.id, new Date(Date.now() - ban_req)]
+      [guild.id]
     );
 
-    for (let i = 0; i < requests.length; i++) {
-      const {rows: signs} = await db.pool.query(
-        queries.selectBanSigns,
-        [requests[i].log_id]
-      );
-
-      for (let j = 0; j < signs.length; j++) {
-        const user = await message.getUser(signs[j].data.signer_id);
-
-        signs[j] = `${message.tag(user)} (${user.id})`;
-      }
-
-      if (signs.length < ban_sigs) {
-        requests[i].data.reached_court = false;
-        requests[i].data.resolved = true;
-        await db.pool.query(
-          "UPDATE logs SET data = $1 WHERE log_id = $2",
-          [requests[i].data, requests[i].log_id]
-        );
-        continue;
-      }
-
-      const {data} = requests[i];
-      const {rows: courtMembers} = await db.pool.query(
-        lbQuery,
-        [guild.id, court + 1]
-      );
-
-      for (let j = 0; j < courtMembers.length; j++)
-        courtMembers[j] = await message.getUser(courtMembers[j].user_id);
-
-      const index = courtMembers.findIndex(c => c.id === data.offender);
-
-      if (index === -1)
-        courtMembers.pop();
-      else
-        courtMembers.splice(index, 1);
-
-      data.reached_court = true;
-      data.court = courtMembers.map(c => c.id);
-      await db.pool.query(
-        "UPDATE logs SET data = $1 WHERE log_id = $2",
-        [data, requests[i].log_id]
-      );
-      await message.dm(
-        await message.getUser(data.offender),
-        str.format(
-          responses.almostBanned,
-          message.tag(await message.getUser(data.requester)),
-          requests[i].log_id,
-          str.list(courtMembers.map(c => `**${message.tag(c)}**`))
-        )
-      ).catch(() => {});
-
-      const user = await message.getUser(data.offender);
-      const requester = await message.getUser(data.requester);
-      const description = str.format(
-        responses.banReq,
-        "",
-        data.rule,
-        data.evidence,
-        str.list(data.msg_ids),
-        message.tag(requester),
-        requester.id,
-        `\n**Signers:** ${str.list(signs)}\n**Log ID:** ${requests[i].log_id}`
-      );
-      const title = `Ban Request for ${message.tag(user)} (${user.id})`;
-
-      for (let j = 0; j < courtMembers.length; j++) {
-        await message.dm(
-          courtMembers[j],
-          {
-            description,
-            title
-          }
-        ).catch(e => {
-          if (e.code === 50007) {
-            db.pool.query(
-              queries.resetRep,
-              [guild.id, courtMembers[j].id]
-            ).then(() => senateUpdate(guild));
-          } else {
-            throw e;
-          }
-        });
-      }
-    }
+    for (let i = 0; i < requests.length; i++)
+      await updatePrecourt(guild, requests[i], ban_req, court);
 
     ({rows: requests} = await db.pool.query(
       queries.selectResolvedBanReqs,
-      [guild.id, new Date(Date.now() - (ban_req * 2))]
+      [guild.id]
     ));
 
-    for (let i = 0; i < requests.length; i++) {
-      requests[i].data.resolved = true;
-      await db.pool.query(
-        "UPDATE logs SET data = $1 WHERE log_id = $2",
-        [requests[i].data, requests[i].log_id]
-      );
-
-      const {rows: votes} = await db.pool.query(
-        queries.selectBanVotes,
-        [requests[i].log_id]
-      );
-      const {data} = requests[i];
-
-      for (let j = 0; j < data.court.length; j++) {
-        if (votes.findIndex(v => v.data.voter_id === data.court[j]) === -1) {
-          await db.pool.query(
-            queries.resetRep,
-            [guild.id, data.court[j]]
-          );
-          await senateUpdate(guild);
-        }
-      }
-
-      if (votes.length !== 0
-          && votes.findIndex(v => v.data.for === false) === -1) {
-        const requester = await message.getUser(data.requester);
-        const logId = await logs.add({
-          data: {
-            log_id: requests[i].log_id,
-            offender: data.offender,
-            requester: data.requester
-          },
-          guild_id: guild.id,
-          type: "member_ban"
-        });
-        const res = await db.pool.query(
-          lbQuery,
-          [guild.id, senate + court]
-        );
-        const senators = [];
-
-        for (let j = court; j < res.rows.length; j++) {
-          const user = await message.getUser(res.rows[j].user_id);
-
-          senators.push(message.tag(user));
-        }
-
-        await message.dm(
-          await message.getUser(data.offender),
-          str.format(
-            responses.banned,
-            message.tag(requester),
-            data.rule,
-            data.evidence,
-            logId,
-            str.list(senators)
-          )
-        ).catch(() => {});
-        await guild.banMember(data.offender);
-      }
-    }
+    for (let i = 0; i < requests.length; i++)
+      await updateResolved(guild, requests[i], ban_req, court);
   }
 };

@@ -21,7 +21,13 @@ const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
 const logs = require("../../services/logs.js");
-const {data: {queries, responses}} = require("../../services/data.js");
+const {
+  data: {
+    constants,
+    queries,
+    responses
+  }
+} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class Unrep extends Command {
@@ -45,19 +51,17 @@ module.exports = new class Unrep extends Command {
   }
 
   async run(msg, args) {
+    const timeframe = new Date(Date.now() - constants.week);
     const res = await db.pool.query(
       this.weekUnrepQuery,
-      [msg.channel.guild.id, msg.author.id, new Date(Date.now() - 6048e5)]
+      [msg.channel.guild.id, msg.author.id, timeframe]
     );
 
     for (let i = 0; i < res.rows.length; i++) {
       if (res.rows[i].data.target_id === args.user.id) {
-        await message.replyError(
-          msg,
-          `you already unrepped ${message.tag(args.user)} in the past week.`
+        return CommandResult.fromError(
+          `you already unrepped **${message.tag(args.user)}** in the past week.`
         );
-
-        return CommandResult.fromError();
       }
     }
 
@@ -77,8 +81,8 @@ module.exports = new class Unrep extends Command {
       "unrepped",
       message.tag(args.user),
       "decreasing",
-      reputation.toFixed(2),
-      rep_reward.toFixed(2)
+      reputation.toFixed(constants.numPrecision),
+      rep_reward.toFixed(constants.numPrecision)
     ));
     await logs.add({
       data: {

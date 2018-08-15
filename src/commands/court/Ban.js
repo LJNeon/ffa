@@ -36,7 +36,7 @@ module.exports = new class Ban extends Command {
         example: "PrinceElmo#7720",
         key: "user",
         name: "user",
-        preconditions: ["noself", "noffa"],
+        preconditions: ["noself", "noffa", "bannableuser"],
         type: "user"
       }),
       new Argument({

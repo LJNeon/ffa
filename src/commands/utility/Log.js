@@ -20,7 +20,6 @@ const {Argument, Command, Context} = require("patron.js");
 const client = require("../../services/client.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
-const str = require("../../utilities/string.js");
 
 module.exports = new class Log extends Command {
   constructor() {
@@ -41,22 +40,11 @@ module.exports = new class Log extends Command {
 
   async run(msg, args) {
     const guild = client.guilds.get(args.log.guild_id);
-    let footer = null;
-
-    if (msg.channel.guild == null) {
-      footer = {};
-
-      if (guild == null)
-        footer.text = `Guild: ${args.log.guild_id}`;
-      else
-        footer.text = `Guild: ${str.escapeFormat(guild.name)}`;
-    }
 
     await message.create(msg.channel, {
       author: await logs.getAuthor(args.log),
       description: await logs.describe(args.log),
-      footer,
       timestamp: new Date(args.log.time)
-    });
+    }, null, null, msg.channel.guild == null ? guild : null);
   }
 }();

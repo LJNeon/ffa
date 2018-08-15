@@ -24,6 +24,65 @@ const {data: {descriptions, responses}} = require("../../services/data.js");
 const message = require("../../utilities/message.js");
 const str = require("../../utilities/string.js");
 
+function formatField(response, msg, user) {
+  return str.format(
+    response,
+    msg.id,
+    message.tag(user),
+    user.id
+  );
+}
+
+async function getFieldsAndUsers(msgs) {
+  const fields = [];
+  const users = [];
+
+  for (let i = 0; i < msgs.length; i++) {
+    users.push(await message.getUser(msgs[i].author_id));
+
+    const revision = await db.getFirstRow(
+      "SELECT * FROM revisions WHERE msg_id = $1 ORDER BY time ASC LIMIT 1",
+      [msgs[i].id]
+    );
+
+    if (revision.content.length !== 0) {
+      fields.push({
+        name: formatField(
+          responses.msgTxtFormat,
+          msgs[i],
+          users[i]
+        ),
+        value: revision.content.slice(0, config.max.deletedMsgChars)
+      });
+    }
+
+    if (revision.attachment_ids.length !== 0) {
+      const {rows: attachments} = await db.pool.query(
+        "SELECT id, name FROM attachments WHERE id = ANY($1)",
+        [revision.attachment_ids]
+      );
+
+      fields.push({
+        name: formatField(
+          responses.attachment,
+          msgs[i],
+          users[i]
+        ),
+        value: str.list(attachments.map(a => str.format(
+          descriptions.attachment,
+          str.escapeFormat(a.name),
+          a.id
+        )))
+      });
+    }
+  }
+
+  return {
+    fields,
+    users
+  };
+}
+
 module.exports = new class Deleted extends Command {
   constructor() {
     super({
@@ -60,51 +119,7 @@ module.exports = new class Deleted extends Command {
       "SELECT * FROM messages WHERE id = ANY($1)",
       [ids]
     );
-    const fields = [];
-    const users = [];
-
-    for (let i = 0; i < msgs.length; i++) {
-      const revision = await db.getFirstRow(
-        "SELECT * FROM revisions WHERE msg_id = $1 ORDER BY time ASC LIMIT 1",
-        [msgs[i].id]
-      );
-
-      users.push(await message.getUser(msgs[i].author_id));
-
-      if (revision.content.length !== 0) {
-        fields.push({
-          name: str.format(
-            responses.msg,
-            msgs[i].id,
-            message.tag(users[i]),
-            users[i].id
-          ),
-          value: revision.content.slice(0, config.max.deletedMsgChars)
-        });
-      }
-
-      if (revision.attachment_ids.length !== 0) {
-        const {rows: attachments} = await db.pool.query(
-          "SELECT id, name FROM attachments WHERE id = ANY($1)",
-          [revision.attachment_ids]
-        );
-
-        fields.push({
-          name: str.format(
-            responses.attachment,
-            msgs[i].id,
-            message.tag(users[i]),
-            users[i].id
-          ),
-          value: str.list(attachments.map(a => str.format(
-            descriptions.attachment,
-            str.escapeFormat(a.name),
-            a.id
-          )))
-        });
-      }
-    }
-
+    const {fields, users} = await getFieldsAndUsers(msgs);
     const approved = await message.verify(msg, users);
 
     if (approved == null)

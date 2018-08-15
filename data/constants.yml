@@ -3,7 +3,11 @@ alphabet: [a, b, c, d, e, f, g, h, i, j, k, l, m,
 
 clearDeleteDelay: 3e3
 
+day: 864e5
+
 deletedMsgChars: 200
+
+discordEpoch: 14200704e5
 
 discordErrorCodes: {
   bulkDelete: 50034,
@@ -11,7 +15,18 @@ discordErrorCodes: {
   internalError: [499, 600],
   noPerm: [403, 50013],
   timedOut: Request timed out,
+  unknownUser: 10013,
   userOnly: 20001
+}
+
+hexBase: 16
+
+httpStatusCodes: {
+  badReq: 400,
+  internalErr: 500,
+  notFound: 404,
+  ok: 200,
+  unauthorized: 401
 }
 
 logColors: {
@@ -23,6 +38,14 @@ logColors: {
 
 logsDirectory: ./logs/
 
+maxEnd: ...
+
+maxMessages: 100
+
+maxPad: 10
+
+minList: 3
+
 modLogTypes: {
   automute: Automatic Mute,
   autounmute: Automatic Unmute,
@@ -31,11 +54,23 @@ modLogTypes: {
   unmute: Unmute
 }
 
+numPrecision: 2
+
+randomLenSlice: -32
+
 sharpFormats: [image/jpeg, image/png, image/webp, image/svg+xml, image/tiff]
+
+snowflakeMult: 4194304
+
+streamTimeout: 1e4
 
 times: {
   day: [864e5],
-  hour: [36e4, 24],
+  hour: [36e5, 24],
   minute: [6e4, 60],
   second: [1e3, 60]
 }
+
+double: 2
+
+week: 6048e5

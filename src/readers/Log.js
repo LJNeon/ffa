@@ -18,6 +18,10 @@
 "use strict";
 const {TypeReader, TypeReaderResult} = require("patron.js");
 const logs = require("../services/logs.js");
+const errorResult = cmd => TypeReaderResult.fromError(
+  cmd,
+  "you have provided an invalid log id."
+);
 
 module.exports = new class Log extends TypeReader {
   constructor() {
@@ -27,21 +31,13 @@ module.exports = new class Log extends TypeReader {
   async read(cmd, msg, arg, args, val) {
     let result = Number(val);
 
-    if (Number.isInteger(result) === false) {
-      return TypeReaderResult.fromError(
-        cmd,
-        "you have provided an invalid log id."
-      );
-    }
+    if (Number.isInteger(result) === false)
+      return errorResult(cmd);
 
     result = await logs.get(result);
 
-    if (result == null) {
-      return TypeReaderResult.fromError(
-        cmd,
-        "you have provided an invalid log id."
-      );
-    }
+    if (result == null)
+      return errorResult(cmd);
 
     return TypeReaderResult.fromSuccess(result);
   }

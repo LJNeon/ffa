@@ -18,14 +18,14 @@
 "use strict";
 const {config} = require("../services/cli.js");
 const db = require("../services/database.js");
-const {data: {queries}} = require("../services/data.js");
+const {data: {constants, queries}} = require("../services/data.js");
 const Timer = require("../utilities/Timer.js");
 
-module.exports = new Timer(async () => {
+async function cleanMessages() {
   const time = Date.now();
   const {rows: msgs} = await db.pool.query(
     "SELECT id FROM messages WHERE time < $1 AND used = false",
-    [new Date(time - 6048e5)]
+    [new Date(time - constants.week)]
   );
 
   for (let i = 0; i < msgs.length; i++) {
@@ -38,9 +38,11 @@ module.exports = new Timer(async () => {
 
   await db.pool.query(
     "DELETE FROM attachments WHERE time < $1 AND used = false",
-    [new Date(time - 864e5)]
+    [new Date(time - constants.day)]
   );
+}
 
+async function cleanUsers() {
   let {rows: users} = await db.pool.query(
     "SELECT user_id FROM users WHERE delete_at > $1",
     [new Date()]
@@ -50,13 +52,23 @@ module.exports = new Timer(async () => {
     .filter(u => users.indexOf(u) === users.lastIndexOf(u));
 
   for (let i = 0; i < users.length; i++) {
+    const {rows: msgs} = await db.pool.query(
+      "SELECT id FROM messages WHERE author_id = $1",
+      [users[i]]
+    );
+
     await db.pool.query(
       "UPDATE users SET delete_at = null WHERE user_id = $1",
       [users[i]]
     );
     await db.pool.query(
       queries.deleteRevisions,
-      [users[i]]
+      [msgs.map(m => m.id)]
     );
   }
+}
+
+module.exports = new Timer(async () => {
+  await cleanMessages();
+  await cleanUsers();
 }, config.timer.dbClean);

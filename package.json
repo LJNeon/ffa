@@ -1,16 +1,15 @@
 {
   "name": "ffa",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The core control of the only fully decentralized discord server.",
   "main": "./src/index.js",
   "private": true,
   "dependencies": {
-    "eris": "^0.8.6",
+    "eris": "github:ljneon/eris-fork#dev2",
     "js-yaml": "^3.12.0",
     "mime": "^2.3.1",
     "pako": "^1.0.6",
     "patron.js": "github:vim2meta/patron.js",
-    "pdfkit": "^0.8.3",
     "pg": "^7.4.3",
     "polka": "^0.4.0",
     "sharp": "^0.20.5",
@@ -22,10 +21,10 @@
     "eventemitter3": "^3.1.0"
   },
   "devDependencies": {
-    "eslint": "^5.2.0"
+    "eslint": "^5.3.0"
   },
   "scripts": {
-    "lint": "node_modules/.bin/eslint . --ext .js --rule 'padding-line-between-statements: 0'",
+    "lint": "node_modules/.bin/eslint . --ext .js",
     "test": "npm run lint && node ./test/index.js"
   },
   "license": "AGPL-3.0-or-later",

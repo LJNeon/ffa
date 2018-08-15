@@ -18,6 +18,10 @@
 "use strict";
 const {
   data: {
+    constants: {
+      maxEnd,
+      minList
+    },
     regexes: {
       format,
       markdown
@@ -48,7 +52,7 @@ module.exports = {
   },
 
   list(arr, or = "and") {
-    if (arr.length < 3)
+    if (arr.length < minList)
       return arr.join(or === false ? ", " : ` ${or} `);
 
     return this.format(
@@ -60,7 +64,12 @@ module.exports = {
   },
 
   max(str, len) {
-    return str.length > len ? `${str.slice(0, len - 3)}...` : str;
+    if (str.length <= len)
+      return str;
+
+    const maxContent = str.slice(0, len - maxEnd.length);
+
+    return maxContent + maxEnd;
   },
 
   pluralize(str) {

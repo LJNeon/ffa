@@ -20,7 +20,13 @@ const {Argument, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
-const {data: {responses, queries}} = require("../../services/data.js");
+const {
+  data: {
+    constants,
+    responses,
+    queries
+  }
+} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 module.exports = new class UnrepLeaderboard extends Command {
@@ -60,7 +66,7 @@ module.exports = new class UnrepLeaderboard extends Command {
         responses.lbEntry,
         i + 1,
         message.tag(tags[i]),
-        r.reputation.toFixed(2)
+        r.reputation.toFixed(constants.numPrecision)
       )).join("\n"),
       title: "The Least Reputable Users"
     });

@@ -20,7 +20,13 @@ const {Command, CommandResult, Context} = require("patron.js");
 const client = require("../../services/client.js");
 const db = require("../../services/database.js");
 const message = require("../../utilities/message.js");
-const {data: {queries, responses}} = require("../../services/data.js");
+const {
+  data: {
+    constants,
+    queries,
+    responses
+  }
+} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 function getLogList(logs) {
@@ -30,48 +36,6 @@ function getLogList(logs) {
   return logs.map(log => `* #${log.log_id}: ${log.data.evidence}`).join("\n");
 }
 
-function getMessageList(msgs) {
-  if (msgs.length === 0)
-    return "None";
-
-  return msgs.map(msg => {
-    const channel = client.getChannel(msg.channel_id);
-    const guild = client.guilds.get(msg.guild_id);
-
-    return str.format(
-      responses.msgList,
-      msg.id,
-      guild == null ? msg.guild_id : `${guild.name} (${guild.id})`,
-      channel == null ? msg.channel_id : `#${channel.name} (${channel.id})`,
-      msg.revisions.map((r, i) => {
-        let attachments = " None";
-
-        if (r.attachment_ids.length !== 0) {
-          attachments = `\n${r.attachment_ids.map(a => {
-            const url = str.format(responses.attachmentUrl, a);
-
-            return `      * ${url}`;
-          })}`;
-        }
-
-        return str.format(
-          responses.revisionList,
-          i + 1,
-          r.content.length === 0 ? "None" : r.content,
-          attachments,
-          r.time.toLocaleDateString("en-US", {
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-          })
-        );
-      }).join("\n  ")
-    );
-  }).join("\n");
-}
-
 function getServerList(users) {
   return users.map(user => {
     const guild = client.guilds.get(user.guild_id);
@@ -79,7 +43,7 @@ function getServerList(users) {
     return str.format(
       responses.serverList,
       guild == null ? user.guild_id : `${guild.name} (${guild.id})`,
-      user.reputation.toFixed(2),
+      user.reputation.toFixed(constants.numPrecision),
       user.muted === true ? "" : " not",
       user.in_guild === true ? "" : " not"
     );
@@ -119,7 +83,7 @@ module.exports = new class Data extends Command {
     );
 
     if (msgs.length !== 0) {
-      msgs = msgs.sort((a, b) => a.time - b.time).slice(0, 1e4);
+      msgs = msgs.sort((a, b) => a.time - b.time).slice(0, constants.maxMsgs);
 
       const {rows: revisions} = await db.pool.query(
         "SELECT * FROM revisions WHERE msg_id = ANY($1)",
@@ -139,7 +103,7 @@ module.exports = new class Data extends Command {
         message.tag(msg.author),
         msg.author.id,
         getServerList(users),
-        getMessageList(msgs),
+        message.list(msgs),
         getLogList(logs)
       )),
       name: `${msg.author.id}.txt`

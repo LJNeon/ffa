@@ -36,6 +36,98 @@ const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
 const lbQuery = str.format(queries.selectRep, "DESC LIMIT $2");
 
+async function describeBan(log) {
+  const {data, log_id} = await db.getFirstRow(
+    "SELECT data, log_id FROM logs WHERE log_id = $1",
+    [log.data.log_id]
+  );
+  const {rows} = await db.pool.query(
+    queries.selectBanVotes,
+    [log_id]
+  );
+  let {rows: signers} = await db.pool.query(
+    queries.selectBanSigns,
+    [log_id]
+  );
+  let yes = 0;
+  let no = 0;
+
+  for (let j = 0; j < rows.length; j++) {
+    if (rows[j].data.for === true)
+      yes++;
+    else
+      no++;
+  }
+
+  for (let i = 0; i < signers.length; i++) {
+    const user = await message.getUser(signers[i].data.signer_id);
+
+    signers[i] = `${message.tag(user)} (${user.id})`;
+  }
+
+  signers = str.list(signers);
+
+  return str.format(
+    responses.banReq,
+    "**Action:** Member Ban\n",
+    data.rule,
+    data.evidence,
+    str.list(data.msg_ids),
+    message.tag(await message.getUser(data.offender)),
+    data.offender,
+    `\n**Signed By:** ${signers}\n**Result:** ${yes}-${no}`
+  );
+}
+
+async function describeBanReq(log) {
+  return str.format(
+    responses.banReq,
+    "**Action:** Ban Request\n",
+    log.data.rule,
+    log.data.evidence,
+    str.list(log.data.msg_ids),
+    message.tag(await message.getUser(log.data.offender)),
+    log.data.offender,
+    ""
+  );
+}
+
+async function describeSenate(log) {
+  const action = constants.modLogTypes[log.type];
+  let data = "";
+
+  for (let key in log.data) {
+    if (log.data.hasOwnProperty(key) === false || key === "senate_id")
+      continue;
+
+    let val = log.data[key];
+
+    if (val == null)
+      continue;
+    else if (Array.isArray(val))
+      val = str.list(val);
+    else if (key === "length")
+      val = time.format(val);
+    else if (key === "penalty")
+      val = `${val.toFixed(constants.numPrecision)} rep`;
+
+    if (key === "msg_ids")
+      key = "Message IDs";
+    else if (key === "user_id")
+      key = "User ID";
+
+    data += `\n**${str.capitalize(key)}:** ${val}`;
+  }
+
+  return str.format(
+    responses.modLog,
+    action,
+    message.tag(await message.getUser(log.data.user_id)),
+    log.data.user_id,
+    data
+  );
+}
+
 async function formatImage(file, type) {
   if (constants.sharpFormats.includes(type) === true) {
     try {
@@ -103,7 +195,7 @@ module.exports = {
           author: await this.getAuthor(log),
           color,
           description: await this.describe(log),
-          footer: {text: `ID: ${res.rows[0].log_id}`},
+          footer: {text: `#${res.rows[0].log_id}`},
           timestamp: new Date()
         });
       }
@@ -112,41 +204,58 @@ module.exports = {
     return res.rows[0].log_id;
   },
 
+  async attachment(msg, attachment) {
+    const {filename, id, url} = attachment;
+    let end;
+    let file = [];
+    let response;
+
+    try {
+      const req = await getAttachment(url);
+
+      ({end, response} = req);
+    } catch (e) {
+      if (e.code === constants.httpStatusCodes.unauthorized
+          || e.code === constants.httpStatusCodes.notFound)
+        return;
+
+      throw e;
+    }
+
+    response.on("data", chunk => file.push(chunk));
+    await end;
+    file = Buffer.concat(file);
+
+    const hash = crypto.createHash("md5").update(file).digest("hex");
+    const match = await db.getFirstRow(
+      "SELECT id FROM attachments WHERE hash = $1",
+      [hash]
+    );
+
+    if (match == null) {
+      const type = mime.getType(filename);
+
+      file = await formatImage(file, type);
+      file = Buffer.from(pako.deflate(file));
+      await db.pool.query(
+        queries.insertAttachment,
+        [id, filename, file.toString("hex"), hash]
+      );
+
+      return id;
+    }
+
+    await db.pool.query(
+      "UPDATE attachments set time = $1 WHERE id = $2",
+      [new Date(), match.id]
+    );
+
+    return match.id;
+  },
+
   async describe(log) {
     if (Object.keys(constants.modLogTypes).includes(log.type) === true) {
-      const action = constants.modLogTypes[log.type];
-      let data = "";
-
-      for (let key in log.data) {
-        if (log.data.hasOwnProperty(key) === false || key === "senate_id")
-          continue;
-
-        let val = log.data[key];
-
-        if (val == null)
-          continue;
-        else if (Array.isArray(val))
-          val = str.list(val);
-        else if (key === "length")
-          val = time.format(val);
-        else if (key === "penalty")
-          val = `${val.toFixed(2)} rep`;
-
-        if (key === "msg_ids")
-          key = "Message IDs";
-        else if (key === "user_id")
-          key = "User ID";
-
-        data += `\n**${str.capitalize(key)}:** ${val}`;
-      }
-
-      return str.format(
-        responses.modLog,
-        action,
-        message.tag(await message.getUser(log.data.user_id)),
-        log.data.user_id,
-        data
-      );
+      return describeSenate(log);
     } else if (log.type === "rep") {
       const target = await message.getUser(log.data.target_id);
 
@@ -160,59 +269,10 @@ module.exports = {
       const level = log.data.rank < court ? "Supreme Court" : "Senate";
 
       return `**Action:** Resignation\n**From:** ${level}`;
-    } else if (log.type === "member_ban" || log.type === "ban_request") {
-      let {data, log_id} = log;
-      let signs = "";
-      let action = "Ban Request";
-
-      if (log.type === "member_ban") {
-        action = "Member Ban";
-        ({data, log_id} = await db.getFirstRow(
-          "SELECT data, log_id FROM logs WHERE log_id = $1",
-          [log.data.log_id]
-        ));
-
-        const {rows} = await db.pool.query(
-          queries.selectBanVotes,
-          [log_id]
-        );
-        let yes = 0;
-        let no = 0;
-
-        for (let j = 0; j < rows.length; j++) {
-          if (rows[j].data.for === true)
-            yes++;
-          else
-            no++;
-        }
-
-        let {rows: signers} = await db.pool.query(
-          queries.selectBanSigns,
-          [log_id]
-        );
-
-        for (let i = 0; i < signers.length; i++) {
-          const user = await message.getUser(signers[i].data.signer_id);
-
-          signers[i] = `${message.tag(user)} (${user.id})`;
-        }
-
-        signers = str.list(signers);
-        signs = `\n**Signed By:** ${signers}\n**Result:** ${yes}-${no}`;
-      }
-
-      const offender = await message.getUser(data.offender);
-
-      return str.format(
-        responses.banReq,
-        `**Action:** ${action}\n`,
-        data.rule,
-        data.evidence,
-        str.list(data.msg_ids),
-        message.tag(offender),
-        offender.id,
-        signs
-      );
+    } else if (log.type === "member_ban") {
+      return describeBan(log);
+    } else if (log.type === "ban_request") {
+      return describeBanReq(log);
     } else if (log.type === "ban_sign") {
       return `**Action:** Ban Signature\n**Log ID:** ${log.data.for}`;
     } else if (log.type === "ban_vote") {
@@ -287,51 +347,8 @@ module.exports = {
 
     const {attachments} = msg;
 
-    for (let i = 0; i < attachments.length; i++) {
-      const {filename, id, url} = attachments[i];
-      let end;
-      let file = [];
-      let response;
-
-      try {
-        const req = await getAttachment(url);
-
-        ({end, response} = req);
-      } catch (e) {
-        if (e.code === 401 || e.code === 404)
-          continue;
-        else
-          throw e;
-      }
-
-      response.on("data", chunk => file.push(chunk));
-      await end;
-      file = Buffer.concat(file);
-
-      const hash = crypto.createHash("md5").update(file).digest("hex");
-      const match = await db.getFirstRow(
-        "SELECT id FROM attachments WHERE hash = $1",
-        [hash]
-      );
-
-      if (match == null) {
-        const type = mime.getType(filename);
-
-        file = await formatImage(file, type);
-        file = Buffer.from(pako.deflate(file));
-        await db.pool.query(
-          queries.insertAttachment,
-          [id, filename, file.toString("hex"), hash]
-        );
-        attachments[i] = id;
-      } else {
-        await db.pool.query(
-          "UPDATE attachments set time = $1 WHERE id = $2",
-          [new Date(), match.id]
-        );
-        attachments[i] = match.id;
-      }
-    }
+    for (let i = 0; i < attachments.length; i++)
+      attachments[i] = await this.attachment(msg, attachments[i]);
 
     const timestamp = msg.editedTimestamp || msg.timestamp;
 

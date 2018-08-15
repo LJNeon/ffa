@@ -17,10 +17,34 @@
  */
 "use strict";
 const {TypeReader, TypeReaderResult} = require("patron.js");
+const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
 const message = require("../utilities/message.js");
 const {data: {regexes}} = require("../services/data.js");
 const str = require("../utilities/string.js");
+
+function handleMatches(cmd, matches) {
+  let users = matches;
+
+  if (users.length === 0)
+    return;
+  else if (users.length === 1)
+    return TypeReaderResult.fromSuccess(users[0]);
+
+  if (users.length > config.max.userResults) {
+    const more = `${users.length - config.max.userResults} more`;
+
+    users = users.slice(0, config.max.userResults).map(u => message.tag(u));
+    users.push(more);
+  } else {
+    users = users.map(u => message.tag(u));
+  }
+
+  return TypeReaderResult.fromError(
+    cmd,
+    `I found multiple members: ${str.list(users)}.`
+  );
+}
 
 module.exports = new class User extends TypeReader {
   constructor() {
@@ -42,105 +66,27 @@ module.exports = new class User extends TypeReader {
       return TypeReaderResult.fromSuccess(user);
     }
 
-    if (msg.channel.guild == null)
+    let result = handleMatches(cmd, client.users.filter(
+      u => `${u.username.toLowerCase()}#${u.discriminator}` === lowerVal
+    ));
+
+    if (result != null)
+      return result;
+
+    result = handleMatches(cmd, client.users
+      .filter(u => str.similarity(u.username, val) <= config.max.typos));
+
+    if (result != null)
+      return result;
+    else if (msg.channel.guild == null)
       return TypeReaderResult.fromError(cmd, "User not found.");
 
-    const index = val.lastIndexOf("#");
+    result = handleMatches(cmd, msg.channel.guild.members.filter(
+      m => m.nick != null && str.similarity(m.nick, val) <= config.max.typos
+    ).map(m => m.user));
 
-    if (index === -1) {
-      let matches = [];
-
-      for (const member of msg.channel.guild.members.values()) {
-        const lowerUser = member.username.toLowerCase();
-        const userSim = str.similarity(lowerUser, lowerVal);
-        let lowerNick = null;
-        let nickSim = Number.POSITIVE_INFINITY;
-
-        if (member.nick != null) {
-          lowerNick = member.nick.toLowerCase();
-          nickSim = str.similarity(lowerNick, lowerVal);
-        }
-
-        if (lowerUser === lowerVal || lowerNick === lowerVal) {
-          matches.push({
-            typos: 0,
-            user: member.user
-          });
-        } else if (userSim <= config.max.typos) {
-          matches.push({
-            typos: userSim,
-            user: member.user
-          });
-        } else if (nickSim <= config.max.typos) {
-          matches.push({
-            typos: nickSim,
-            user: member.user
-          });
-        }
-      }
-
-      if (matches.length !== 0) {
-        if (matches.length === 1)
-          return TypeReaderResult.fromSuccess(matches[0].user);
-
-        if (matches.length > config.max.userResults) {
-          const more = `${matches.length - config.max.userResults} more`;
-
-          matches = matches.sort((a, b) => a.typos - b.typos)
-            .slice(0, config.max.userResults)
-            .map(m => message.tag(m.user));
-          matches.push(more);
-        } else {
-          matches = matches.map(m => message.tag(m.user));
-        }
-
-        return TypeReaderResult.fromError(
-          cmd,
-          `I found multiple members: ${str.list(matches)}.`
-        );
-      }
-    } else {
-      let matches = [];
-
-      for (const member of msg.channel.guild.members.values()) {
-        const tag = message.tag(member);
-
-        if (tag === lowerVal) {
-          matches.push({
-            typos: 0,
-            user: member.user
-          });
-        } else {
-          const userSim = str.similarity(tag, lowerVal);
-
-          if (userSim <= config.max.typos) {
-            matches.push({
-              typos: userSim,
-              user: member.user
-            });
-          }
-        }
-      }
-
-      if (matches.length !== 0) {
-        if (matches.length === 1)
-          return TypeReaderResult.fromSuccess(matches[0].user);
-
-        if (matches.length > config.max.userResults) {
-          matches = matches.sort((a, b) => a.typos - b.typos)
-            .slice(0, config.max.userResults)
-            .map(m => message.tag(m.user));
-          matches.push(`${matches.length - config.max.userResults} more`);
-        } else {
-          matches = matches.map(m => message.tag(m.user));
-        }
-
-        return TypeReaderResult.fromError(
-          cmd,
-          `I found multiple members: ${str.list(matches)}.`
-        );
-      }
-    }
+    if (result != null)
+      return result;
 
     return TypeReaderResult.fromError(cmd, "User not found.");
   }

@@ -1,16 +1,5 @@
 allCooldowns: All of **{0}** commands are available for use.
 
-almostBanned: |-
-  **{0}'s** request to ban you has reached the required amount of signatures. Use `;log {1}` for more information.
-
-  **If this ban is unjustified or invalid, there are several steps you must take to prevent it from happening:**
-
-  **1.** DM every single Supreme Court member: {2}.
-
-  **2.** Explain in crucial detail to every single one of them why you are innocent of the accused crimes. If you are unable to DM them, you must lobby others to do so on your behalf.
-
-  **3.** Ensure you obtain at least one single vote `;against` the ban request. You must do whatever it takes to obtain this vote. The Supreme Court requires a 100% majority for any action to take effect, meaning if only one member supports you, the ban **will not go through**.
-
 attachment: "{0} attachment's sent by {1} ({2})"
 
 attachmentUrl: "https://ffabot.com/api/attachments/{0}"
@@ -38,17 +27,37 @@ banReq: |-
   **Message IDs:** {3}
   **User:** {4} ({5}){6}
 
+banWarning: |-
+  **{0}'s** request to ban you has reached the required amount of signatures. Use `;log {1}` for more information.
+
+  **If this ban is unjustified or invalid, there are several steps you must take to prevent it from happening:**
+
+  **1.** DM every single Supreme Court member: {2}.
+
+  **2.** Explain in crucial detail to every single one of them why you are innocent of the accused crimes. If you are unable to DM them, you must lobby others to do so on your behalf.
+
+  **3.** Ensure you obtain at least one single vote `;against` the ban request. You must do whatever it takes to obtain this vote. The Supreme Court requires a 100% majority for any action to take effect, meaning if only one member supports you, the ban **will not go through**.
+
 between: the {0} must be between {1} and {2}.
 
 cantDM: "I can't DM you. Please allow direct messages from server members."
 
-cantLocate: "Unable to locate {0}. Please double-check that it's in the working directory, your home directory, or the {1} argument."
+cantLocate: "Unable to locate {0}. The configuration file must be in either the working directory, the home directory, or must specified in the {1} argument."
 
 clearReply: "you have successfully deleted {0} messages sent by **{1}**."
 
 console: "{0} {1}[{2}]\x1b[0m"
 
 cooldownReply: you may use this command in {0}.
+
+courtBanDm: |-
+  {0} #{1} by **{2}** has reached the required amount of Senate signatures.
+
+  As a member of the Supreme Court, you have {3} to vote either `;for` or `;against` regardless of the current votes. Failing to do so will result in a reset of your reputation.
+
+  Use `;log {1}` for more information on the case. Carefully review the evidence using `;message <id>`. If a jury deems your ruling unjust, you will suffer severe consequences.
+
+courtReset: "Your reputation has been reset as you have failed to vote on ban request #{0} within {1} of its approval by the Senate."
 
 data: |-
   User: {0} ({1})
@@ -64,8 +73,10 @@ data: |-
 
 hasMsg: "the {0} must contain the ID of at least one message sent in this server. Please visit this [Discord blog post](https://support.discordapp.com/hc/en-us/articles/206346498) for information on how to obtain IDs."
 
+hasntReachedCourt: that ban request hasn't reached court yet.
+
 helpMsg: |-
-  FFA's goal is to provide a fully decentralized discord server by allowing the community to control every aspect of the server. The entire system is based around reputation. The most reputable users are the moderators. If you believe a certain user is suitable to moderate, you may enter the following: `{0}rep username#1234`. The opposite can be done with `{0}unrep`.
+  FFA's goal is to provide a fully decentralized discord server by allowing the community to control every aspect of the server. The entire system is based around reputation. The most reputable users are the Senators. If you believe a certain user is suitable to moderate, you may enter the following: `{0}rep username#1234`. The opposite can be done with `{0}unrep`.
 
   It is essential that reputation remains in the right hands, as everything revolves around it. It is your duty as a member of this community to ensure that if a user was unjustly punished, the culprit must pay the consequences while vindicating the victim. You may view anyone's reputation by using `{0}getrep`.
 
@@ -98,13 +109,13 @@ maxLen: the {0} cannot contain more than {1} characters.
 
 memberAge: this command may only be used by members who have been in this server for at least {0}.
 
-msg: "{0} sent by {1} ({2})"
-
 msgList: |-
    * {0}
      * Server: {1}
      * Channel: {2}
      {3}
+
+msgTxtFormat: "{0} sent by {1} ({2})"
 
 modLog: |-
   **Action:** {0}
@@ -114,16 +125,16 @@ muted: |-
   **{0}** has muted you for **{1}** for breaking the following rule: ```
   {2}
   ```
-  **{0}** has provided the following evidence: ```
+  The following evidence has been provided: ```
   {3}
   ```
   **If this mute was unjustified or invalid, there are several steps you must take to vindicate yourself:**
 
   **1.** You must `{5}unrep "{0}"`. This is essential as it will prevent **{0}** from unjustly muting others. This command must be used inside a server channel. If there are no channels dedicated to allow muted users to use commands, please contact **{4}**.
 
-  **2.** You must use `{5}replb 30` to DM these moderators with undeniable proof of your innocence. You must explain in detail why **{0}'s** mute was invalid, and why it should be reverted.
+  **2.** You must use `{5}replb 30` to DM these Senators with undeniable proof of your innocence. You must explain in detail why **{0}'s** mute was invalid, and why it should be reverted.
 
-  **3.** You must ensure **{0}** get's muted for unlawful punishment. You may do this by lobbying other moderators, or by gaining enough reputation to do it yourself. If there is no unlawful punishment rule, create a poll which adds it, and lobby other users to vote in favor of said poll.
+  **3.** You must ensure **{0}** get's muted for unlawful punishment. You may do this by lobbying other Senators, or by gaining enough reputation to do it yourself. If there is no unlawful punishment rule, create a poll which adds it, and lobby other users to vote in favor of said poll.
 
 mutedUser: this command may only be used on a muted user.
 

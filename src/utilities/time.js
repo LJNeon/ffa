@@ -17,28 +17,20 @@
  */
 "use strict";
 const str = require("./string.js");
-const {data: {constants: {times}}} = require("../services/data.js");
+const {config: {default: {timePrecision}}} = require("../services/cli.js");
+const {data: {constants: {maxPad, times}}} = require("../services/data.js");
 const keys = Object.keys(times).sort((a, b) => times[b][0] - times[a][0]);
 
 module.exports = {
   clockFormat(ms) {
-    let hours = Math.floor(ms / 36e5 % 24);
-    let mins = Math.floor(ms / 6e4 % 60);
-    let secs = Math.floor(ms / 1e3 % 60);
+    const hours = Math.floor(ms / times.hour[0] % times.hour[1]);
+    const mins = Math.floor(ms / times.minute[0] % times.minute[1]);
+    const secs = Math.floor(ms / times.second[0] % times.second[1]);
 
-    if (hours < 10)
-      hours = `0${hours}`;
-
-    if (mins < 10)
-      mins = `0${mins}`;
-
-    if (secs < 10)
-      secs = `0${secs}`;
-
-    return `${hours}:${mins}:${secs}`;
+    return `${this.padNum(hours)}:${this.padNum(mins)}:${this.padNum(secs)}`;
   },
 
-  format(ms, precision = 2) {
+  format(ms, precision = timePrecision) {
     const items = [];
 
     for (let i = 0; i < keys.length; i++) {
@@ -67,5 +59,12 @@ module.exports = {
       hour: "2-digit",
       minute: "2-digit"
     });
+  },
+
+  padNum(number) {
+    if (number < maxPad)
+      return `0${number}`;
+
+    return String(number);
   }
 };

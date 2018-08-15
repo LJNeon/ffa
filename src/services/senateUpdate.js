@@ -25,6 +25,61 @@ const str = require("../utilities/string.js");
 const mutex = new LimitedMutex(1);
 const selectRep = str.format(queries.selectRep, "DESC LIMIT $2");
 
+async function demote(guild, res, courtId, senateId, court) {
+  const currentCourt = guild.members.filter(m => m.roles.includes(courtId));
+  const currentSenate = guild.members.filter(m => m.roles.includes(senateId));
+
+  for (let i = 0; i < currentCourt.length; i++) {
+    const rank = res.rows.findIndex(r => r.user_id === currentCourt[i].id);
+
+    if (rank === -1 || rank >= court) {
+      await currentCourt[i].removeRole(courtId).catch(() => {});
+      await logs.add({
+        data: {senate_id: currentCourt[i].id},
+        guild_id: guild.id,
+        type: "court_change"
+      });
+    }
+  }
+
+  for (let i = 0; i < currentSenate.length; i++) {
+    const rank = res.rows.findIndex(r => r.user_id === currentSenate[i].id);
+
+    if (rank === -1 || rank < court)
+      await currentSenate[i].removeRole(senateId).catch(() => {});
+  }
+}
+
+async function promote(guild, res, courtId, senateId, court) {
+  for (let i = 0; i < res.rows.length; i++) {
+    const member = guild.members.get(res.rows[i].user_id);
+
+    if (i < court && member.roles.includes(courtId) === false)
+      await member.addRole(courtId).catch(() => {});
+    else if (i >= court && member.roles.includes(senateId) === false)
+      await member.addRole(senateId).catch(() => {});
+  }
+}
+
+function validateRoles(guild, courtId, senateId) {
+  if (courtId == null || senateId == null)
+    return false;
+
+  const senateUsable = message.canUseRole(
+    guild,
+    guild.roles.get(senateId)
+  );
+  const courtUsable = message.canUseRole(
+    guild,
+    guild.roles.get(courtId)
+  );
+
+  if (senateUsable === false || courtUsable === false)
+    return false;
+
+  return true;
+}
+
 module.exports = async guild => mutex.sync(guild.id, async () => {
   const {
     roles: {
@@ -43,54 +98,14 @@ module.exports = async guild => mutex.sync(guild.id, async () => {
     }
   );
 
-  if (senate_id == null || court_id == null)
-    return;
-
-  const senateUsable = message.canUseRole(
-    guild,
-    guild.roles.get(senate_id)
-  );
-  const courtUsable = message.canUseRole(
-    guild,
-    guild.roles.get(court_id)
-  );
-
-  if (senateUsable === false || courtUsable === false)
+  if (validateRoles(guild, court_id, senate_id) === false)
     return;
 
   const res = await db.pool.query(
     selectRep,
     [guild.id, senate + court]
   );
-  const currentSenate = guild.members.filter(m => m.roles.includes(senate_id));
-  const currentCourt = guild.members.filter(m => m.roles.includes(court_id));
 
-  for (let i = 0; i < res.rows.length; i++) {
-    const member = guild.members.get(res.rows[i].user_id);
-
-    if (i < court && member.roles.includes(court_id) === false)
-      await member.addRole(court_id).catch(() => {});
-    else if (i >= court && member.roles.includes(senate_id) === false)
-      await member.addRole(senate_id).catch(() => {});
-  }
-
-  for (let i = 0; i < currentCourt.length; i++) {
-    const rank = res.rows.findIndex(r => r.user_id === currentCourt[i].id);
-
-    if (rank === -1 || rank >= court) {
-      await currentCourt[i].removeRole(court_id).catch(() => {});
-      await logs.add({
-        data: {senate_id: currentCourt[i].id},
-        guild_id: guild.id,
-        type: "court_change"
-      });
-    }
-  }
-
-  for (let i = 0; i < currentSenate.length; i++) {
-    const rank = res.rows.findIndex(r => r.user_id === currentSenate[i].id);
-
-    if (rank === -1 || rank < court)
-      await currentSenate[i].removeRole(senate_id).catch(() => {});
-  }
+  await promote(guild, res, court_id, senate_id, court);
+  await demote(guild, res, court_id, senate_id, court);
 });

@@ -21,7 +21,8 @@ const {
   data: {
     constants: {
       logColors,
-      logsDirectory
+      logsDirectory,
+      streamTimeout
     },
     responses
   }
@@ -127,7 +128,7 @@ module.exports = new class Logger {
           console.error("Logger stream took over 10s.");
           process.exit(1);
         }
-      }, 1e4);
+      }, streamTimeout);
     });
   }
 

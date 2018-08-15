@@ -29,6 +29,35 @@ const message = require("../utilities/message.js");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
 
+function handleError(result) {
+  let reply = result.error.message;
+
+  if (result.error.constructor.name === "DiscordHTTPError"
+      || result.error.constructor.name === "DiscordRESTError") {
+    if (result.error.code === discordErrorCodes.userOnly)
+      reply = "only a user account may perform this action.";
+    else if (result.error.code === discordErrorCodes.cantDM)
+      reply = responses.cantDM;
+    else if (result.error.code === discordErrorCodes.noPerm[0]
+        || result.error.code === discordErrorCodes.noPerm[1])
+      reply = "I don't have permission to do that.";
+    else if (result.error.code === discordErrorCodes.bulkDelete)
+      reply = responses.noBulkDelete;
+    else if (result.error.code > discordErrorCodes.internalError[0]
+        && result.error.code < discordErrorCodes.internalError[1])
+      reply = "an unexpected error has occurred, please try again later.";
+    else if (result.error.message.startsWith(discordErrorCodes.timedOut))
+      reply = "the request has timed out, please try again later.";
+    else
+      Logger.error(result.error);
+  } else {
+    Logger.error(result.error);
+    reply = result.error.message;
+  }
+
+  return reply;
+}
+
 module.exports = async (msg, result) => {
   if (result.success === true)
     return;
@@ -41,30 +70,7 @@ module.exports = async (msg, result) => {
   let reply = "";
 
   if (result.commandError === CommandError.Exception) {
-    reply = result.error.message;
-
-    if (result.error.constructor.name === "DiscordHTTPError"
-        || result.error.constructor.name === "DiscordRESTError") {
-      if (result.error.code === discordErrorCodes.userOnly)
-        reply = "only a user account may perform this action.";
-      else if (result.error.code === discordErrorCodes.cantDM)
-        reply = responses.cantDM;
-      else if (result.error.code === discordErrorCodes.noPerm[0]
-          || result.error.code === discordErrorCodes.noPerm[1])
-        reply = "I don't have permission to do that.";
-      else if (result.error.code === discordErrorCodes.bulkDelete)
-        reply = responses.noBulkDelete;
-      else if (result.error.code > discordErrorCodes.internalError[0]
-          && result.error.code < discordErrorCodes.internalError[1])
-        reply = "an unexpected error has occurred, please try again later.";
-      else if (result.error.message.startsWith(discordErrorCodes.timedOut))
-        reply = "the request has timed out, please try again later.";
-      else
-        Logger.error(result.error);
-    } else {
-      Logger.error(result.error);
-      reply = result.error.message;
-    }
+    reply = handleError(result);
   } else if (result.commandError === CommandError.BotPermission) {
     reply = "I don't have permission to do that.";
   } else if (result.commandError === CommandError.MemberPermission) {
@@ -92,7 +98,7 @@ module.exports = async (msg, result) => {
     reply = result.errorReason;
   } else if (result.error == null) {
     Logger.error(result);
-    reply = "unknown error";
+    reply = "an unknown error has occured.";
   } else {
     Logger.error(result.error);
     reply = result.error.message;

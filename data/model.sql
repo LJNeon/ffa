@@ -106,7 +106,7 @@ ALTER TABLE public.senate OWNER TO {0};
 
 CREATE TABLE public.spam (
     guild_id varchar(20) PRIMARY KEY,
-    duration int NOT NULL CHECK (duration > 0) DEFAULT 4,
+    duration int NOT NULL CHECK (duration > 0) DEFAULT 4000,
     msg_limit smallint NOT NULL CHECK (msg_limit > 0) DEFAULT 5,
     rep_penalty real NOT NULL CHECK (rep_penalty > 0 AND rep_penalty <= 100) DEFAULT 2
 );

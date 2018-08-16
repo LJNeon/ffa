@@ -27,19 +27,27 @@ const {data: {queries, responses}} = require("../../services/data.js");
 const str = require("../../utilities/string.js");
 
 async function banReq(msg, log) {
-  const {ages: {ban_req}} = await db.getGuild(
+  const {ages: {ban_req}, senate: {ban_sigs}} = await db.getGuild(
     log.guild_id,
-    {ages: "ban_req"}
+    {
+      ages: "ban_req",
+      senate: "ban_sigs"
+    }
   );
   const {rows: signs} = await db.pool.query(
     queries.selectBanSigns,
     [log.log_id]
   );
 
-  if (signs.findIndex(s => s.data.signer_id === msg.author.id) !== -1)
+  if (signs.length >= ban_sigs) {
+    return CommandResult.fromError(
+      "that ban request has already reached ${ban_sigs} signatures."
+    );
+  } else if (signs.findIndex(s => s.data.signer_id === msg.author.id) !== -1) {
     return CommandResult.fromError("you already signed that ban request.");
-  else if (Date.now() - log.time > ban_req)
+  } else if (Date.now() - log.time > ban_req) {
     return CommandResult.fromError("that ban request is too old.");
+  }
 
   await logs.add({
     data: {

@@ -32,9 +32,9 @@ function handleMatches(cmd, matches) {
     return TypeReaderResult.fromSuccess(users[0]);
 
   if (users.length > config.max.readerResults) {
-    const more = `${users.length - config.max.userResults} more`;
+    const more = `${users.length - config.max.readerResults} more`;
 
-    users = users.slice(0, config.max.userResults).map(u => message.tag(u));
+    users = users.slice(0, config.max.readerResults).map(u => message.tag(u));
     users.push(more);
   } else {
     users = users.map(u => message.tag(u));

@@ -111,8 +111,12 @@ async function describeSenate(log) {
     else if (key === "penalty")
       val = `${val.toFixed(constants.numPrecision)} reputation`;
 
-    if (key === "msg_ids")
-      key = "Message IDs";
+    if (key === "msg_ids") {
+      if (val.length === 0)
+        continue;
+      else
+        key = "Message IDs";
+    }
 
     data += `\n**${str.capitalize(key)}:** ${val}`;
   }

@@ -47,8 +47,8 @@ maxPad: 10
 minList: 3
 
 modLogTypes: {
-  automute: Automatic Mute,
-  autounmute: Automatic Unmute,
+  auto_mute: Automatic Mute,
+  auto_unmute: Automatic Unmute,
   clear: Clear,
   mute: Mute,
   unmute: Unmute

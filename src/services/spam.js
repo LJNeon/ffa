@@ -29,7 +29,7 @@ module.exports = {
       const entry = this.entries.get(msg.author.id);
 
       if (entry == null
-          || Date.now() - entry.first > guild.spam.duration) {
+          || Date.now() - entry.first < guild.spam.duration) {
         this.entries.set(msg.author.id, {
           count: 1,
           first: Date.now()
@@ -40,7 +40,7 @@ module.exports = {
         if (entry.count >= guild.spam.msg_limit) {
           const success = await senate.autoMute(
             msg,
-            guild.moderation.mute_length,
+            guild.senate.mute_length,
             guild.spam.rep_penalty
           );
 

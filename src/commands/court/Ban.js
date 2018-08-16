@@ -17,6 +17,7 @@
  */
 "use strict";
 const {Argument, Command} = require("patron.js");
+const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
@@ -55,6 +56,7 @@ module.exports = new class Ban extends Command {
         remainder: true,
         type: "string"
       })],
+      cooldown: config.cd.ban,
       description: "Request a ban for any guild user.",
       groupName: "court",
       names: ["ban"]

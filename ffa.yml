@@ -83,7 +83,7 @@ cd: {
   color: 36e5,
   modCmd: 36e5,
   removeCmd: 36e5,
-  sign: 144e5
+  sign: 72e5
 }
 
 timer: {

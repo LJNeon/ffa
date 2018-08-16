@@ -102,19 +102,17 @@ async function describeSenate(log) {
 
     let val = log.data[key];
 
-    if (val == null)
+    if (val == null || key === "user_id")
       continue;
     else if (Array.isArray(val))
       val = str.list(val);
     else if (key === "length")
       val = time.format(val);
     else if (key === "penalty")
-      val = `${val.toFixed(constants.numPrecision)} rep`;
+      val = `${val.toFixed(constants.numPrecision)} reputation`;
 
     if (key === "msg_ids")
       key = "Message IDs";
-    else if (key === "user_id")
-      key = "User ID";
 
     data += `\n**${str.capitalize(key)}:** ${val}`;
   }
@@ -314,18 +312,24 @@ module.exports = {
 
     let id;
 
-    if (Object.keys(constants.modLogTypes).includes(log.type) === true)
-      id = log.data.senate_id == null ? log.data.user_id : log.data.senate_id;
-    else if (log.type === "rep" || log.type === "unrep")
+    if (Object.keys(constants.modLogTypes).includes(log.type) === true) {
+      if (log.type === "auto_mute" || log.type === "auto_unmute")
+        return;
+      else if (log.data.senate_id == null)
+        id = log.data.user_id;
+      else
+        id = log.data.senate_id;
+    } else if (log.type === "rep" || log.type === "unrep") {
       id = log.data.user_id;
-    else if (log.type === "resign")
+    } else if (log.type === "resign") {
       id = log.data.senate_id;
-    else if (log.type === "member_ban" || log.type === "ban_request")
+    } else if (log.type === "member_ban" || log.type === "ban_request") {
       id = log.data.requester;
-    else if (log.type === "ban_sign")
+    } else if (log.type === "ban_sign") {
       id = log.data.signer_id;
-    else if (log.type === "ban_vote")
+    } else if (log.type === "ban_vote") {
       id = log.data.voter_id;
+    }
 
     const user = await message.getUser(id);
 

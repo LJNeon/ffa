@@ -39,7 +39,7 @@ async function getActive(text) {
       [reqs[i].log_id]
     );
 
-    if (rows.some(r => r.for === false) === true) {
+    if (rows.some(r => r.data.for === false) === true) {
       reqs.splice(i, 1);
       i--;
       continue;

@@ -1,3 +1,20 @@
+/**
+ * FFA - The core control of the free-for-all discord server.
+ * Copyright (c) 2018 FFA contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 "use strict";
 const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
@@ -45,10 +62,9 @@ async function getActive(text) {
       continue;
     } else {
       reqs[i].status = `${rows.length} - 0`;
+      reqs[i].user = await message.getUser(reqs[i].data.offender);
+      reqs[i].requester = await message.getUser(reqs[i].data.requester);
     }
-
-    reqs[i].user = await message.getUser(reqs[i].data.offender);
-    reqs[i].requester = await message.getUser(reqs[i].data.requester);
   }
 
   return getEmbed(reqs, text, "Active Cases");
@@ -56,6 +72,17 @@ async function getActive(text) {
 
 async function getRecent(text) {
   const {rows: reqs} = await db.pool.query(queries.recentBanReqs);
+  const {rows} = await db.pool.query(queries.activeBanReqs);
+
+  for (let i = 0; i < rows.length; i++) {
+    const {rows: votes} = await db.pool.query(
+      queries.selectBanVotes,
+      [rows[i].log_id]
+    );
+
+    if (votes.some(v => v.data.for === false) === true)
+      reqs.splice(0, 0, rows[i]);
+  }
 
   for (let i = 0; i < reqs.length; i++) {
     if (reqs[i].data.reached_court === false) {

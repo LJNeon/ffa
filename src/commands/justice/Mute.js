@@ -46,7 +46,7 @@ module.exports = new class Mute extends Command {
           max: config.max.mute,
           min: config.min.mute
         }],
-        preconditions: ["between"],
+        preconditions: ["between", "ruletime"],
         type: "timespan"
       }),
       new Argument({

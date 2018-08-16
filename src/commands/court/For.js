@@ -18,6 +18,7 @@
 "use strict";
 const {Argument, Command, Context} = require("patron.js");
 const bans = require("../../services/bans.js");
+const client = require("../../services/client.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
 const message = require("../../utilities/message.js");
@@ -30,6 +31,7 @@ const {
 } = require("../../services/data.js");
 
 async function banReq(msg, args) {
+  const guild = client.guilds.get(args.log.guild_id);
   const {ages: {ban_req}, senate: {vote_opinion}} = await db.getGuild(
     msg.channel.guild.id,
     {
@@ -68,10 +70,10 @@ async function banReq(msg, args) {
       opinion: args.evidence,
       voter_id: msg.author.id
     },
-    guild_id: msg.channel.guild.id,
+    guild_id: guild.id,
     type: "ban_vote"
   });
-  await bans.update(msg.channel.guild);
+  await bans.update(guild);
 
   return message.reply(
     msg,

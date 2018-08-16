@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Argument, Command} = require("patron.js");
+const {Argument, ArgumentDefault, Command} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const deleted = require("../../services/deleted.js");
@@ -87,6 +87,13 @@ module.exports = new class Deleted extends Command {
   constructor() {
     super({
       args: [new Argument({
+        defaultValue: ArgumentDefault.Channel,
+        example: "<#254066549587968001>",
+        key: "channel",
+        name: "channel",
+        type: "guildchannel"
+      }),
+      new Argument({
         defaultValue: config.default.deletedMsgs,
         example: "5",
         key: "count",
@@ -98,7 +105,7 @@ module.exports = new class Deleted extends Command {
         preconditions: ["between"],
         type: "integer"
       })],
-      description: "Gets the last deleted messages of the channel.",
+      description: "Gets the last deleted messages of a channel.",
       groupName: "utility",
       names: ["deleted", "deletedmessages", "deletedmsgs"],
       preconditions: ["nsfw"]
@@ -106,12 +113,12 @@ module.exports = new class Deleted extends Command {
   }
 
   async run(msg, args) {
-    const ids = deleted.get(msg.channel.id, args.count);
+    const ids = deleted.get(args.channel.id, args.count);
 
     if (ids.length === 0) {
       return message.replyError(
         msg,
-        "there are no recently deleted messages in this channel."
+        "there are no recently deleted messages in that channel."
       );
     }
 

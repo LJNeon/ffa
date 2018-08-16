@@ -24,31 +24,31 @@ const {data: {regexes}} = require("../services/data.js");
 const str = require("../utilities/string.js");
 
 function handleMatches(cmd, matches) {
-  let users = matches;
+  let channels = matches;
 
-  if (users.length === 0)
+  if (channels.length === 0)
     return;
-  else if (users.length === 1)
-    return TypeReaderResult.fromSuccess(users[0]);
+  else if (channels.length === 1)
+    return TypeReaderResult.fromSuccess(channels[0]);
 
-  if (users.length > config.max.readerResults) {
-    const more = `${users.length - config.max.userResults} more`;
+  if (channels.length > config.max.readerResults) {
+    const more = `${channels.length - config.max.userResults} more`;
 
-    users = users.slice(0, config.max.userResults).map(u => message.tag(u));
-    users.push(more);
+    channels = channels.slice(0, config.max.userResults).map(c => c.mention);
+    channels.push(more);
   } else {
-    users = users.map(u => message.tag(u));
+    channels = channels.map(c => c.mention);
   }
 
   return TypeReaderResult.fromError(
     cmd,
-    `I found multiple members: ${str.list(users)}.`
+    `I found multiple channels: ${str.list(channels)}.`
   );
 }
 
-module.exports = new class User extends TypeReader {
+module.exports = new class GuildChannel extends TypeReader {
   constructor() {
-    super({type: "user"});
+    super({type: "guildchannel"});
   }
 
   async read(cmd, msg, arg, args, val) {
@@ -58,36 +58,27 @@ module.exports = new class User extends TypeReader {
     if (id != null || (id = val.match(regexes.id)) != null) {
       id = id[id.length - 1];
 
-      const user = await message.getUser(id);
+      const channel = await msg.channel.guild.channels.get(id);
 
-      if (user == null)
-        return TypeReaderResult.fromError(cmd, "User not found.");
+      if (channel == null)
+        return TypeReaderResult.fromError(cmd, "Channel not found.");
 
-      return TypeReaderResult.fromSuccess(user);
+      return TypeReaderResult.fromSuccess(channel);
     }
 
-    let result = handleMatches(cmd, client.users.filter(
-      u => `${u.username.toLowerCase()}#${u.discriminator}` === lowerVal
+    let result = handleMatches(cmd, msg.channel.guild.channels.filter(
+      c => c.name.toLowerCase() === lowerVal
     ));
 
     if (result != null)
       return result;
 
-    result = handleMatches(cmd, client.users
-      .filter(u => str.similarity(u.username, val) <= config.max.typos));
-
-    if (result != null)
-      return result;
-    else if (msg.channel.guild == null)
-      return TypeReaderResult.fromError(cmd, "User not found.");
-
-    result = handleMatches(cmd, msg.channel.guild.members.filter(
-      m => m.nick != null && str.similarity(m.nick, val) <= config.max.typos
-    ).map(m => m.user));
+    result = handleMatches(cmd, msg.channel.guild.channels
+      .filter(c => str.similarity(c.name, val) <= config.max.typos));
 
     if (result != null)
       return result;
 
-    return TypeReaderResult.fromError(cmd, "User not found.");
+    return TypeReaderResult.fromError(cmd, "Channel not found.");
   }
 }();

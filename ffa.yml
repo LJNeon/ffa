@@ -57,7 +57,7 @@ max: {
   evidenceLen: 600,
   lb: 30,
   typos: 2,
-  userResults: 3,
+  readerResults: 3,
   mute: 2592e6
 }
 

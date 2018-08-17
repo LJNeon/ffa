@@ -32,17 +32,17 @@ const str = require("../../utilities/string.js");
 const time = require("../../utilities/time.js");
 const selectReppedMsgs = str.format(
   queries.selectReppedMsgs,
-  config.chat.activeAmount
+  config.chat.active
 );
 
 async function validateReppedMsgs(msg) {
-  const recent = new Date(Date.now() - config.chat.active);
+  const recent = Date.now() - config.chat.active;
   const {rows} = await db.pool.query(
     selectReppedMsgs,
-    [msg.channel.guild.id, msg.author.id, recent]
+    [msg.channel.guild.id, msg.author.id]
   );
 
-  if (rows.length >= config.chat.activeAmount)
+  if (rows.length !== 0 && rows[rows.length - 1].time.getTime() > recent)
     return;
 
   return CommandResult.fromError(str.format(

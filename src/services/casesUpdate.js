@@ -80,8 +80,16 @@ async function getRecent(text) {
       [rows[i].log_id]
     );
 
-    if (votes.some(v => v.data.for === false) === true)
-      reqs.splice(0, 0, rows[i]);
+    if (votes.some(v => v.data.for === false) === true) {
+      const index = reqs.findIndex(
+        r => r.time.getTime() < rows[i].time.getTime()
+      );
+
+      if (index === -1)
+        reqs.push(rows[i]);
+      else
+        reqs.splice(index, 0, rows[i]);
+    }
   }
 
   for (let i = 0; i < reqs.length; i++) {

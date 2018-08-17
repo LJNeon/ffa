@@ -82,14 +82,8 @@ async function dmCourt(guild, req, signs, courtMembers, banReq) {
 
   for (let i = 0; i < courtMembers.length; i++) {
     await message.dm(courtMembers[i], {description}, null, guild).catch(e => {
-      if (e.code === constants.discordErrorCodes.cantDM) {
-        db.pool.query(
-          queries.resetRep,
-          [guild.id, courtMembers[i].id]
-        ).then(() => senateUpdate(guild));
-      } else {
+      if (e.code !== constants.discordErrorCodes.cantDM)
         throw e;
-      }
     });
   }
 }

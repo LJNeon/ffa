@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
-const {Argument, Command} = require("patron.js");
+const {Argument, Command, CommandResult} = require("patron.js");
 const {config} = require("../../services/cli.js");
 const db = require("../../services/database.js");
 const logs = require("../../services/logs.js");
@@ -71,8 +71,7 @@ module.exports = new class Ban extends Command {
     );
 
     if (args.evidence.length < ban_evidence) {
-      return message.replyError(
-        msg,
+      return CommandResult.fromError(
         `the evidence cannot contain fewer than ${ban_evidence} characters.`
       );
     }

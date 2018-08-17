@@ -44,7 +44,8 @@ async function banReq(msg, args) {
     [args.log.log_id]
   );
 
-  if (args.log.data.court.includes(msg.author.id) === false) {
+  if (args.log.data.court == null
+      || args.log.data.court.includes(msg.author.id) === false) {
     return message.replyError(msg, "you cannot vote on this ban request.");
   } else if (args.evidence.length < vote_opinion) {
     return message.replyError(

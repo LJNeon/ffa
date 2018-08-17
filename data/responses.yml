@@ -154,7 +154,7 @@ nsfw: |-
 
   Do you agree to these conditions?
 
-rep: you have successfully {0} **{1}** {2} their reputation to {3}, rewarding you with {4} rep.
+rep: you have successfully {0} **{1}** {2} their reputation to {3}, rewarding you with {4} reputation.
 
 repRank: |-
   **Reputation:** {0}

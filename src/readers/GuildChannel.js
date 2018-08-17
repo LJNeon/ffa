@@ -17,9 +17,7 @@
  */
 "use strict";
 const {TypeReader, TypeReaderResult} = require("patron.js");
-const client = require("../services/client.js");
 const {config} = require("../services/cli.js");
-const message = require("../utilities/message.js");
 const {data: {regexes}} = require("../services/data.js");
 const str = require("../utilities/string.js");
 

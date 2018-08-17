@@ -29,6 +29,28 @@ const {
   }
 } = require("../../services/data.js");
 const str = require("../../utilities/string.js");
+const time = require("../../utilities/time.js");
+const selectReppedMsgs = str.format(
+  queries.selectReppedMsgs,
+  config.chat.activeAmount
+);
+
+async function validateReppedMsgs(msg) {
+  const recent = new Date(Date.now() - config.chat.active);
+  const {rows} = await db.pool.query(
+    selectReppedMsgs,
+    [msg.channel.guild.id, msg.author.id, recent]
+  );
+
+  if (rows.length >= config.chat.activeAmount)
+    return;
+
+  return CommandResult.fromError(str.format(
+    responses.requiredMsgs,
+    config.chat.activeAmount,
+    time.format(config.chat.active)
+  ));
+}
 
 module.exports = new class Unrep extends Command {
   constructor() {
@@ -47,21 +69,28 @@ module.exports = new class Unrep extends Command {
       names: ["unrep"],
       preconditions: ["memberage"]
     });
-    this.weekUnrepQuery = str.format(queries.selectWeekRep, "unrep");
+    this.lastUnrepQuery = str.format(queries.selectLastRep, "unrep");
   }
 
   async run(msg, args) {
-    const timeframe = new Date(Date.now() - constants.week);
-    const res = await db.pool.query(
-      this.weekUnrepQuery,
+    const valid = await validateReppedMsgs(msg);
+
+    if (valid != null)
+      return valid;
+
+    const timeframe = new Date(Date.now() - config.cd.userRepped);
+    const {rows} = await db.pool.query(
+      this.lastUnrepQuery,
       [msg.channel.guild.id, msg.author.id, timeframe]
     );
 
-    for (let i = 0; i < res.rows.length; i++) {
-      if (res.rows[i].data.target_id === args.user.id) {
-        return CommandResult.fromError(
-          `you already unrepped **${message.tag(args.user)}** in the past week.`
-        );
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].data.target_id === args.user.id) {
+        return CommandResult.fromError(str.format(
+          responses.alreadyRepped,
+          message.tag(args.user),
+          time.format(config.cd.userRepped)
+        ));
       }
     }
 

@@ -99,15 +99,15 @@ async function getRecent(text) {
       continue;
     }
 
-    const {rows} = await db.pool.query(
+    const {rows: votes} = await db.pool.query(
       queries.selectBanVotes,
       [reqs[i].log_id]
     );
     let no = 0;
     let yes = 0;
 
-    for (let j = 0; j < rows.length; j++) {
-      if (rows[j].data.for === true)
+    for (let j = 0; j < votes.length; j++) {
+      if (votes[j].data.for === true)
         yes++;
       else
         no++;

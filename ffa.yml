@@ -37,8 +37,16 @@ handlerOptions: {}
 # patron.js Registry options. See more at: https://vim2meta.github.io/patron.js/global.html#RegistryOptions
 registryOptions: {caseSensitive: false}
 
+port: 80
+
 guild: {
   invite: https://discord.gg/F7reg7e
+}
+
+chat: {
+  active: 1728e5,
+  activeAmount: 30,
+  sim: 0.8
 }
 
 ratelimits: {
@@ -78,12 +86,13 @@ default: {
 
 cd: {
   ban: 3e5,
-  rep: 72e5,
-  unrep: 72e5,
+  rep: 216e5,
+  unrep: 216e5,
   color: 36e5,
   modCmd: 36e5,
   removeCmd: 36e5,
-  sign: 72e5
+  sign: 144e5,
+  userRepped: 432e6
 }
 
 timer: {

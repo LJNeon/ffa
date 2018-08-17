@@ -1,5 +1,7 @@
 allCooldowns: All of **{0}** commands are available for use.
 
+alreadyRepped: you already repped **{0}** in the past {1}.
+
 attachment: "{0} attachment's sent by {1} ({2})"
 
 attachmentUrl: "https://ffabot.com/api/attachments/{0}"
@@ -159,6 +161,8 @@ rep: you have successfully {0} **{1}** {2} their reputation to {3}, rewarding yo
 repRank: |-
   **Reputation:** {0}
   **Rank:** {1}
+
+requiredMsgs: You must have sent at least {0} reputation-eligble messages within the last {1} to use this command.
 
 revisionList: |-
     * Revision #{0}

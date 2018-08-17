@@ -41,7 +41,7 @@ async function banReq(msg, log) {
 
   if (signs.length >= ban_sigs) {
     return CommandResult.fromError(
-      "that ban request has already reached ${ban_sigs} signatures."
+      `that ban request has already reached ${ban_sigs} signatures.`
     );
   } else if (signs.findIndex(s => s.data.signer_id === msg.author.id) !== -1) {
     return CommandResult.fromError("you already signed that ban request.");

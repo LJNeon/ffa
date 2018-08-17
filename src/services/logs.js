@@ -343,6 +343,13 @@ module.exports = {
     };
   },
 
+  markReppedMsg(id) {
+    return db.pool.query(
+      "UPDATE messages SET earned_rep = true WHERE id = $1",
+      [id]
+    );
+  },
+
   async message(msg) {
     await db.pool.query(
       queries.insertMessage,

@@ -46,7 +46,7 @@ module.exports = new class Message extends TypeReader {
     }
 
     const {rows} = await db.pool.query(
-      "SELECT * FROM revisions WHERE msg_id = $1",
+      "SELECT * FROM revisions WHERE msg_id = $1 ORDER BY time",
       [val]
     );
 

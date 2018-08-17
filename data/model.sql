@@ -44,6 +44,7 @@ CREATE TABLE public.messages (
     author_id varchar(20) NOT NULL,
     channel_id varchar(20) NOT NULL,
     guild_id varchar(20) NOT NULL,
+    earned_rep bool NOT NULL DEFAULT false,
     time timestamptz NOT NULL DEFAULT now(),
     used bool NOT NULL DEFAULT false
 );

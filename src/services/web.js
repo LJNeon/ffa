@@ -16,6 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const {config} = require("./cli.js");
 const db = require("./database.js");
 const Logger = require("../utilities/Logger.js");
 const mime = require("mime");
@@ -87,8 +88,7 @@ Polka.get("/api/attachments/:id", async (req, res) => {
   res.writeHead(httpStatusCodes.ok, {"Content-Type": type});
   res.end(attachment.file);
 });
-/**
- * TODO pretty sure process.env.PORT is a c9 thing,
- * should replace with auth option?
- */
-Polka.listen(process.env.PORT).then(() => Logger.info("POLKA_READY"));
+Polka.listen(config.port).then(() => Logger.info("POLKA_READY"), e => {
+  console.error(e);
+  process.exit(1);
+});

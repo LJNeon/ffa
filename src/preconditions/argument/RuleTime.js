@@ -24,8 +24,8 @@ module.exports = new class RuleTime extends ArgumentPrecondition {
     super({name: "ruletime"});
   }
 
-  async run(cmd, msg, arg, args, val, opt) {
-    let {rule} = args;
+  async run(cmd, msg, arg, args, val) {
+    const {rule} = args;
 
     if (rule.mute_length != null && rule.mute_length < val) {
       const formattedTime = time.format(rule.mute_length);

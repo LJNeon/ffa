@@ -42,7 +42,8 @@ async function validateReppedMsgs(msg) {
     [msg.channel.guild.id, msg.author.id]
   );
 
-  if (rows.length !== 0 && rows[rows.length - 1].time.getTime() > recent)
+  if (rows.length !== 0 && rows.length === config.chat.activeAmount
+      && rows[rows.length - 1].time.getTime() > recent)
     return;
 
   return CommandResult.fromError(str.format(

@@ -19,9 +19,6 @@
 const {Argument, Command, Context} = require("patron.js");
 const bans = require("../../services/bans.js");
 const client = require("../../services/client.js");
-const db = require("../../services/database.js");
-const logs = require("../../services/logs.js");
-const message = require("../../utilities/message.js");
 const {
   data: {
     constants,
@@ -29,56 +26,59 @@ const {
     responses
   }
 } = require("../../services/data.js");
+const db = require("../../services/database.js");
+const logs = require("../../services/logs.js");
+const message = require("../../utilities/message.js");
+const str = require("../../utilities/string.js");
 
-async function banReq(msg, args) {
-  const guild = client.guilds.get(args.log.guild_id);
-  const {ages: {ban_req}, senate: {vote_opinion}} = await db.getGuild(
-    msg.channel.guild.id,
-    {
-      ages: "ban_req",
-      senate: "vote_opinion"
+function banReq(msg, args) {
+  return bans.limitedVote(args.log.guild_id, async () => {
+    const guild = client.guilds.get(args.log.guild_id);
+    const {ages: {ban_req}, senate: {vote_opinion}} = await db.getGuild(
+      msg.channel.guild.id,
+      {
+        ages: "ban_req",
+        senate: "vote_opinion"
+      }
+    );
+    const {rows: votes} = await db.pool.query(
+      queries.selectBanVotes,
+      [args.log.log_id]
+    );
+
+    if (args.log.data.court == null
+        || args.log.data.court.includes(msg.author.id) === false) {
+      return message.replyError(msg, "you cannot vote on this ban request.");
+    } else if (args.evidence.length < vote_opinion) {
+      return message.replyError(
+        msg,
+        `the opinion cannot contain fewer than ${vote_opinion} characters.`
+      );
+    } else if (votes.findIndex(v => v.data.voter_id === msg.author.id) !== -1) {
+      return message.replyError(
+        msg,
+        "you already voted on that ban request."
+      );
+    } else if (Date.now() - args.log.time > ban_req * constants.double) {
+      return message.replyError(msg, "that ban request is too old.");
+    } else if (args.log.data.reached_court === false) {
+      return message.replyError(msg, responses.hasntReachedCourt);
     }
-  );
-  const {rows: votes} = await db.pool.query(
-    queries.selectBanVotes,
-    [args.log.log_id]
-  );
 
-  if (args.log.data.court == null
-      || args.log.data.court.includes(msg.author.id) === false) {
-    return message.replyError(msg, "you cannot vote on this ban request.");
-  } else if (args.evidence.length < vote_opinion) {
-    return message.replyError(
-      msg,
-      `the opinion cannot contain fewer than ${vote_opinion} characters.`
-    );
-  } else if (votes.findIndex(v => v.data.voter_id === msg.author.id) !== -1) {
-    return message.replyError(
-      msg,
-      "you already voted on that ban request."
-    );
-  } else if (Date.now() - args.log.time > ban_req * constants.double) {
-    return message.replyError(msg, "that ban request is too old.");
-  } else if (args.log.data.reached_court === false) {
-    return message.replyError(msg, responses.hasntReachedCourt);
-  }
+    await logs.add({
+      data: {
+        for: true,
+        log_id: args.log.log_id,
+        opinion: args.evidence,
+        voter_id: msg.author.id
+      },
+      guild_id: guild.id,
+      type: "ban_vote"
+    });
+    await bans.update(guild);
 
-  await logs.add({
-    data: {
-      for: true,
-      log_id: args.log.log_id,
-      opinion: args.evidence,
-      voter_id: msg.author.id
-    },
-    guild_id: guild.id,
-    type: "ban_vote"
+    return message.reply(msg, str.format(responses.vote, "for"));
   });
-  await bans.update(guild);
-
-  return message.reply(
-    msg,
-    "you have successfully voted for this ban request."
-  );
 }
 
 module.exports = new class For extends Command {

@@ -20,6 +20,7 @@ const casesUpdate = require("./casesUpdate.js");
 const db = require("./database.js");
 const logs = require("./logs.js");
 const message = require("../utilities/message.js");
+const MultiMutex = require("../utilities/MultiMutex.js");
 const {
   data: {
     constants,
@@ -31,6 +32,7 @@ const senateUpdate = require("./senateUpdate.js");
 const str = require("../utilities/string.js");
 const time = require("../utilities/time.js");
 const lbQuery = str.format(queries.selectRep, "DESC LIMIT $2");
+const mutex = new MultiMutex();
 
 async function ban(guild, data, req, court, senate) {
   const requester = await message.getUser(data.requester);
@@ -204,6 +206,10 @@ module.exports = {
       queries.selectBanReq,
       [userId]
     );
+  },
+
+  limitVote(guildId, func) {
+    return mutex.sync(guildId, func);
   },
 
   async update(guild) {

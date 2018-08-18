@@ -88,7 +88,7 @@ Polka.get("/api/attachments/:id", async (req, res) => {
   res.writeHead(httpStatusCodes.ok, {"Content-Type": type});
   res.end(attachment.file);
 });
-Polka.listen(process.env.PORT).then(() => Logger.info("POLKA_READY"), e => {
+Polka.listen(80).then(() => Logger.info("POLKA_READY"), e => {
   console.error(e);
   process.exit(1);
 });

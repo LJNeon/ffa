@@ -16,7 +16,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 "use strict";
+const catchPromise = require("../utilities/catchPromise.js");
 const client = require("../services/client.js");
+const db = require("../services/database.js");
 const deleted = require("../services/deleted.js");
 
-client.on("messageDelete", msg => deleted.add(msg));
+client.on("messageDelete", catchPromise(async msg => {
+  deleted.add(msg);
+  await db.pool.query(
+    "UPDATE messages SET earned_rep = false WHERE id = $1",
+    [msg.id]
+  );
+}));

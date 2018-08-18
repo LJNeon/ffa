@@ -41,7 +41,6 @@ async function validateReppedMsgs(msg) {
     selectReppedMsgs,
     [msg.channel.guild.id, msg.author.id]
   );
-  console.log(rows);
 
   if (rows.length !== 0 && rows.length === config.chat.activeAmount
       && rows[rows.length - 1].time.getTime() > recent)

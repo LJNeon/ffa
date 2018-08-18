@@ -23,8 +23,13 @@ const deleted = require("../services/deleted.js");
 
 client.on("messageDelete", catchPromise(async msg => {
   deleted.add(msg);
-  await db.pool.query(
-    "UPDATE messages SET earned_rep = false WHERE id = $1",
-    [msg.id]
-  );
+  if (msg.channel.guild != null) {
+    const {chat} = await db.getGuild(msg.channel.guild.id, {chat: "reward"});
+
+    await db.pool.query(
+      "UPDATE messages SET earned_rep = false WHERE id = $1",
+      [msg.id]
+    );
+    await db.changeRep(msg.channel.guild.id, msg.author.id, chat.reward);
+  }
 }));

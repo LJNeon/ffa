@@ -31,6 +31,6 @@ client.on("messageDelete", catchPromise(async msg => {
       [msg.id]
     );
     if (msg.author != null)
-      await db.changeRep(msg.channel.guild.id, msg.author.id, chat.reward);
+      await db.changeRep(msg.channel.guild.id, msg.author.id, -chat.reward);
   }
 }));

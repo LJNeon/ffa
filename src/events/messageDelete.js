@@ -30,6 +30,7 @@ client.on("messageDelete", catchPromise(async msg => {
       "UPDATE messages SET earned_rep = false WHERE id = $1",
       [msg.id]
     );
-    await db.changeRep(msg.channel.guild.id, msg.author.id, chat.reward);
+    if (msg.author != null)
+      await db.changeRep(msg.channel.guild.id, msg.author.id, chat.reward);
   }
 }));

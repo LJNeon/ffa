@@ -162,7 +162,7 @@ repRank: |-
   **Reputation:** {0}
   **Rank:** {1}
 
-requiredMsgs: You must have sent at least {0} reputation-eligble messages within the last {1} to use this command.
+requiredMsgs: You must have sent at least {0} reputation-eligible messages within the last {1} to use this command.
 
 revisionList: |-
     * Revision #{0}

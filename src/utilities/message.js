@@ -241,6 +241,15 @@ module.exports = {
   },
 
   verify(msg, users, file) {
+    for (let i = 0; i < users.length; i++) {
+      for (let j = i + 1; j < users.length; j++) {
+        if (users[i].id === users[j].id) {
+          users.splice(i, 1);
+          break;
+        }
+      }
+    }
+
     const response = str.format(
       responses.nsfw,
       str.list(users.map(u => `**${this.tag(u)}**`)),

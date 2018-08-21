@@ -31,6 +31,7 @@ module.exports = new class Cooldowns extends Command {
         example: "jimbo#8237",
         key: "user",
         name: "user",
+        remainder: true,
         type: "user"
       })],
       description: "View anyone's command cooldowns.",

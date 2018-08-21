@@ -75,21 +75,14 @@ async function getRecent(text) {
   const {rows} = await db.pool.query(queries.activeBanReqs);
 
   for (let i = 0; i < rows.length; i++) {
-    const {rows: votes} = await db.pool.query(
-      queries.selectBanVotes,
-      [rows[i].log_id]
+    const index = reqs.findIndex(
+      r => r.time.getTime() < rows[i].time.getTime()
     );
 
-    if (votes.some(v => v.data.for === false) === true) {
-      const index = reqs.findIndex(
-        r => r.time.getTime() < rows[i].time.getTime()
-      );
-
-      if (index === -1)
-        reqs.push(rows[i]);
-      else
-        reqs.splice(index, 0, rows[i]);
-    }
+    if (index === -1)
+      reqs.push(rows[i]);
+    else
+      reqs.splice(index, 0, rows[i]);
   }
 
   for (let i = 0; i < reqs.length; i++) {

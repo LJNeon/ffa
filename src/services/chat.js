@@ -23,8 +23,8 @@ const {data: {queries}} = require("./data.js");
 const senate = require("./senate.js");
 const str = require("../utilities/string.js");
 const cooldowns = new Map();
-const selectReppedMsgs = str.format(
-  queries.selectReppedMsgs,
+const selectFullReppedMsgs = str.format(
+  queries.selectFullReppedMsgs,
   config.chat.activeAmount
 );
 
@@ -36,7 +36,7 @@ function percentSim(one, two) {
 
 async function validateReppedMessages(msg) {
   const {rows: msgs} = await db.pool.query(
-    selectReppedMsgs,
+    selectFullReppedMsgs,
     [msg.channel.guild.id, msg.author.id]
   );
 

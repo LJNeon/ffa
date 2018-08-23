@@ -1,4 +1,7 @@
-SELECT *
+SELECT 1
     FROM messages
-        WHERE (guild_id, author_id, earned_rep) = ($1, $2, true)
-    ORDER BY time DESC LIMIT {0}
+        WHERE guild_id = $1
+            AND author_id = $2
+            AND earned_rep = true
+            AND time > $3
+        LIMIT {0}

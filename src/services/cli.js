@@ -93,8 +93,8 @@ module.exports = {
       if (this.auth == null || this.config == null) {
         console.error(str.format(
           responses.cantLocate,
-          `ffa${this.auth === false ? "Auth" : ""}.yml`,
-          `--${this.auth === false ? "auth" : "config"}`
+          `ffa${this.auth === true ? "Auth" : ""}.yml`,
+          `--${this.auth === true ? "auth" : "config"}`
         ));
         process.exit(1);
       }

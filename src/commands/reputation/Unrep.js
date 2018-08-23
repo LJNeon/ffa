@@ -36,14 +36,13 @@ const selectReppedMsgs = str.format(
 );
 
 async function validateReppedMsgs(msg) {
-  const recent = Date.now() - config.chat.active;
+  const recent = new Date(Date.now() - config.chat.active);
   const {rows} = await db.pool.query(
     selectReppedMsgs,
-    [msg.channel.guild.id, msg.author.id]
+    [msg.channel.guild.id, msg.author.id, recent]
   );
 
-  if (rows.length !== 0 && rows.length === config.chat.activeAmount
-      && rows[rows.length - 1].time.getTime() > recent)
+  if (rows.length === config.chat.activeAmount)
     return;
 
   return CommandResult.fromError(str.format(

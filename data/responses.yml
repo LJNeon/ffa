@@ -11,7 +11,7 @@ banCreate: ban request for **{0}** successfully created with log ID {1}.
 banned: |-
   {0}'s request to ban you for breaking the following rule has passed: ```
   {1}
-  ```They provided the following evidence: ```
+  ```{0} provided the following evidence: ```
   {2}
   ```Use `;log {3}` for more information.
 

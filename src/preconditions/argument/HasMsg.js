@@ -45,14 +45,8 @@ module.exports = new class Between extends ArgumentPrecondition {
         [msg.channel.guild.id, ids[i]]
       );
 
-      if (res == null) {
-        return PreconditionResult.fromError(
-          cmd,
-          str.format(responses.hasMsg, arg.name)
-        );
-      } else if (res.author_id === user.id) {
+      if (res != null && res.author_id === user.id)
         userSent = true;
-      }
     }
 
     if (userSent === false) {

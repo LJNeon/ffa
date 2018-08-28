@@ -128,7 +128,8 @@ async function updatePrecourt(guild, request, banReq, court) {
   );
   const courtMembers = await getCourt(guild, req.data, court);
 
-  if (request.time.getTime() > Date.now() - banReq && signs.length < ban_sigs)
+  if (req.data.resolved === true || (req.time.getTime() > Date.now() - banReq
+      && signs.length < ban_sigs))
     return;
 
   for (let i = 0; i < signs.length; i++) {

@@ -32,7 +32,7 @@ const message = require("../../utilities/message.js");
 const str = require("../../utilities/string.js");
 
 function banReq(msg, args) {
-  return bans.limitedVote(args.log.guild_id, async () => {
+  return bans.limitVote(args.log.guild_id, async () => {
     const guild = client.guilds.get(args.log.guild_id);
     const {ages: {ban_req}, senate: {vote_opinion}} = await db.getGuild(
       msg.channel.guild.id,

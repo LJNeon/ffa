@@ -74,7 +74,7 @@ module.exports = new class User extends TypeReader {
       return result;
 
     result = handleMatches(cmd, client.users
-      .filter(u => str.similarity(u.username, val) <= config.max.typos));
+      .filter(u => u.username.startsWith(val) === true));
 
     if (result != null)
       return result;
@@ -82,7 +82,7 @@ module.exports = new class User extends TypeReader {
       return TypeReaderResult.fromError(cmd, "User not found.");
 
     result = handleMatches(cmd, msg.channel.guild.members.filter(
-      m => m.nick != null && str.similarity(m.nick, val) <= config.max.typos
+      m => m.nick != null && m.nick.startsWith(val) === true
     ).map(m => m.user));
 
     if (result != null)
